@@ -1,0 +1,31 @@
+import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import SplashScreen from '../screens/SplashScreen';
+import OnboardingScreen from '../screens/onboarding/OnboardingScreen';
+import SocialLogicScreen from '../screens/auth/SocialLogicScreen';
+import AuthStack from './stacks/AuthStack';
+import MainTabs from './tabs/MainTabs';
+import Constants from '../constants/data';
+
+const Stack = createStackNavigator();
+
+const AppNavigator = () => {
+    return (
+        <NavigationContainer>
+            <Stack.Navigator
+                screenOptions={{
+                    headerShown: false,
+                }}
+                initialRouteName={Constants.Screen.Splash}
+            >
+                <Stack.Screen name={Constants.Screen.Splash} component={SplashScreen} />
+                <Stack.Screen name={Constants.Screen.Onboarding} component={OnboardingScreen} />
+                <Stack.Screen name={Constants.Screen.Stack.Auth} component={AuthStack} />
+                <Stack.Screen name={Constants.Screen.Stack.Main} component={MainTabs} />
+            </Stack.Navigator>
+        </NavigationContainer>
+    );
+};
+
+export default AppNavigator; 
