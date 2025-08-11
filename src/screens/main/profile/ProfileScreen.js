@@ -8,9 +8,15 @@ import {
     ScrollView,
     Alert,
     Switch,
+    Platform,
+    FlatList,
 } from 'react-native';
 import { theme } from '../../../constants/theme';
 import ScreenContainer from '../../../components/common/ScreenContainer';
+import IconAsset from '../../../assets/icons/IconAsset';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import AppImage from '../../../components/common/AppImage';
+import ImageAsset from '../../../assets/images/ImageAsset';
 
 const ProfileScreen = ({ navigation }) => {
     const [notificationsEnabled, setNotificationsEnabled] = useState(true);
@@ -18,91 +24,41 @@ const ProfileScreen = ({ navigation }) => {
     const [darkModeEnabled, setDarkModeEnabled] = useState(false);
 
     const userProfile = {
-        name: 'John Doe',
-        email: 'john.doe@example.com',
-        phone: '+1 (555) 123-4567',
-        avatar: '👤',
-        memberSince: 'January 2024',
-        totalPoints: 1250,
-        level: 'Gold',
+        name: 'Thomas Monoghan',
+        email: 't.monoghan@gmail.com',
     };
 
     const menuItems = [
         {
-            id: 'account',
-            title: 'Account Settings',
-            subtitle: 'Manage your account information',
-            icon: '⚙️',
-            action: 'navigate',
+            id: 'personal-info',
+            title: 'Personal Information',
         },
         {
-            id: 'security',
-            title: 'Security & Privacy',
-            subtitle: 'Password, 2FA, and privacy settings',
-            icon: '🔒',
-            action: 'navigate',
+            id: 'favorites-filters',
+            title: 'Favorites Filters',
         },
         {
-            id: 'notifications',
-            title: 'Notifications',
-            subtitle: 'Push notifications and email preferences',
-            icon: '🔔',
-            action: 'toggle',
-            value: notificationsEnabled,
-            onValueChange: setNotificationsEnabled,
+            id: 'sign-in-options',
+            title: 'Sign in options',
         },
         {
-            id: 'location',
-            title: 'Location Services',
-            subtitle: 'Enable location-based features',
-            icon: '📍',
-            action: 'toggle',
-            value: locationEnabled,
-            onValueChange: setLocationEnabled,
-        },
-        {
-            id: 'appearance',
-            title: 'Appearance',
-            subtitle: 'Dark mode and theme settings',
-            icon: '🎨',
-            action: 'toggle',
-            value: darkModeEnabled,
-            onValueChange: setDarkModeEnabled,
-        },
-        {
-            id: 'help',
-            title: 'Help & Support',
-            subtitle: 'FAQ, contact support, and feedback',
-            icon: '❓',
-            action: 'navigate',
-        },
-        {
-            id: 'about',
-            title: 'About',
-            subtitle: 'App version and legal information',
-            icon: 'ℹ️',
-            action: 'navigate',
+            id: 'notifications-settings',
+            title: 'Notifications Settings',
         },
     ];
 
-    const quickActions = [
+    const aboutItems = [
         {
-            id: 'edit',
-            title: 'Edit Profile',
-            icon: '✏️',
-            action: () => Alert.alert('Edit Profile', 'Edit profile functionality'),
+            id: 'faq-contact-us',
+            title: 'FAQ / Contact Us',
         },
         {
-            id: 'share',
-            title: 'Share App',
-            icon: '📤',
-            action: () => Alert.alert('Share App', 'Share app functionality'),
+            id: 'terms-of-service',
+            title: 'Terms of Service',
         },
         {
-            id: 'rate',
-            title: 'Rate App',
-            icon: '⭐',
-            action: () => Alert.alert('Rate App', 'Rate app functionality'),
+            id: 'privacy-policy',
+            title: 'Privacy Policy',
         },
     ];
 
@@ -129,76 +85,40 @@ const ProfileScreen = ({ navigation }) => {
 
     const renderProfileHeader = () => (
         <View style={styles.profileHeader}>
-            <View style={styles.avatarContainer}>
-                <Text style={styles.avatar}>{userProfile.avatar}</Text>
-                <View style={styles.levelBadge}>
-                    <Text style={styles.levelBadgeText}>{userProfile.level}</Text>
-                </View>
+            <View style={styles.avatarImageContainer}>
+                <AppImage source={ImageAsset.profileImage} style={styles.avatarImage} />
             </View>
 
             <View style={styles.profileInfo}>
                 <Text style={styles.profileName}>{userProfile.name}</Text>
                 <Text style={styles.profileEmail}>{userProfile.email}</Text>
-                <Text style={styles.profilePhone}>{userProfile.phone}</Text>
-                <Text style={styles.memberSince}>Member since {userProfile.memberSince}</Text>
             </View>
         </View>
     );
 
-    const renderQuickActions = () => (
-        <View style={styles.quickActionsContainer}>
-            <Text style={styles.sectionTitle}>Quick Actions</Text>
-            <View style={styles.quickActionsGrid}>
-                {quickActions.map((action) => (
-                    <TouchableOpacity
-                        key={action.id}
-                        style={styles.quickActionButton}
-                        onPress={action.action}
-                        activeOpacity={0.8}
-                    >
-                        <Text style={styles.quickActionIcon}>{action.icon}</Text>
-                        <Text style={styles.quickActionTitle}>{action.title}</Text>
-                    </TouchableOpacity>
-                ))}
-            </View>
-        </View>
-    );
-
-    const renderMenuItem = (item) => (
-        <TouchableOpacity
-            key={item.id}
-            style={styles.menuItem}
-            onPress={() => {
-                if (item.action === 'navigate') {
-                    Alert.alert(item.title, `${item.title} functionality`);
-                }
-            }}
-            activeOpacity={0.8}
-        >
-            <View style={styles.menuItemLeft}>
-                <Text style={styles.menuItemIcon}>{item.icon}</Text>
-                <View style={styles.menuItemContent}>
-                    <Text style={styles.menuItemTitle}>{item.title}</Text>
-                    <Text style={styles.menuItemSubtitle}>{item.subtitle}</Text>
-                </View>
-            </View>
-
-            {item.action === 'toggle' ? (
-                <Switch
-                    value={item.value}
-                    onValueChange={item.onValueChange}
-                    trackColor={{
-                        false: theme.colors.neutral[300],
-                        true: theme.colors.primary[300],
-                    }}
-                    thumbColor={
-                        item.value ? theme.colors.primary[500] : theme.colors.neutral[400]
+    const renderMenuItem = ({ item, isLastItem }) => (
+        <View>
+            <TouchableOpacity
+                key={item.id}
+                style={styles.menuItem}
+                onPress={() => {
+                    if (item.action === 'navigate') {
+                        Alert.alert(item.title, `${item.title} functionality`);
                     }
-                />
-            ) : (
-                <Text style={styles.menuItemArrow}>›</Text>
-            )}
-        </TouchableOpacity>
+                }}
+                activeOpacity={0.8}
+            >
+                <View style={styles.menuItemLeft}>
+                    <Text style={styles.menuItemTitle}>{item.title}</Text>
+                </View>
+
+
+                <IconAsset.arrowRightIcon width={20} height={20} />
+
+            </TouchableOpacity>
+            {!isLastItem && <View style={styles.menuItemSeparator} />}
+        </View>
+
     );
 
     const renderStats = () => (
@@ -219,28 +139,15 @@ const ProfileScreen = ({ navigation }) => {
     );
 
     return (
-        <ScreenContainer{...ScreenContainer.presets.full}
-            paddingCustom={{
-                paddingHorizontal: theme.spacing.lg,
-                paddingTop: theme.spacing.xxxl,
-                paddingBottom: theme.spacing.md,
-            }}>
-            <Text>Profile Screen</Text>
-        </ScreenContainer>
-    )
-
-    return (
-        <View style={styles.container}>
-            <StatusBar
-                barStyle="dark-content"
-                backgroundColor={theme.colors.background.primary}
-            />
+        <SafeAreaView style={styles.container}>
 
             {/* Header */}
             <View style={styles.header}>
-                <Text style={styles.headerTitle}>Profile</Text>
-                <TouchableOpacity style={styles.settingsButton}>
-                    <Text style={styles.settingsButtonText}>⚙️</Text>
+                <View style={styles.headerTitleContainer}>
+                    <Text style={styles.headerTitle}>My profile</Text>
+                </View>
+                <TouchableOpacity style={styles.newProfileButton}>
+                    <IconAsset.newProfileIcon width={24} height={24} />
                 </TouchableOpacity>
             </View>
 
@@ -251,33 +158,25 @@ const ProfileScreen = ({ navigation }) => {
                 {/* Profile Header */}
                 {renderProfileHeader()}
 
-                {/* Stats */}
-                {renderStats()}
-
-                {/* Quick Actions */}
-                {renderQuickActions()}
-
                 {/* Menu Items */}
                 <View style={styles.menuContainer}>
-                    <Text style={styles.sectionTitle}>Settings</Text>
-                    {menuItems.map(renderMenuItem)}
+                    <Text style={styles.sectionTitle}>Profile</Text>
+                    {menuItems.map((item, index) => {
+                        let isLastItem = index === menuItems.length - 1;
+                        return renderMenuItem({ item, isLastItem })
+                    })}
                 </View>
 
-                {/* Logout Button */}
-                <TouchableOpacity
-                    style={styles.logoutButton}
-                    onPress={handleLogout}
-                    activeOpacity={0.8}
-                >
-                    <Text style={styles.logoutButtonText}>Logout</Text>
-                </TouchableOpacity>
-
-                {/* App Version */}
-                <View style={styles.versionContainer}>
-                    <Text style={styles.versionText}>RNFramework v1.0.0</Text>
+                {/* About Items */}
+                <View style={styles.menuContainer}>
+                    <Text style={styles.sectionTitle}>About</Text>
+                    {aboutItems.map((item, index) => {
+                        let isLastItem = index === aboutItems.length - 1;
+                        return renderMenuItem({ item, isLastItem })
+                    })}
                 </View>
             </ScrollView>
-        </View>
+        </SafeAreaView>
     );
 };
 
@@ -287,96 +186,97 @@ const styles = StyleSheet.create({
         backgroundColor: theme.colors.background.primary,
     },
     header: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
+        alignItems: 'flex-end',
+        justifyContent: 'center',
         paddingHorizontal: theme.spacing.lg,
-        paddingTop: theme.spacing.xxxl,
-        paddingBottom: theme.spacing.md,
+        height: theme.responsive.headerHeight(),
     },
-    headerTitle: {
-        ...theme.typography.h2,
-        color: theme.colors.text.primary,
-    },
-    settingsButton: {
-        width: 40,
-        height: 40,
-        borderRadius: theme.borderRadius.round,
-        backgroundColor: theme.colors.neutral[100],
+    headerTitleContainer: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        top: 0,
+        bottom: 0,
         justifyContent: 'center',
         alignItems: 'center',
     },
-    settingsButtonText: {
-        fontSize: 18,
+    headerTitle: {
+        ...theme.typography.h4,
+        color: theme.colors.text.primary,
+        fontWeight: theme.fontWeight.bold,
+        textAlign: 'center',
+    },
+    newProfileButton: {
+        width: theme.responsive.size(50),
+        height: theme.responsive.size(50),
+        borderRadius: theme.borderRadius.lg,
+        backgroundColor: theme.colors.background.white,
+        justifyContent: 'center',
+        alignItems: 'center',
+        ...theme.shadows.large,
     },
     scrollContent: {
         paddingHorizontal: theme.spacing.lg,
         paddingBottom: theme.spacing.xl,
     },
     profileHeader: {
-        flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: theme.colors.background.primary,
         borderRadius: theme.borderRadius.lg,
-        padding: theme.spacing.lg,
-        marginBottom: theme.spacing.lg,
-        borderWidth: 1,
-        borderColor: theme.colors.border.light,
-        ...theme.shadows.ios.small,
+        paddingVertical: theme.spacing.sm,
     },
     avatarContainer: {
         position: 'relative',
-        marginRight: theme.spacing.lg,
     },
-    avatar: {
-        fontSize: 64,
-        width: 80,
-        height: 80,
+    avatarImageContainer: {
+        width: theme.responsive.size(110),
+        height: theme.responsive.size(110),
+        borderRadius: theme.borderRadius.full,
+        borderWidth: 2,
+        borderColor: theme.colors.primary[500],
+        ...theme.shadows.small,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    avatarImage: {
+        width: theme.responsive.size(110) - theme.responsive.size(8),
+        height: theme.responsive.size(110) - theme.responsive.size(8),
         borderRadius: theme.borderRadius.round,
         backgroundColor: theme.colors.primary[100],
-        textAlign: 'center',
-        lineHeight: 80,
-    },
-    levelBadge: {
-        position: 'absolute',
-        bottom: -5,
-        right: -5,
-        backgroundColor: theme.colors.warning[500],
-        borderRadius: theme.borderRadius.round,
-        paddingHorizontal: theme.spacing.sm,
-        paddingVertical: theme.spacing.xs,
-    },
-    levelBadgeText: {
-        ...theme.typography.captionSmall,
-        color: theme.colors.background.primary,
-        fontWeight: theme.fontWeight.semiBold,
     },
     profileInfo: {
         flex: 1,
+        justifyContent: 'center',
+        marginTop: theme.spacing.sm,
+        marginBottom: theme.spacing.md,
     },
     profileName: {
         ...theme.typography.h3,
         color: theme.colors.text.primary,
         marginBottom: theme.spacing.xs,
+        textAlign: 'center',
     },
     profileEmail: {
         ...theme.typography.bodyMedium,
         color: theme.colors.text.secondary,
         marginBottom: theme.spacing.xs,
+        textAlign: 'center',
     },
     profilePhone: {
         ...theme.typography.bodyMedium,
         color: theme.colors.text.secondary,
         marginBottom: theme.spacing.xs,
+        textAlign: 'center',
     },
     memberSince: {
         ...theme.typography.captionMedium,
         color: theme.colors.text.tertiary,
     },
     statsContainer: {
-        flexDirection: 'row',
+        flexDirection: theme.responsive.isSmall() ? 'column' : 'row',
         justifyContent: 'space-between',
         marginBottom: theme.spacing.lg,
+        gap: theme.responsive.isSmall() ? theme.spacing.sm : 0,
     },
     statCard: {
         flex: 1,
@@ -387,7 +287,7 @@ const styles = StyleSheet.create({
         marginHorizontal: theme.spacing.xs,
         borderWidth: 1,
         borderColor: theme.colors.border.light,
-        ...theme.shadows.ios.small,
+        ...theme.shadows.small,
     },
     statValue: {
         ...theme.typography.h4,
@@ -406,24 +306,27 @@ const styles = StyleSheet.create({
         ...theme.typography.h4,
         color: theme.colors.text.primary,
         marginBottom: theme.spacing.md,
+        fontWeight: theme.fontWeight.bold,
     },
     quickActionsGrid: {
-        flexDirection: 'row',
+        flexDirection: theme.responsive.isSmall() ? 'column' : 'row',
         justifyContent: 'space-between',
+        gap: theme.responsive.isSmall() ? theme.spacing.sm : 0,
     },
     quickActionButton: {
-        flex: 1,
+        flex: theme.responsive.isSmall() ? 0 : 1,
         backgroundColor: theme.colors.background.primary,
         borderRadius: theme.borderRadius.md,
         padding: theme.spacing.lg,
         alignItems: 'center',
-        marginHorizontal: theme.spacing.xs,
+        marginHorizontal: theme.responsive.isSmall() ? 0 : theme.spacing.xs,
         borderWidth: 1,
         borderColor: theme.colors.border.light,
-        ...theme.shadows.ios.small,
+        minHeight: theme.responsive.height(80),
+        ...theme.shadows.small,
     },
     quickActionIcon: {
-        fontSize: 24,
+        fontSize: theme.responsive.iconSize('large'),
         marginBottom: theme.spacing.sm,
     },
     quickActionTitle: {
@@ -432,19 +335,25 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     menuContainer: {
-        marginBottom: theme.spacing.xl,
+        backgroundColor: theme.colors.background.white,
+        borderRadius: theme.borderRadius.md,
+        paddingTop: theme.spacing.lg,
+        paddingBottom: theme.spacing.sm,
+        paddingHorizontal: theme.spacing.md,
+        marginBottom: theme.spacing.md,
+        ...theme.shadows.small,
+    },
+    menuItemSeparator: {
+        height: 1,
+        backgroundColor: theme.colors.background.tertiary,
+        marginVertical: theme.spacing.xs,
     },
     menuItem: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        backgroundColor: theme.colors.background.primary,
-        borderRadius: theme.borderRadius.md,
-        padding: theme.spacing.lg,
-        marginBottom: theme.spacing.sm,
-        borderWidth: 1,
         borderColor: theme.colors.border.light,
-        ...theme.shadows.ios.small,
+        paddingVertical: theme.spacing.md,
     },
     menuItemLeft: {
         flexDirection: 'row',
@@ -452,23 +361,24 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     menuItemIcon: {
-        fontSize: 20,
+        fontSize: theme.responsive.iconSize('large'),
         marginRight: theme.spacing.md,
     },
     menuItemContent: {
         flex: 1,
     },
     menuItemTitle: {
-        ...theme.typography.h5,
+        ...theme.typography.bodyLarge,
         color: theme.colors.text.primary,
         marginBottom: theme.spacing.xs,
+        fontWeight: theme.fontWeight.semiBold,
     },
     menuItemSubtitle: {
         ...theme.typography.bodySmall,
         color: theme.colors.text.secondary,
     },
     menuItemArrow: {
-        ...theme.typography.h4,
+        ...theme.typography.bodyLarge,
         color: theme.colors.text.tertiary,
     },
     logoutButton: {
@@ -477,7 +387,7 @@ const styles = StyleSheet.create({
         paddingVertical: theme.spacing.md,
         alignItems: 'center',
         marginBottom: theme.spacing.lg,
-        ...theme.shadows.ios.small,
+        ...theme.shadows.small,
     },
     logoutButtonText: {
         ...theme.typography.buttonLarge,

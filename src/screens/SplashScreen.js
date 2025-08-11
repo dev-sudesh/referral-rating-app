@@ -26,7 +26,7 @@ const SplashScreen = ({ navigation }) => {
     }, [navigation]);
 
     return (
-        <ScreenContainer {...ScreenContainer.presets.full}>
+        <ScreenContainer {...ScreenContainer.presets.full} safeArea={false}>
             <View style={styles.container}>
                 <View style={styles.logoContainer}>
                     <View style={styles.logoPlaceholder}>
@@ -35,8 +35,8 @@ const SplashScreen = ({ navigation }) => {
                             localKey="logo-full"
                             source={ImageAsset.logos.logoFull}
                             style={styles.logoImage}
-                            width={250}
-                            height={250}
+                            width={theme.responsive.size(250)}
+                            height={theme.responsive.size(250)}
                             borderRadius={theme.borderRadius.lg}
                             showLoadingIndicator={false}
                             showErrorPlaceholder={false}
@@ -55,26 +55,25 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'flex-end',
         alignItems: 'center',
-        paddingVertical: theme.spacing.xxxl,
+        paddingVertical: theme.responsive.isSmall() ? theme.spacing.xxl : theme.spacing.xxxl,
     },
     logoContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
         position: 'absolute',
-        top: 24,
+        top: theme.responsive.height(24),
         left: 0,
         right: 0,
         bottom: 0,
     },
     logoPlaceholder: {
-        width: 250,
-        height: 250,
+        width: theme.responsive.size(250),
+        height: theme.responsive.size(250),
         borderRadius: theme.borderRadius.lg,
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: theme.spacing.lg,
-        ...theme.shadows.ios.medium,
     },
     logoText: {
         ...theme.typography.h3,
@@ -96,8 +95,8 @@ const styles = StyleSheet.create({
         marginBottom: theme.spacing.xxl,
     },
     loadingDot: {
-        width: 12,
-        height: 12,
+        width: theme.responsive.size(12),
+        height: theme.responsive.size(12),
         borderRadius: theme.borderRadius.round,
         backgroundColor: theme.colors.primary[500],
         marginHorizontal: theme.spacing.xs,
@@ -110,8 +109,8 @@ const styles = StyleSheet.create({
         opacity: 1,
     },
     logoImage: {
-        width: 250,
-        height: 250,
+        width: theme.responsive.size(250),
+        height: theme.responsive.size(250),
         borderRadius: theme.borderRadius.lg,
     },
 });

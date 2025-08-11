@@ -286,14 +286,14 @@ const styles = StyleSheet.create({
         borderColor: 'transparent',
         borderRadius: theme.borderRadius.md,
         backgroundColor: theme.colors.background.white,
-        minHeight: 48,
+        minHeight: theme.responsive.inputHeight(),
         borderColor: theme.colors.border.light,
-        ...theme.shadows[Platform.OS].medium,
+        ...theme.shadows.medium,
     },
     inputContainerFocused: {
         borderColor: theme.colors.primary[500],
         borderWidth: 2,
-        ...theme.shadows.ios.small,
+        ...theme.shadows.small,
     },
     inputContainerError: {
         borderColor: theme.colors.error[500],
@@ -308,8 +308,7 @@ const styles = StyleSheet.create({
         paddingVertical: theme.spacing.md,
         ...theme.typography.bodyMedium,
         color: theme.colors.text.primary,
-        fontSize: 16,
-        lineHeight: 20,
+        minHeight: theme.responsive.inputHeight(),
     },
     inputFocused: {
         color: theme.colors.text.primary,

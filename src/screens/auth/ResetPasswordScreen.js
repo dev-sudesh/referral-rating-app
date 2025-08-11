@@ -176,8 +176,8 @@ const styles = StyleSheet.create({
         paddingBottom: theme.spacing.xl,
     },
     backButton: {
-        width: 40,
-        height: 40,
+        width: theme.responsive.size(40),
+        height: theme.responsive.size(40),
         borderRadius: theme.borderRadius.round,
         backgroundColor: theme.colors.neutral[100],
         justifyContent: 'center',
@@ -199,10 +199,10 @@ const styles = StyleSheet.create({
         lineHeight: 24,
     },
     form: {
-        marginBottom: theme.spacing.xl,
+        marginBottom: theme.responsive.isSmall() ? theme.spacing.lg : theme.spacing.xl,
     },
     inputContainer: {
-        marginBottom: theme.spacing.xl,
+        marginBottom: theme.responsive.isSmall() ? theme.spacing.lg : theme.spacing.xl,
     },
     inputLabel: {
         ...theme.typography.labelLarge,
@@ -215,6 +215,7 @@ const styles = StyleSheet.create({
         borderRadius: theme.borderRadius.md,
         paddingHorizontal: theme.spacing.md,
         paddingVertical: theme.spacing.md,
+        minHeight: theme.responsive.inputHeight(),
         ...theme.typography.bodyMedium,
         color: theme.colors.text.primary,
         backgroundColor: theme.colors.background.primary,
@@ -225,7 +226,7 @@ const styles = StyleSheet.create({
         paddingVertical: theme.spacing.md,
         alignItems: 'center',
         marginBottom: theme.spacing.lg,
-        ...theme.shadows.ios.small,
+        ...theme.shadows.small,
     },
     resetButtonDisabled: {
         opacity: 0.6,

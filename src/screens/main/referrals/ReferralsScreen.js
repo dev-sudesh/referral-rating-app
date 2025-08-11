@@ -281,7 +281,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         paddingHorizontal: theme.spacing.lg,
-        paddingTop: theme.spacing.xxxl,
+        paddingTop: theme.responsive.isSmall() ? theme.spacing.xxl : theme.spacing.xxxl,
         paddingBottom: theme.spacing.md,
     },
     headerTitle: {
@@ -289,8 +289,8 @@ const styles = StyleSheet.create({
         color: theme.colors.text.primary,
     },
     helpButton: {
-        width: 32,
-        height: 32,
+        width: theme.responsive.size(32),
+        height: theme.responsive.size(32),
         borderRadius: theme.borderRadius.round,
         backgroundColor: theme.colors.neutral[100],
         justifyContent: 'center',
@@ -319,7 +319,7 @@ const styles = StyleSheet.create({
         marginHorizontal: theme.spacing.xs,
         borderWidth: 1,
         borderColor: theme.colors.border.light,
-        ...theme.shadows.ios.small,
+        ...theme.shadows.small,
     },
     statValue: {
         ...theme.typography.h3,
@@ -378,7 +378,7 @@ const styles = StyleSheet.create({
         borderRadius: theme.borderRadius.md,
         paddingVertical: theme.spacing.md,
         alignItems: 'center',
-        ...theme.shadows.ios.small,
+        ...theme.shadows.small,
     },
     shareButtonText: {
         ...theme.typography.buttonLarge,
@@ -399,7 +399,7 @@ const styles = StyleSheet.create({
         marginBottom: theme.spacing.md,
         borderWidth: 1,
         borderColor: theme.colors.border.light,
-        ...theme.shadows.ios.small,
+        ...theme.shadows.small,
     },
     historyHeader: {
         flexDirection: 'row',

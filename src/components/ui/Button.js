@@ -83,23 +83,23 @@ const styles = StyleSheet.create({
         borderRadius: theme.borderRadius.md,
         alignItems: 'center',
         justifyContent: 'center',
-        ...theme.shadows.ios.small,
+        ...theme.shadows.small,
     },
     // Size variants
     small: {
         paddingHorizontal: theme.spacing.md,
         paddingVertical: theme.spacing.sm,
-        minHeight: 36,
+        minHeight: theme.responsive.buttonHeight('small'),
     },
     medium: {
         paddingHorizontal: theme.spacing.lg,
         paddingVertical: theme.spacing.md,
-        minHeight: 48,
+        minHeight: theme.responsive.buttonHeight('medium'),
     },
     large: {
         paddingHorizontal: theme.spacing.xl,
         paddingVertical: theme.spacing.lg,
-        minHeight: 56,
+        minHeight: theme.responsive.buttonHeight('large'),
     },
     // Primary variant
     primary: {

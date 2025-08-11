@@ -1,26 +1,75 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
     View,
     Text,
     StyleSheet,
     FlatList,
-    Dimensions,
     TouchableOpacity,
     StatusBar,
+    Platform,
 } from 'react-native';
 import { theme } from '../../constants/theme';
 import Constants from '../../constants/data';
-
-const { width, height } = Dimensions.get('window');
+import ScreenContainer from '../../components/common/ScreenContainer';
 
 const OnboardingScreen = ({ navigation }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
+    const [isAutoScrollActive, setIsAutoScrollActive] = useState(true);
     const flatListRef = useRef(null);
+    const autoScrollTimer = useRef(null);
+
+    // Auto scroll functionality
+    useEffect(() => {
+        const startAutoScroll = () => {
+            if (autoScrollTimer.current) {
+                clearInterval(autoScrollTimer.current);
+            }
+
+            autoScrollTimer.current = setInterval(() => {
+                if (isAutoScrollActive) {
+                    setCurrentIndex(prevIndex => {
+                        const nextIndex = prevIndex + 1;
+                        if (nextIndex < Constants.onboarding.length) {
+                            flatListRef.current?.scrollToIndex({
+                                index: nextIndex,
+                                animated: true,
+                            });
+                            return nextIndex;
+                        } else {
+                            if (autoScrollTimer.current) {
+                                clearInterval(autoScrollTimer.current);
+                            }
+                            return Constants.onboarding.length - 1;
+                        }
+                    });
+                }
+            }, 10000); // 10 seconds
+        };
+
+        if (isAutoScrollActive) {
+            startAutoScroll();
+        }
+
+        return () => {
+            if (autoScrollTimer.current) {
+                clearInterval(autoScrollTimer.current);
+            }
+        };
+    }, [isAutoScrollActive, navigation]);
+
+    // Pause auto scroll when component unmounts or navigation happens
+    useEffect(() => {
+        return () => {
+            if (autoScrollTimer.current) {
+                clearInterval(autoScrollTimer.current);
+            }
+        };
+    }, []);
 
     const renderOnboardingItem = ({ item, index }) => (
         <View style={styles.slide}>
             <View style={styles.iconContainer}>
-                <item.icon />
+                <item.icon width={'100%'} height={'100%'} style={styles.icon} />
             </View>
 
             <View style={styles.contentContainer}>
@@ -32,6 +81,9 @@ const OnboardingScreen = ({ navigation }) => {
     );
 
     const handleNext = () => {
+        // Pause auto scroll when user manually navigates
+        setIsAutoScrollActive(false);
+
         if (currentIndex < Constants.onboarding.length - 1) {
             flatListRef.current?.scrollToIndex({
                 index: currentIndex + 1,
@@ -43,6 +95,8 @@ const OnboardingScreen = ({ navigation }) => {
     };
 
     const handleSkip = () => {
+        // Pause auto scroll when user skips
+        setIsAutoScrollActive(false);
         navigation.replace(Constants.Screen.Stack.Auth);
     };
 
@@ -67,95 +121,119 @@ const OnboardingScreen = ({ navigation }) => {
     );
 
     return (
-        <View style={styles.container}>
-            <StatusBar
-                barStyle="dark-content"
-                backgroundColor={theme.colors.background.primary}
-            />
+        <ScreenContainer {...ScreenContainer.presets.default}
+            paddingCustom={{
+                paddingTop: 0,
+                paddingBottom: 0,
+                paddingLeft: 0,
+                paddingRight: 0,
+            }}>
 
-            {/* Skip Button */}
-            <TouchableOpacity style={styles.skipButton} onPress={handleSkip}>
-                <Text style={styles.skipText}>Skip</Text>
-            </TouchableOpacity>
+            <View style={styles.container}>
+                {/* Skip Button */}
+                <TouchableOpacity style={styles.skipButton} onPress={handleSkip}>
+                    <Text style={styles.skipText}>Skip</Text>
+                </TouchableOpacity>
 
-            {/* Onboarding Slides */}
-            <FlatList
-                ref={flatListRef}
-                data={Constants.onboarding}
-                renderItem={renderOnboardingItem}
-                keyExtractor={(item) => item.id}
-                horizontal
-                pagingEnabled
-                showsHorizontalScrollIndicator={false}
-                onViewableItemsChanged={handleViewableItemsChanged}
-                viewabilityConfig={{ itemVisiblePercentThreshold: 50 }}
-                style={styles.flatList}
-                contentContainerStyle={styles.flatListContent}
-            />
+                {/* Onboarding Slides */}
+                <View style={styles.flatListContainer}>
+                    <FlatList
+                        ref={flatListRef}
+                        data={Constants.onboarding}
+                        renderItem={renderOnboardingItem}
+                        keyExtractor={(item) => item.id}
+                        horizontal
+                        pagingEnabled
+                        showsHorizontalScrollIndicator={false}
+                        onViewableItemsChanged={handleViewableItemsChanged}
+                        viewabilityConfig={{ itemVisiblePercentThreshold: 50 }}
+                        onScrollBeginDrag={() => setIsAutoScrollActive(false)}
+                        style={styles.flatList}
+                        contentContainerStyle={styles.flatListContent}
+                    />
+                </View>
 
-            <View style={styles.footerContainer}>
-                {/* Pagination */}
-                {renderPagination()}
+                <View style={styles.footerContainer}>
+                    {/* Pagination */}
+                    {renderPagination()}
 
-                {/* Navigation Buttons */}
-                <View style={styles.buttonContainer}>
-                    <TouchableOpacity
-                        style={styles.nextButton}
-                        onPress={handleNext}
-                        activeOpacity={0.8}
-                    >
-                        <Text style={styles.nextButtonText}>
-                            {currentIndex === Constants.onboarding.length - 1 ? 'Get Started' : 'Next'}
-                        </Text>
-                    </TouchableOpacity>
+                    {/* Navigation Buttons */}
+                    <View style={styles.buttonContainer}>
+                        <TouchableOpacity
+                            style={styles.nextButton}
+                            onPress={handleNext}
+                            activeOpacity={0.8}
+                        >
+                            <Text style={styles.nextButtonText}>
+                                {currentIndex === Constants.onboarding.length - 1 ? 'Get Started' : 'Next'}
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
                 </View>
             </View>
-        </View>
+        </ScreenContainer>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        flexDirection: 'column',
         backgroundColor: theme.colors.background.primary,
+    },
+    viewContainer: {
+        flex: 1,
+        flexDirection: 'column',
     },
     skipButton: {
         position: 'absolute',
-        top: 60,
+        top: theme.responsive.height(20),
         right: theme.spacing.md,
         zIndex: 1,
         padding: theme.spacing.sm,
+        minHeight: theme.responsive.size(44),
+        minWidth: theme.responsive.size(44),
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     skipText: {
         ...theme.typography.bodyMedium,
         color: theme.colors.text.secondary,
     },
     flatList: {
-        flex: 1,
+        height: '100%',
+    },
+    flatListContainer: {
+        flex: 2,
     },
     flatListContent: {
         flexGrow: 1,
     },
     slide: {
-        width,
-        justifyContent: 'flex-end',
+        flex: 1,
+        width: theme.responsive.screen().width,
         alignItems: 'center',
     },
     iconContainer: {
+        flex: 1,
+        width: '100%',
+        height: '100%',
         justifyContent: 'center',
         alignItems: 'center',
-        marginBottom: theme.spacing.xl,
     },
     icon: {
-        fontSize: 60,
+        flex: 1,
+        width: '100%',
+        height: '100%',
     },
     contentContainer: {
-        width,
-        height: height * 0.2,
+        width: theme.responsive.screen().width,
+        height: theme.responsive.height(theme.responsive.screen().height * 0.14),
+        minHeight: theme.responsive.height(100),
         alignItems: 'center',
         justifyContent: 'center',
         backgroundColor: theme.colors.background.white,
-        paddingHorizontal: width * 0.2,
+        paddingHorizontal: theme.responsive.width(theme.responsive.screen().width * 0.2),
     },
     title: {
         ...theme.typography.h3,
@@ -176,48 +254,48 @@ const styles = StyleSheet.create({
         lineHeight: 24,
     },
     paginationContainer: {
-        width,
+        width: theme.responsive.screen().width,
         flexDirection: 'row',
         justifyContent: 'center',
         alignItems: 'center',
-        paddingVertical: theme.spacing.lg,
-        marginBottom: theme.spacing.xxl,
         backgroundColor: theme.colors.background.white,
+        marginBottom: theme.responsive.isSmall() ? theme.spacing.xxl : theme.spacing.xxxl,
+        marginTop: theme.spacing.md,
     },
     paginationDot: {
-        width: 8,
-        height: 8,
+        width: theme.responsive.size(10),
+        height: theme.responsive.size(10),
         borderRadius: theme.borderRadius.round,
         backgroundColor: theme.colors.tertiary[100],
         marginHorizontal: theme.spacing.xs,
     },
     paginationDotActive: {
         backgroundColor: theme.colors.tertiary[500],
-        width: 24,
+        width: theme.responsive.size(20),
     },
     buttonContainer: {
-        width,
-        paddingHorizontal: theme.spacing.xxxl,
-        paddingBottom: theme.spacing.xxl,
+        width: theme.responsive.screen().width,
+        paddingHorizontal: theme.responsive.isSmall() ? theme.spacing.lg : theme.spacing.xxl,
         backgroundColor: theme.colors.background.white,
     },
     nextButton: {
         backgroundColor: theme.colors.primary[500],
-        borderRadius: theme.borderRadius.md,
-        paddingVertical: theme.spacing.md,
+        borderRadius: theme.borderRadius.xl,
+        paddingVertical: theme.spacing.lg,
         alignItems: 'center',
-        ...theme.shadows.ios.small,
+        minHeight: theme.responsive.buttonHeight('large'),
+        ...theme.shadows.small,
     },
     nextButtonText: {
         ...theme.typography.buttonLarge,
         color: theme.colors.background.primary,
     },
     footerContainer: {
-        width,
-        justifyContent: 'center',
+        height: theme.responsive.height(theme.responsive.screen().height * 0.22),
+        minHeight: theme.responsive.height(160),
+        width: theme.responsive.screen().width,
         alignItems: 'center',
         paddingHorizontal: theme.spacing.lg,
-        paddingBottom: theme.spacing.lg,
         backgroundColor: theme.colors.background.white,
     },
 });

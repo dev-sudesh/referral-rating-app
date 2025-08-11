@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
         paddingVertical: theme.spacing.md,
         alignItems: 'center',
         marginTop: theme.spacing.lg,
-        ...theme.shadows.ios.small,
+        ...theme.shadows.small,
     },
     submitButtonText: {
         ...theme.typography.buttonLarge,

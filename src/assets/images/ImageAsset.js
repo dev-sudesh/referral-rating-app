@@ -11,6 +11,10 @@ const ImageAsset = {
         intro2: Intro2,
         intro3: Intro3,
     },
+    places: {
+        place01: require('../../assets/images/others/place-01.png'),
+    },
+    profileImage: require('../../assets/images/others/profile-image.png'),
 }
 
 

@@ -1,28 +1,33 @@
 export const fontFamily = {
-    // Primary Font Family
+    // Primary Font Family - Inter
     primary: {
-        regular: 'Inter-Regular',
-        medium: 'Inter-Medium',
-        semiBold: 'Inter-SemiBold',
-        bold: 'Inter-Bold',
-        light: 'Inter-Light',
-        thin: 'Inter-Thin',
+        thin: 'Inter_28pt-Thin',
+        extraLight: 'Inter_28pt-ExtraLight',
+        light: 'Inter_28pt-Light',
+        regular: 'Inter_28pt-Regular',
+        medium: 'Inter_28pt-Medium',
+        semiBold: 'Inter_28pt-SemiBold',
+        bold: 'Inter_28pt-Bold',
+        extraBold: 'Inter_28pt-ExtraBold',
+        black: 'Inter_28pt-Black',
     },
 
-    // Secondary Font Family (for headings)
+    // Secondary Font Family (for headings) - Inter
     secondary: {
-        regular: 'Poppins-Regular',
-        medium: 'Poppins-Medium',
-        semiBold: 'Poppins-SemiBold',
-        bold: 'Poppins-Bold',
-        light: 'Poppins-Light',
+        light: 'Inter_28pt-Light',
+        regular: 'Inter_28pt-Regular',
+        medium: 'Inter_28pt-Medium',
+        semiBold: 'Inter_28pt-SemiBold',
+        bold: 'Inter_28pt-Bold',
+        extraBold: 'Inter_28pt-ExtraBold',
+        black: 'Inter_28pt-Black',
     },
 
-    // Monospace Font (for code, numbers)
+    // Monospace Font (for code, numbers) - System fallback
     mono: {
-        regular: 'RobotoMono-Regular',
-        medium: 'RobotoMono-Medium',
-        bold: 'RobotoMono-Bold',
+        regular: 'Courier',
+        medium: 'Courier-Bold',
+        bold: 'Courier-Bold',
     },
 };
 

@@ -209,17 +209,6 @@ const RewardsScreen = ({ navigation }) => {
     );
 
     return (
-        <ScreenContainer {...ScreenContainer.presets.full}
-            paddingCustom={{
-                paddingHorizontal: theme.spacing.lg,
-                paddingTop: theme.spacing.xxxl,
-                paddingBottom: theme.spacing.md,
-            }}>
-            <Text>Rewards Screen</Text>
-        </ScreenContainer>
-    )
-
-    return (
         <View style={styles.container}>
             <StatusBar
                 barStyle="dark-content"
@@ -307,7 +296,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         paddingHorizontal: theme.spacing.lg,
-        paddingTop: theme.spacing.xxxl,
+        paddingTop: theme.responsive.isSmall() ? theme.spacing.xxl : theme.spacing.xxxl,
         paddingBottom: theme.spacing.md,
     },
     headerTitle: {
@@ -317,6 +306,9 @@ const styles = StyleSheet.create({
     historyButton: {
         paddingHorizontal: theme.spacing.md,
         paddingVertical: theme.spacing.sm,
+        minHeight: theme.responsive.size(44),
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     historyButtonText: {
         ...theme.typography.bodyMedium,
@@ -331,7 +323,7 @@ const styles = StyleSheet.create({
         borderRadius: theme.borderRadius.lg,
         padding: theme.spacing.lg,
         marginBottom: theme.spacing.lg,
-        ...theme.shadows.ios.medium,
+        ...theme.shadows.medium,
     },
     pointsHeader: {
         flexDirection: 'row',
@@ -388,7 +380,7 @@ const styles = StyleSheet.create({
     },
     activeTabButton: {
         backgroundColor: theme.colors.background.primary,
-        ...theme.shadows.ios.small,
+        ...theme.shadows.small,
     },
     tabButtonText: {
         ...theme.typography.buttonSmall,
@@ -408,7 +400,7 @@ const styles = StyleSheet.create({
         marginBottom: theme.spacing.md,
         borderWidth: 1,
         borderColor: theme.colors.border.light,
-        ...theme.shadows.ios.small,
+        ...theme.shadows.small,
     },
     rewardHeader: {
         flexDirection: 'row',

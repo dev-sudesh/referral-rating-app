@@ -199,8 +199,8 @@ const styles = StyleSheet.create({
         paddingBottom: theme.spacing.xl,
     },
     backButton: {
-        width: 40,
-        height: 40,
+        width: theme.responsive.size(40),
+        height: theme.responsive.size(40),
         borderRadius: theme.borderRadius.round,
         backgroundColor: theme.colors.neutral[100],
         justifyContent: 'center',
@@ -221,11 +221,11 @@ const styles = StyleSheet.create({
         color: theme.colors.text.secondary,
     },
     form: {
-        marginTop: theme.spacing.xxl,
+        marginTop: theme.responsive.isSmall() ? theme.spacing.xl : theme.spacing.xxl,
         marginBottom: theme.spacing.xl,
     },
     inputContainer: {
-        marginBottom: theme.spacing.lg,
+        marginBottom: theme.responsive.isSmall() ? theme.spacing.md : theme.spacing.lg,
     },
     inputLabel: {
         ...theme.typography.labelLarge,
@@ -238,6 +238,7 @@ const styles = StyleSheet.create({
         borderRadius: theme.borderRadius.md,
         paddingHorizontal: theme.spacing.md,
         paddingVertical: theme.spacing.md,
+        minHeight: theme.responsive.inputHeight(),
         ...theme.typography.bodyMedium,
         color: theme.colors.text.primary,
         backgroundColor: theme.colors.background.primary,
@@ -254,11 +255,16 @@ const styles = StyleSheet.create({
         flex: 1,
         paddingHorizontal: theme.spacing.md,
         paddingVertical: theme.spacing.md,
+        minHeight: theme.responsive.inputHeight(),
         ...theme.typography.bodyMedium,
         color: theme.colors.text.primary,
     },
     eyeButton: {
         padding: theme.spacing.md,
+        minWidth: theme.responsive.size(44),
+        minHeight: theme.responsive.size(44),
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     forgotPasswordButton: {
         alignSelf: 'center',
@@ -275,7 +281,7 @@ const styles = StyleSheet.create({
         borderRadius: theme.borderRadius.md,
         paddingVertical: theme.spacing.md,
         alignItems: 'center',
-        ...theme.shadows.ios.small,
+        ...theme.shadows.small,
     },
     loginButtonDisabled: {
         opacity: 0.6,

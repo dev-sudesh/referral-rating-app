@@ -66,6 +66,7 @@ const Constants = {
             Referrals: 'Referrals',
             Profile: 'Profile',
         },
+        Search: 'Search',
     },
 }
 

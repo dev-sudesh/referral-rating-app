@@ -177,6 +177,10 @@ local.properties
 google-services.json
 GoogleService-Info.plist
 
+# Google Maps API Keys (for security)
+android/app/src/main/res/values/secrets.xml
+ios/ReferralRating/GoogleMapsApiKey.plist
+
 android/app/.cxx
 android/.kotlin
  

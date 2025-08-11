@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View,
     Text,
@@ -7,28 +7,82 @@ import {
     StatusBar,
     Alert,
     Platform,
-    Dimensions,
 } from 'react-native';
 import { theme } from '../../constants/theme';
 import ScreenContainer from '../../components/common/ScreenContainer';
 import AppImage from '../../components/common/AppImage';
 import ImageAsset from '../../assets/images/ImageAsset';
 import Constants from '../../constants/data';
-
-const { height } = Dimensions.get('window');
+import FirebaseAuthService from '../../services/firebase/FirebaseAuthService';
+import FirebaseInitializer from '../../utils/FirebaseInitializer';
 
 const SocialLogicScreen = ({ navigation }) => {
     const [isLoading, setIsLoading] = useState(false);
+
+    useEffect(() => {
+        // Listen for authentication state changes
+        const unsubscribe = FirebaseAuthService.onAuthStateChanged((user) => {
+            if (user) {
+                console.log('User signed in:', user.uid);
+                // Navigate to main screen when user is authenticated
+                navigation.replace(Constants.Screen.Stack.Main);
+            }
+        });
+
+        return unsubscribe; // Clean up the listener when component unmounts
+    }, [navigation]);
 
     const handleSocialLogin = async (provider) => {
         setIsLoading(true);
 
         try {
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            // Ensure Firebase is ready before attempting authentication
+            await FirebaseInitializer.waitForFirebase();
 
-            navigation.replace(Constants.Screen.Stack.Main);
+            let result;
+
+            switch (provider) {
+                case 'google':
+                    result = await FirebaseAuthService.signInWithGoogle();
+                    break;
+                case 'facebook':
+                    if (__DEV__) {
+                        result = {
+                            success: true,
+                            user: { uid: 'test-user-id' },
+                            provider: 'facebook'
+                        };
+                    } else {
+                        result = await FirebaseAuthService.signInWithFacebook();
+                    }
+                    break;
+                case 'apple':
+                    result = await FirebaseAuthService.signInWithApple();
+                    break;
+                case 'twitter':
+                    result = await FirebaseAuthService.signInWithTwitter();
+                    break;
+                default:
+                    throw new Error('Unsupported provider');
+            }
+
+            if (result.success) {
+                // Success will be handled by the auth state listener
+                console.log(`Successfully signed in with ${provider}:`, result.user.uid);
+                navigation.replace(Constants.Screen.Stack.Main);
+            } else {
+                Alert.alert('Sign-In Failed', result.error);
+            }
         } catch (error) {
-            Alert.alert('Error', 'Failed to sign in. Please try again.');
+            console.error('Social login error:', error);
+
+            if (error.message.includes('Firebase not initialized')) {
+                Alert.alert('Configuration Error', 'Firebase is not properly configured. Please check your setup.');
+            } else if (error.message.includes('runtime not ready')) {
+                Alert.alert('Initialization Error', 'Services are still initializing. Please try again in a moment.');
+            } else {
+                Alert.alert('Error', 'Failed to sign in. Please try again.');
+            }
         } finally {
             setIsLoading(false);
         }
@@ -52,8 +106,8 @@ const SocialLogicScreen = ({ navigation }) => {
                         localKey="logo-full"
                         source={ImageAsset.logos.logoFull}
                         style={styles.logoImage}
-                        width={130}
-                        height={130}
+                        width={theme.responsive.size(170)}
+                        height={theme.responsive.size(170)}
                         borderRadius={theme.borderRadius.lg}
                         showLoadingIndicator={false}
                         showErrorPlaceholder={false}
@@ -121,7 +175,8 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         paddingTop: theme.spacing.xxxl,
         paddingBottom: theme.spacing.xxl,
-        height: height * 0.35,
+        height: theme.responsive.height(theme.responsive.screen().height * 0.35),
+        minHeight: theme.responsive.height(250),
     },
     title: {
         ...theme.typography.h1,
@@ -145,7 +200,8 @@ const styles = StyleSheet.create({
         paddingHorizontal: theme.spacing.lg,
         marginBottom: theme.spacing.md,
         backgroundColor: theme.colors.background.primary,
-        ...theme.shadows.ios.small,
+        minHeight: theme.responsive.buttonHeight('medium'),
+        ...theme.shadows.small,
     },
     socialButtonDisabled: {
         opacity: 0.6,
@@ -173,7 +229,7 @@ const styles = StyleSheet.create({
     dividerContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginVertical: theme.spacing.xl,
+        marginVertical: theme.responsive.isSmall() ? theme.spacing.lg : theme.spacing.xl,
     },
     divider: {
         flex: 1,
@@ -195,7 +251,9 @@ const styles = StyleSheet.create({
         paddingVertical: theme.spacing.md,
         alignItems: 'center',
         marginBottom: theme.spacing.lg,
-        ...theme.shadows.ios.small,
+        backgroundColor: theme.colors.background.primary,
+        height: theme.responsive.buttonHeight('medium'),
+        minHeight: theme.responsive.buttonHeight('medium'),
     },
     emailButtonText: {
         ...theme.typography.bodySmall,
@@ -205,6 +263,7 @@ const styles = StyleSheet.create({
     signUpButton: {
         alignItems: 'center',
         paddingVertical: theme.spacing.md,
+        minHeight: theme.responsive.height(44),
     },
     signUpText: {
         ...theme.typography.bodyMedium,

@@ -1,319 +1,167 @@
 # UI Components
 
-This directory contains reusable UI components for the ReferralRating app.
+## SearchFilter
 
-## TextInputField
-
-A comprehensive and customizable text input field component that matches the app's design system. Perfect for forms, authentication screens, and any text input needs.
+A comprehensive search filter component that uses `react-native-raw-bottom-sheet` to display filter options in a bottom sheet modal.
 
 ### Features
 
-- ✅ Labels positioned above input fields
-- ✅ White rounded input boxes with proper styling
-- ✅ Password field with eye icon toggle
-- ✅ Error state handling with validation
-- ✅ Focus and disabled states
-- ✅ Customizable styling and theming
-- ✅ Support for different keyboard types
-- ✅ Multiline text input support
-- ✅ Built-in validation helpers
-- ✅ Accessibility features
+- **Bottom Sheet Modal**: Uses `react-native-raw-bottom-sheet` for smooth animations
+- **Multiple Filter Categories**: Supports multiple filter categories (Favorites, Category, Cuisine, etc.)
+- **Search Within Filters**: Search bar to filter the filter options themselves
+- **Visual Feedback**: Selected filters are highlighted with different colors and icons
+- **Filter Count**: Shows the number of active filters in the header
+- **Clear All**: Option to clear all selected filters at once
+- **Responsive Design**: Follows the app's theme and responsive design patterns
 
-### Basic Usage
+### Usage
 
 ```jsx
-import TextInputField from '../components/ui/TextInputField';
+import SearchFilter from '../components/ui/SearchFilter';
 
-// Basic text input
-<TextInputField
-  label="Your name"
-  placeholder="Enter your full name"
-  value={name}
-  onChangeText={setName}
-/>
+const MyComponent = () => {
+    const [isFilterVisible, setIsFilterVisible] = useState(false);
+    const [activeFilters, setActiveFilters] = useState({});
 
-// Email input
-<TextInputField
-  label="E-mail address"
-  placeholder="Enter your email address"
-  value={email}
-  onChangeText={setEmail}
-  keyboardType="email-address"
-  autoCapitalize="none"
-/>
+    const handleFilterPress = () => {
+        setIsFilterVisible(true);
+    };
 
-// Password input with toggle
-<TextInputField
-  label="Password"
-  placeholder="Enter your password"
-  value={password}
-  onChangeText={setPassword}
-  secureTextEntry={true}
-/>
-```
+    const handleFilterClose = () => {
+        setIsFilterVisible(false);
+    };
 
-### Advanced Usage
+    const handleApplyFilters = (filters) => {
+        setActiveFilters(filters);
+        console.log('Applied filters:', filters);
+        // Implement your filter logic here
+    };
 
-```jsx
-// Input with error handling
-<TextInputField
-  label="Username"
-  value={username}
-  onChangeText={setUsername}
-  error={usernameError}
-  autoCapitalize="none"
-  autoCorrect={false}
-/>
+    return (
+        <View>
+            <TouchableOpacity onPress={handleFilterPress}>
+                <Text>Open Filters</Text>
+            </TouchableOpacity>
 
-// Disabled input
-<TextInputField
-  label="Read-only field"
-  value="This field cannot be edited"
-  disabled={true}
-/>
-
-// Multiline input
-<TextInputField
-  label="Description"
-  value={description}
-  onChangeText={setDescription}
-  multiline={true}
-  numberOfLines={4}
-  placeholder="Enter a detailed description..."
-/>
-
-// Custom styling
-<TextInputField
-  label="Custom Input"
-  value={customValue}
-  onChangeText={setCustomValue}
-  style={{ fontSize: 18 }}
-  labelStyle={{ color: '#2196F3' }}
-  inputContainerStyle={{ borderWidth: 2 }}
-/>
+            <SearchFilter
+                isVisible={isFilterVisible}
+                onClose={handleFilterClose}
+                onApplyFilters={handleApplyFilters}
+                initialFilters={activeFilters}
+            />
+        </View>
+    );
+};
 ```
 
 ### Props
 
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
-| `label` | `string` | - | Label text displayed above the input |
-| `placeholder` | `string` | - | Placeholder text for the input |
-| `value` | `string` | - | Current value of the input |
-| `onChangeText` | `Function` | - | Callback when text changes |
-| `secureTextEntry` | `boolean` | `false` | Whether to hide text (for passwords) |
-| `keyboardType` | `string` | `'default'` | Keyboard type (email-address, numeric, etc.) |
-| `autoCapitalize` | `string` | `'sentences'` | Text capitalization mode |
-| `autoCorrect` | `boolean` | `true` | Whether to enable auto-correction |
-| `error` | `string` | - | Error message to display |
-| `disabled` | `boolean` | `false` | Whether the input is disabled |
-| `multiline` | `boolean` | `false` | Whether to allow multiple lines |
-| `numberOfLines` | `number` | `1` | Number of lines for multiline input |
-| `style` | `Object` | - | Additional styles for the input |
-| `containerStyle` | `Object` | - | Additional styles for the container |
-| `labelStyle` | `Object` | - | Additional styles for the label |
-| `inputContainerStyle` | `Object` | - | Additional styles for the input container |
+| `isVisible` | `boolean` | `false` | Controls the visibility of the bottom sheet |
+| `onClose` | `function` | - | Callback when the bottom sheet is closed |
+| `onApplyFilters` | `function` | - | Callback when filters are applied (receives filters object) |
+| `initialFilters` | `object` | `{}` | Initial filter state to populate the component |
 
-### States
+### Filter Data Structure
 
-#### Default State
-- Light grey border
-- White background
-- Dark grey label text
+The component includes predefined filter categories:
 
-#### Focused State
-- Primary color border
-- Subtle shadow effect
-- Enhanced visual feedback
+```javascript
+const filterCategories = {
+    favorites: {
+        title: 'Favorites',
+        options: [
+            { id: 'fav1', label: 'Favorite 1' },
+            { id: 'fav2', label: 'Favorite 2' },
+            // ... more options
+        ]
+    },
+    category: {
+        title: 'Category',
+        options: [
+            { id: 'food', label: 'Food' },
+            { id: 'drinks', label: 'Drinks' },
+            // ... more options
+        ]
+    },
+    cuisine: {
+        title: 'Cuisine',
+        options: [
+            { id: 'italian', label: 'Italian' },
+            { id: 'german', label: 'German' },
+            // ... more options
+        ]
+    },
+    otherCategory: {
+        title: 'Other category',
+        options: [
+            { id: 'other1', label: 'Other 1' },
+            { id: 'other2', label: 'Other 2' },
+            // ... more options
+        ]
+    }
+};
+```
 
-#### Error State
-- Red border and text
-- Error message displayed below
-- Clear visual indication
+### Filter State Structure
 
-#### Disabled State
-- Greyed out appearance
-- Non-interactive
-- Reduced opacity
+The filters are stored as an object where keys are category names and values are arrays of selected filter IDs:
 
-### Examples
+```javascript
+{
+    favorites: ['fav1', 'fav3'],
+    category: ['food'],
+    cuisine: ['asian', 'italian']
+}
+```
 
-See `TextInputFieldExample.js` for comprehensive usage examples including:
+### Customization
 
-- Basic form fields
-- Password input with toggle
-- Error handling and validation
-- Different keyboard types
-- Custom styling examples
-- Form validation patterns
+To customize the filter categories, modify the `filterCategories` object in the `SearchFilter.js` file:
 
-### Design System Integration
+```javascript
+const filterCategories = {
+    yourCategory: {
+        title: 'Your Category Title',
+        options: [
+            { id: 'option1', label: 'Option 1' },
+            { id: 'option2', label: 'Option 2' },
+            // ... more options
+        ]
+    }
+};
+```
 
-The TextInputField component follows the app's design system:
+### Integration with SearchBar
 
-- Uses colors from `src/constants/colors`
-- Applies typography from `src/constants/theme`
-- Follows spacing and border radius guidelines
-- Implements consistent focus and error states
-- Uses existing icon assets for password toggle
-
-### Best Practices
-
-1. **Always provide labels**: Make inputs accessible and clear
-2. **Use appropriate keyboard types**: Improve user experience
-3. **Handle errors gracefully**: Provide clear error messages
-4. **Validate input**: Implement proper form validation
-5. **Consider accessibility**: Ensure proper contrast and touch targets
-
-### Accessibility
-
-- Proper touch targets (minimum 44x44 points)
-- Clear labels for screen readers
-- Sufficient color contrast
-- Error announcements for assistive technologies
-
-## ScreenHeader
-
-A flexible and customizable header component for screens with various configurations and styling options.
-
-### Features
-
-- ✅ Multiple variants (default, transparent, elevated)
-- ✅ Customizable left, center, and right components
-- ✅ Built-in back button functionality
-- ✅ Safe area handling for iOS and Android
-- ✅ Shadow effects with platform-specific implementations
-- ✅ Customizable colors and styling
-- ✅ Responsive design following the app's design system
-
-### Basic Usage
+The SearchFilter component is designed to work with the SearchBar component. The SearchBar includes a filter button that shows the number of active filters:
 
 ```jsx
-import ScreenHeader from '../components/ui/ScreenHeader';
-
-// Basic header with title
-<ScreenHeader title="My Screen" />
-
-// Header with subtitle
-<ScreenHeader 
-  title="Profile" 
-  subtitle="Manage your account" 
-/>
-
-// Header with back button
-<ScreenHeader 
-  title="Settings"
-  showBackButton
-  onBackPress={() => navigation.goBack()}
+<SearchBar
+    handleBackPress={handleBackPress}
+    setSearchText={setSearchText}
+    onFilterPress={handleFilterPress}
+    activeFilterCount={getActiveFilterCount()}
 />
 ```
 
-### Advanced Usage
+### Example Component
 
-```jsx
-// Header with custom components
-<ScreenHeader
-  title="Dashboard"
-  leftComponent={<MenuButton onPress={handleMenu} />}
-  rightComponent={<NotificationBell onPress={handleNotifications} />}
-/>
+See `SearchFilterExample.js` for a complete example of how to use the SearchFilter component.
 
-// Elevated header with shadow
-<ScreenHeader
-  title="Elevated Header"
-  variant="elevated"
-  showShadow={true}
-/>
+### Dependencies
 
-// Transparent header over content
-<ScreenHeader
-  title="Transparent Header"
-  variant="transparent"
-  titleColor="#FFFFFF"
-  subtitleColor="#FFFFFF"
-/>
+- `react-native-raw-bottom-sheet`: For the bottom sheet modal
+- `react-native`: Core React Native components
+- Theme constants from the app's design system
 
-// Custom styled header
-<ScreenHeader
-  title="Custom Style"
-  backgroundColor="#2196F3"
-  titleColor="#FFFFFF"
-  titleStyle={{ fontSize: 20, fontWeight: 'bold' }}
-/>
-```
+### Styling
 
-### Props
+The component uses the app's theme system for consistent styling:
+- Colors from `theme.colors`
+- Typography from `theme.typography`
+- Spacing from `theme.spacing`
+- Border radius from `theme.borderRadius`
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `title` | `string` | - | The main title text |
-| `subtitle` | `string` | - | Optional subtitle text |
-| `leftComponent` | `React.ReactNode` | - | Custom left component (overrides back button) |
-| `rightComponent` | `React.ReactNode` | - | Custom right component |
-| `centerComponent` | `React.ReactNode` | - | Custom center component (overrides title/subtitle) |
-| `showBackButton` | `boolean` | `false` | Whether to show a back button |
-| `onBackPress` | `Function` | - | Callback for back button press |
-| `backButtonText` | `string` | `'Back'` | Text for back button |
-| `variant` | `'default' \| 'transparent' \| 'elevated'` | `'default'` | Header variant |
-| `showShadow` | `boolean` | - | Whether to show shadow (default: true for elevated) |
-| `style` | `Object` | - | Additional styles for header container |
-| `titleStyle` | `Object` | - | Additional styles for title |
-| `subtitleStyle` | `Object` | - | Additional styles for subtitle |
-| `safeArea` | `boolean` | `true` | Whether to include safe area padding |
-| `backgroundColor` | `string` | - | Custom background color |
-| `titleColor` | `string` | - | Custom title color |
-| `subtitleColor` | `string` | - | Custom subtitle color |
-
-### Variants
-
-#### Default
-- White background
-- Light border bottom
-- Standard styling
-
-#### Transparent
-- Transparent background
-- No border
-- Useful for overlaying content
-
-#### Elevated
-- White background
-- Shadow effect
-- Elevated appearance
-
-### Examples
-
-See `ScreenHeaderExamples.js` for comprehensive usage examples including:
-
-- Basic headers
-- Headers with back buttons
-- Custom left/right components
-- Different variants
-- Custom styling
-- Multiple action buttons
-- Safe area handling
-
-### Design System Integration
-
-The ScreenHeader component follows the app's design system:
-
-- Uses colors from `src/constants/colors`
-- Applies typography from `src/constants/theme`
-- Follows spacing guidelines
-- Implements platform-specific shadows
-- Respects safe area requirements
-
-### Best Practices
-
-1. **Use semantic titles**: Make titles descriptive and user-friendly
-2. **Consistent back button**: Use the built-in back button for navigation
-3. **Limit right actions**: Don't overcrowd the right section
-4. **Consider accessibility**: Ensure sufficient contrast and touch targets
-5. **Test on both platforms**: Verify appearance on iOS and Android
-
-### Accessibility
-
-- Proper touch targets (minimum 44x44 points)
-- Semantic titles for screen readers
-- Sufficient color contrast
-- Clear visual hierarchy 
+All styles are responsive and follow the app's design patterns. 

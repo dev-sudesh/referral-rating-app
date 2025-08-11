@@ -215,15 +215,15 @@ const styles = StyleSheet.create({
     },
     scrollContent: {
         flexGrow: 1,
-        marginTop: theme.spacing.xl,
+        marginTop: theme.responsive.isSmall() ? theme.spacing.lg : theme.spacing.xl,
     },
     header: {
         paddingTop: theme.spacing.xxxl,
         paddingBottom: theme.spacing.xl,
     },
     backButton: {
-        width: 40,
-        height: 40,
+        width: theme.responsive.size(40),
+        height: theme.responsive.size(40),
         borderRadius: theme.borderRadius.round,
         backgroundColor: theme.colors.neutral[100],
         justifyContent: 'center',
@@ -247,13 +247,15 @@ const styles = StyleSheet.create({
         marginBottom: theme.spacing.xl,
     },
     nameContainer: {
-        flexDirection: 'row',
+        flexDirection: theme.responsive.isSmall() ? 'column' : 'row',
         justifyContent: 'space-between',
+        gap: theme.responsive.isSmall() ? 0 : theme.spacing.sm,
     },
     inputContainer: {
     },
     halfWidth: {
-        width: '48%',
+        width: theme.responsive.isSmall() ? '100%' : '48%',
+        marginBottom: theme.responsive.isSmall() ? theme.spacing.md : 0,
     },
     inputLabel: {
         ...theme.typography.labelLarge,
@@ -266,6 +268,7 @@ const styles = StyleSheet.create({
         borderRadius: theme.borderRadius.md,
         paddingHorizontal: theme.spacing.md,
         paddingVertical: theme.spacing.md,
+        minHeight: theme.responsive.inputHeight(),
         ...theme.typography.bodyMedium,
         color: theme.colors.text.primary,
         backgroundColor: theme.colors.background.primary,
@@ -282,12 +285,17 @@ const styles = StyleSheet.create({
         flex: 1,
         paddingHorizontal: theme.spacing.md,
         paddingVertical: theme.spacing.md,
+        minHeight: theme.responsive.inputHeight(),
         ...theme.typography.bodyMedium,
         color: theme.colors.text.primary,
     },
     eyeButton: {
         paddingHorizontal: theme.spacing.md,
         paddingVertical: theme.spacing.md,
+        minWidth: theme.responsive.size(44),
+        minHeight: theme.responsive.size(44),
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     eyeButtonText: {
         fontSize: 20,
@@ -298,13 +306,13 @@ const styles = StyleSheet.create({
         marginTop: theme.spacing.xl,
     },
     checkbox: {
-        width: 20,
-        height: 20,
+        width: theme.responsive.size(20),
+        height: theme.responsive.size(20),
         borderWidth: 2,
         borderColor: theme.colors.border.medium,
         borderRadius: theme.borderRadius.xs,
         marginRight: theme.spacing.sm,
-        marginTop: 2,
+        marginTop: theme.responsive.size(2),
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -334,7 +342,7 @@ const styles = StyleSheet.create({
         borderRadius: theme.borderRadius.md,
         paddingVertical: theme.spacing.md,
         alignItems: 'center',
-        ...theme.shadows.ios.small,
+        ...theme.shadows.small,
     },
     registerButtonDisabled: {
         opacity: 0.6,

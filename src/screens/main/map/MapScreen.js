@@ -1,20 +1,54 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     View,
     Text,
     StyleSheet,
     TouchableOpacity,
     StatusBar,
-    Dimensions,
-    ScrollView,
+    Alert,
+    FlatList,
 } from 'react-native';
+import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { theme } from '../../../constants/theme';
-import ScreenContainer from '../../../components/common/ScreenContainer';
-
-const { width, height } = Dimensions.get('window');
+import IconAsset from '../../../assets/icons/IconAsset';
+import AppImage from '../../../components/common/AppImage';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import ImageAsset from '../../../assets/images/ImageAsset';
+import SearchFilter from '../../../components/ui/SearchFilter';
+import RBSheet from 'react-native-raw-bottom-sheet';
+import SearchFilterController from '../../../controllers/filters/SearchFilterController';
 
 const MapScreen = ({ navigation }) => {
     const [selectedFilter, setSelectedFilter] = useState('all');
+    const [region, setRegion] = useState({
+        latitude: 37.78825,
+        longitude: -122.4324,
+        latitudeDelta: 0.032,
+        longitudeDelta: 0.032,
+    });
+    const [userLocation, setUserLocation] = useState(null);
+    const mapRef = useRef(null);
+    const [selectedPlace, setSelectedPlace] = useState(null);
+    const bottomSheetRef = useRef(null);
+    const { isSearchFilterVisible, setIsSearchFilterVisible } = SearchFilterController();
+
+    useEffect(() => {
+        // Request location permissions and get user location
+        const requestLocationPermission = async () => {
+            try {
+                // For now, we'll use a default location
+                // In a real app, you'd use react-native-permissions to request location access
+                setUserLocation({
+                    latitude: 37.78825,
+                    longitude: -122.4324,
+                });
+            } catch (error) {
+                console.log('Location permission error:', error);
+            }
+        };
+
+        requestLocationPermission();
+    }, []);
 
     const filters = [
         { id: 'all', label: 'All' },
@@ -26,35 +60,55 @@ const MapScreen = ({ navigation }) => {
     const nearbyPlaces = [
         {
             id: '1',
-            name: 'Coffee Shop',
+            name: 'Boucherie Union Square',
+            address: '225 Park Ave, New York',
             category: 'restaurants',
             distance: '0.2 km',
             rating: 4.5,
             isOpen: true,
+            latitude: 37.78725,
+            longitude: -122.4314,
+            rank: 1,
+            image: ImageAsset.places.place01,
         },
         {
             id: '2',
             name: 'Grocery Store',
+            address: '225 Park Ave, New York',
             category: 'shops',
             distance: '0.5 km',
             rating: 4.2,
             isOpen: true,
+            latitude: 37.77925,
+            longitude: -122.4234,
+            rank: 2,
+            image: ImageAsset.places.place01,
         },
         {
             id: '3',
             name: 'Bank Branch',
+            address: '225 Park Ave, New York',
             category: 'services',
             distance: '0.8 km',
             rating: 4.0,
             isOpen: false,
+            latitude: 37.77725,
+            longitude: -122.4214,
+            rank: 3,
+            image: ImageAsset.places.place01,
         },
         {
             id: '4',
             name: 'Pizza Place',
+            address: '225 Park Ave, New York',
             category: 'restaurants',
             distance: '1.1 km',
             rating: 4.7,
             isOpen: true,
+            latitude: 37.78025,
+            longitude: -122.4204,
+            rank: 4,
+            image: ImageAsset.places.place01,
         },
     ];
 
@@ -79,129 +133,235 @@ const MapScreen = ({ navigation }) => {
         </TouchableOpacity>
     );
 
-    const renderPlaceCard = (place) => (
-        <TouchableOpacity
-            key={place.id}
-            style={styles.placeCard}
-            activeOpacity={0.8}
-        >
+    // Filter places based on selected filter
+    const filteredPlaces = selectedFilter === 'all'
+        ? nearbyPlaces
+        : nearbyPlaces.filter(place => place.category === selectedFilter);
+
+    const handleMapPress = () => {
+        // Handle map press if needed
+    };
+
+    const handleMarkerPress = (place) => {
+        Alert.alert(
+            place.name,
+            `${place.category} • ${place.distance} • ⭐ ${place.rating}`,
+            [
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'Directions', onPress: () => console.log('Directions to', place.name) },
+            ]
+        );
+    };
+
+    const centerOnUserLocation = () => {
+        if (userLocation && mapRef.current) {
+            mapRef.current.animateToRegion({
+                latitude: userLocation.latitude,
+                longitude: userLocation.longitude,
+                latitudeDelta: 0.01,
+                longitudeDelta: 0.05,
+            }, 1000);
+        }
+    };
+
+    const renderSelectedPlaceCard = React.useCallback(() => (
+        <TouchableOpacity style={styles.placeCardBig} activeOpacity={0.8} onPress={() => setSelectedPlace(null)}>
             <View style={styles.placeCardHeader}>
-                <View style={styles.placeInfo}>
-                    <Text style={styles.placeName}>{place.name}</Text>
-                    <Text style={styles.placeCategory}>{place.category}</Text>
-                </View>
-                <View style={styles.placeStatus}>
-                    <View style={[
-                        styles.statusIndicator,
-                        place.isOpen ? styles.statusOpen : styles.statusClosed,
-                    ]} />
-                    <Text style={styles.statusText}>
-                        {place.isOpen ? 'Open' : 'Closed'}
-                    </Text>
+                <View style={styles.placeCardImage}>
+                    <AppImage
+                        source={selectedPlace?.image}
+                        style={{
+                            width: '100%',
+                            height: '100%',
+                            borderRadius: theme.borderRadius.sm,
+                        }}
+                    />
                 </View>
             </View>
-
-            <View style={styles.placeCardFooter}>
-                <View style={styles.placeDetails}>
-                    <Text style={styles.placeDistance}>{place.distance}</Text>
-                    <View style={styles.ratingContainer}>
-                        <Text style={styles.ratingText}>⭐ {place.rating}</Text>
-                    </View>
+            <View style={styles.placeCardInfo}>
+                <View style={styles.placeInfo}>
+                    <Text style={styles.placeName}>{selectedPlace?.name}</Text>
+                    <Text style={styles.placeCategory}>{selectedPlace?.address}</Text>
                 </View>
-                <TouchableOpacity style={styles.directionsButton}>
-                    <Text style={styles.directionsButtonText}>Directions</Text>
-                </TouchableOpacity>
+                <View style={styles.placeInfo}>
+                    <Text style={styles.placeCategory}>{selectedPlace?.address}</Text>
+                </View>
             </View>
         </TouchableOpacity>
+    ), []);
+
+    const renderPlaceCard = (place) => (
+        <>
+            {selectedPlace?.id === place.id ? renderSelectedPlaceCard() : (
+
+                <TouchableOpacity
+                    key={place.id}
+                    style={styles.placeCard}
+                    activeOpacity={0.8}
+                    onPress={() => setSelectedPlace(place)}
+                >
+                    <View style={styles.placeCardHeader}>
+                        <View style={styles.placeCardImage}>
+                            <AppImage
+                                source={place.image}
+                                style={{
+                                    width: '100%',
+                                    height: '100%',
+                                    borderRadius: theme.borderRadius.sm,
+                                }}
+                            />
+                        </View>
+                        <View style={styles.placeInfo}>
+                            <Text style={styles.placeName}>{place.name}</Text>
+                            <Text style={styles.placeCategory}>{place.address}</Text>
+                        </View>
+                    </View>
+                </TouchableOpacity>)}
+        </>
     );
 
 
     return (
-        <ScreenContainer {...ScreenContainer.presets.full}
-            paddingCustom={{
-                paddingHorizontal: theme.spacing.lg,
-                paddingTop: theme.spacing.xxxl,
-                paddingBottom: theme.spacing.md,
-            }}>
-            <Text>Map Screen</Text>
-        </ScreenContainer>
-    )
+        <SafeAreaView style={{ flex: 1 }} edges={[]}>
+            <View style={styles.container}>
+                <StatusBar
+                    barStyle="dark-content"
+                    translucent={true}
+                    backgroundColor={'transparent'}
+                />
 
-    return (
-        <View style={styles.container}>
-            <StatusBar
-                barStyle="dark-content"
-                backgroundColor={theme.colors.background.primary}
-            />
 
-            {/* Header */}
-            <View style={styles.header}>
-                <Text style={styles.headerTitle}>Map</Text>
-                <TouchableOpacity style={styles.searchButton}>
-                    <Text style={styles.searchButtonText}>🔍</Text>
-                </TouchableOpacity>
-            </View>
+                {/* Interactive Map */}
+                <View style={styles.mapContainer}>
+                    <MapView
+                        ref={mapRef}
+                        style={styles.map}
+                        provider={PROVIDER_GOOGLE}
+                        region={region}
+                        onRegionChangeComplete={setRegion}
+                        onPress={handleMapPress}
+                        showsUserLocation={true}
+                        showsMyLocationButton={false}
+                        showsCompass={true}
+                        showsScale={true}
+                        showsBuildings={true}
+                        showsTraffic={false}
+                        showsIndoors={true}
+                        mapType="standard"
+                    >
+                        {filteredPlaces.map((place) => (
+                            <Marker
+                                key={place.id}
+                                coordinate={{
+                                    latitude: place.latitude,
+                                    longitude: place.longitude,
+                                }}
+                            >
+                                <View style={{
+                                    width: 50,
+                                    height: 50,
+                                    borderRadius: 25,
+                                    justifyContent: 'flex-start',
+                                    alignItems: 'center',
+                                }}>
+                                    <View style={{
+                                        position: 'absolute',
+                                        top: 0,
+                                        left: 0,
+                                        right: 0,
+                                        bottom: 0,
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                    }}>
+                                        <IconAsset.markerIconSvg
+                                            width={50}
+                                            height={50}
+                                        />
+                                    </View>
+                                    <View style={{
+                                        height: 35,
+                                        width: 35,
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                    }}>
+                                        <Text style={{
+                                            color: 'white',
+                                            fontSize: 14,
+                                            fontWeight: '900',
+                                        }}>
+                                            {place.rank}
+                                        </Text>
+                                    </View>
+                                </View>
+                            </Marker>
+                        ))}
+                    </MapView>
 
-            {/* Map Placeholder */}
-            <View style={styles.mapContainer}>
-                <View style={styles.mapPlaceholder}>
-                    <Text style={styles.mapPlaceholderIcon}>🗺️</Text>
-                    <Text style={styles.mapPlaceholderTitle}>Interactive Map</Text>
-                    <Text style={styles.mapPlaceholderText}>
-                        Map integration will be implemented here
-                    </Text>
-                    <TouchableOpacity style={styles.mapButton}>
-                        <Text style={styles.mapButtonText}>Enable Location</Text>
+                    <View style={styles.placesContainer}>
+                        <FlatList
+                            horizontal
+                            showsHorizontalScrollIndicator={false}
+                            data={filteredPlaces}
+                            renderItem={({ item }) => renderPlaceCard(item)}
+                            keyExtractor={(item) => item.id}
+                            snapToInterval={theme.responsive.width(theme.responsive.screen().width * 0.8)}
+                            decelerationRate="fast"
+                            snapToAlignment="start"
+                            pagingEnabled={true}
+                            scrollEnabled={true}
+                            contentContainerStyle={styles.placeCardContainer}
+                        />
+
+                    </View>
+                </View>
+
+
+                {/* Header */}
+                <View style={styles.header}>
+                    {/* Search input */}
+                    <TouchableOpacity style={styles.searchContainer} onPress={() => navigation.navigate('Search')}  >
+                        {/* Search icon */}
+                        <IconAsset.searchIcon
+                            width={24}
+                            height={24}
+                        />
+                        {/* Search input */}
+                        <View style={styles.searchInput}>
+                            <Text style={styles.searchInputText}>Search now...</Text>
+                        </View>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.filterButton} onPress={() => setIsSearchFilterVisible(true)}>
+                        <IconAsset.filterIcon
+                            width={30}
+                            height={30}
+                        />
                     </TouchableOpacity>
                 </View>
             </View>
-
-            {/* Filters */}
-            <View style={styles.filtersContainer}>
-                <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={styles.filtersScroll}
-                >
-                    {filters.map(renderFilterButton)}
-                </ScrollView>
-            </View>
-
-            {/* Nearby Places */}
-            <View style={styles.placesContainer}>
-                <Text style={styles.placesTitle}>Nearby Places</Text>
-                <ScrollView
-                    showsVerticalScrollIndicator={false}
-                    contentContainerStyle={styles.placesScroll}
-                >
-                    {nearbyPlaces.map(renderPlaceCard)}
-                </ScrollView>
-            </View>
-        </View>
+        </SafeAreaView>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: theme.colors.background.primary,
     },
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
         paddingHorizontal: theme.spacing.lg,
-        paddingTop: theme.spacing.xxxl,
+        paddingTop: theme.responsive.isSmall() ? theme.spacing.xxl : theme.spacing.xxxl,
         paddingBottom: theme.spacing.md,
-        backgroundColor: theme.colors.background.primary,
+        gap: theme.spacing.md,
     },
     headerTitle: {
         ...theme.typography.h2,
         color: theme.colors.text.primary,
     },
     searchButton: {
-        width: 40,
-        height: 40,
+        width: theme.responsive.size(40),
+        height: theme.responsive.size(40),
         borderRadius: theme.borderRadius.round,
         backgroundColor: theme.colors.neutral[100],
         justifyContent: 'center',
@@ -211,44 +371,30 @@ const styles = StyleSheet.create({
         fontSize: 18,
     },
     mapContainer: {
-        height: height * 0.4,
-        marginHorizontal: theme.spacing.lg,
-        marginBottom: theme.spacing.lg,
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        overflow: 'hidden',
     },
-    mapPlaceholder: {
+    map: {
         flex: 1,
-        backgroundColor: theme.colors.neutral[100],
-        borderRadius: theme.borderRadius.lg,
+    },
+    locationButton: {
+        position: 'absolute',
+        bottom: theme.spacing.md,
+        right: theme.spacing.md,
+        width: theme.responsive.size(44),
+        height: theme.responsive.size(44),
+        borderRadius: theme.borderRadius.round,
+        backgroundColor: theme.colors.background.primary,
         justifyContent: 'center',
         alignItems: 'center',
-        borderWidth: 2,
-        borderColor: theme.colors.border.light,
-        borderStyle: 'dashed',
+        ...theme.shadows.medium,
     },
-    mapPlaceholderIcon: {
-        fontSize: 64,
-        marginBottom: theme.spacing.md,
-    },
-    mapPlaceholderTitle: {
-        ...theme.typography.h3,
-        color: theme.colors.text.primary,
-        marginBottom: theme.spacing.sm,
-    },
-    mapPlaceholderText: {
-        ...theme.typography.bodyMedium,
-        color: theme.colors.text.secondary,
-        textAlign: 'center',
-        marginBottom: theme.spacing.lg,
-    },
-    mapButton: {
-        backgroundColor: theme.colors.primary[500],
-        borderRadius: theme.borderRadius.md,
-        paddingHorizontal: theme.spacing.lg,
-        paddingVertical: theme.spacing.sm,
-    },
-    mapButtonText: {
-        ...theme.typography.buttonMedium,
-        color: theme.colors.background.primary,
+    locationButtonText: {
+        fontSize: 20,
     },
     filtersContainer: {
         marginBottom: theme.spacing.lg,
@@ -257,11 +403,13 @@ const styles = StyleSheet.create({
         paddingHorizontal: theme.spacing.lg,
     },
     filterButton: {
-        paddingHorizontal: theme.spacing.lg,
-        paddingVertical: theme.spacing.sm,
-        borderRadius: theme.borderRadius.round,
-        backgroundColor: theme.colors.neutral[100],
-        marginRight: theme.spacing.sm,
+        width: theme.responsive.size(55),
+        height: theme.responsive.size(55),
+        borderRadius: theme.borderRadius.lg,
+        backgroundColor: theme.colors.background.primary,
+        justifyContent: 'center',
+        alignItems: 'center',
+        ...theme.shadows.medium,
     },
     filterButtonActive: {
         backgroundColor: theme.colors.primary[500],
@@ -273,9 +421,15 @@ const styles = StyleSheet.create({
     filterButtonTextActive: {
         color: theme.colors.background.primary,
     },
-    placesContainer: {
-        flex: 1,
+    placeCardContainer: {
         paddingHorizontal: theme.spacing.lg,
+        gap: theme.spacing.md,
+    },
+    placesContainer: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
     },
     placesTitle: {
         ...theme.typography.h4,
@@ -285,33 +439,57 @@ const styles = StyleSheet.create({
     placesScroll: {
         paddingBottom: theme.spacing.xl,
     },
+    placeCardBig: {
+        width: theme.responsive.width(theme.responsive.screen().width * 0.8),
+        zIndex: 1000,
+        backgroundColor: 'red',
+    },
     placeCard: {
+        width: theme.responsive.width(theme.responsive.screen().width * 0.8),
         backgroundColor: theme.colors.background.primary,
         borderRadius: theme.borderRadius.md,
-        padding: theme.spacing.lg,
+        padding: theme.spacing.sm,
         marginBottom: theme.spacing.md,
         borderWidth: 1,
         borderColor: theme.colors.border.light,
-        ...theme.shadows.ios.small,
+        ...theme.shadows.medium,
     },
     placeCardHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'flex-start',
-        marginBottom: theme.spacing.md,
+        gap: theme.spacing.md,
+    },
+    placeCardImage: {
+        width: theme.responsive.size(80),
+        height: theme.responsive.size(80),
+        borderRadius: theme.borderRadius.sm,
+        overflow: 'hidden',
+    },
+    placeCardInfo: {
+        flex: 1,
+        height: theme.responsive.size(80),
+        justifyContent: 'center',
+        alignItems: 'flex-start',
+        gap: theme.spacing.xxs,
     },
     placeInfo: {
         flex: 1,
+        height: theme.responsive.size(80),
+        justifyContent: 'center',
+        alignItems: 'flex-start',
+        gap: theme.spacing.xxs,
     },
     placeName: {
-        ...theme.typography.h5,
+        ...theme.typography.bodyLarge,
         color: theme.colors.text.primary,
-        marginBottom: theme.spacing.xs,
+        fontWeight: '700',
     },
     placeCategory: {
-        ...theme.typography.captionMedium,
+        ...theme.typography.bodyMedium,
         color: theme.colors.text.secondary,
         textTransform: 'capitalize',
+        fontWeight: '600',
     },
     placeStatus: {
         flexDirection: 'row',
@@ -364,6 +542,26 @@ const styles = StyleSheet.create({
     directionsButtonText: {
         ...theme.typography.buttonSmall,
         color: theme.colors.primary[500],
+    },
+    searchContainer: {
+        flex: 1,
+        gap: theme.spacing.md,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: theme.spacing.md,
+        backgroundColor: theme.colors.background.primary,
+        borderRadius: theme.borderRadius.lg,
+        paddingHorizontal: theme.spacing.md,
+        height: 55,
+        ...theme.shadows.large,
+    },
+    searchInput: {
+        ...theme.typography.bodyMedium,
+        color: theme.colors.text.primary,
+    },
+    searchInputText: {
+        ...theme.typography.bodyMedium,
+        color: theme.colors.text.secondary,
     },
 });
 

@@ -14,6 +14,7 @@ const Tab = createBottomTabNavigator();
 const MainTabs = () => {
     return (
         <ScreenContainer {...ScreenContainer.presets.full}
+            edges={['bottom']}
             backgroundColor={theme.colors.background.primary}
             paddingCustom={{
 

@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
         paddingVertical: theme.spacing.md,
-        minHeight: 56,
+        minHeight: theme.responsive.headerHeight(),
     },
     leftSection: {
         flex: 1,
@@ -209,7 +209,11 @@ const styles = StyleSheet.create({
         padding: theme.spacing.md,
         backgroundColor: theme.colors.background.white,
         borderRadius: theme.borderRadius.lg,
-        ...theme.shadows[Platform.OS].medium,
+        minWidth: theme.responsive.size(44),
+        minHeight: theme.responsive.size(44),
+        justifyContent: 'center',
+        alignItems: 'center',
+        ...theme.shadows.medium,
     },
     backButtonText: {
         ...theme.typography.labelMedium,

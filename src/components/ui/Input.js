@@ -145,7 +145,7 @@ const styles = StyleSheet.create({
     },
     inputContainerFocused: {
         borderColor: theme.colors.primary[500],
-        ...theme.shadows.ios.small,
+        ...theme.shadows.small,
     },
     inputContainerError: {
         borderColor: theme.colors.error[500],

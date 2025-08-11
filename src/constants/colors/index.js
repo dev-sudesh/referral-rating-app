@@ -1,16 +1,16 @@
 export const colors = {
     // Primary Colors
     primary: {
-        50: '#E8F2FF',
-        100: '#C5E0FF',
-        200: '#9DCCFF',
-        300: '#75B8FF',
-        400: '#5CA5FF',
-        500: '#4489F2', // Main primary color
-        600: '#3D7BE0',
-        700: '#366DCE',
-        800: '#2F5FBC',
-        900: '#2851AA',
+        50: '#EBF3FF',
+        100: '#D1E3FF',
+        200: '#A8CCFF',
+        300: '#7FB5FF',
+        400: '#5BA6FF',
+        500: '#4798FF', // Main primary color
+        600: '#3F86E6',
+        700: '#3774CC',
+        800: '#2F62B3',
+        900: '#274A8A',
     },
 
     // Secondary Colors
@@ -103,11 +103,12 @@ export const colors = {
         dark: '#121212',
         white: '#FFFFFF',
         transparent: 'transparent',
+        searchFilter: '#E9E5FF',
     },
 
     // Text Colors
     text: {
-        primary: '#212121',
+        primary: '#22272F',
         secondary: '#757575',
         tertiary: '#9E9E9E',
         neutral: '#493BB0',

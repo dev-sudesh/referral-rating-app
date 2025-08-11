@@ -7,6 +7,7 @@ import SocialLogicScreen from '../screens/auth/SocialLogicScreen';
 import AuthStack from './stacks/AuthStack';
 import MainTabs from './tabs/MainTabs';
 import Constants from '../constants/data';
+import SearchScreen from '../screens/main/search/SearchScreen';
 
 const Stack = createStackNavigator();
 
@@ -23,6 +24,8 @@ const AppNavigator = () => {
                 <Stack.Screen name={Constants.Screen.Onboarding} component={OnboardingScreen} />
                 <Stack.Screen name={Constants.Screen.Stack.Auth} component={AuthStack} />
                 <Stack.Screen name={Constants.Screen.Stack.Main} component={MainTabs} />
+                <Stack.Screen name={Constants.Screen.Search} component={SearchScreen} />
+
             </Stack.Navigator>
         </NavigationContainer>
     );
