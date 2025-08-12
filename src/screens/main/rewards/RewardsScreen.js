@@ -7,14 +7,85 @@ import {
     StatusBar,
     ScrollView,
     Dimensions,
+    FlatList,
 } from 'react-native';
 import { theme } from '../../../constants/theme';
 import ScreenContainer from '../../../components/common/ScreenContainer';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import AppImage from '../../../components/common/AppImage';
+import ImageAsset from '../../../assets/images/ImageAsset';
 
 const { width } = Dimensions.get('window');
 
+const rewards = [
+    {
+        id: 'reward-001',
+        type: 'Free Product',
+        title: 'Free Coffee Beans',
+        image: ImageAsset.places.place01,
+        validUntil: '2021-03-25',
+        status: 'active'
+    },
+    {
+        id: 'reward-002',
+        type: 'Free Product',
+        title: 'Free in-store beverage',
+        image: ImageAsset.places.place01,
+        validUntil: '2021-03-25',
+        status: 'active'
+    },
+    {
+        id: 'reward-003',
+        type: 'Discount',
+        title: 'Birthday rewards',
+        image: ImageAsset.places.place01,
+        validUntil: '2024-03-31',
+        status: 'active'
+    },
+    {
+        id: 'reward-004',
+        type: 'Discount',
+        title: '10% discount',
+        image: ImageAsset.places.place01,
+        validUntil: '2024-03-31',
+        status: 'active'
+    },
+    {
+        id: 'reward-005',
+        type: 'Free Product',
+        title: 'Free Coffee Beans',
+        image: ImageAsset.places.place01,
+        validUntil: '2021-03-25',
+        status: 'past'
+    },
+    {
+        id: 'reward-006',
+        type: 'Free Product',
+        title: 'Free in-store beverage',
+        image: ImageAsset.places.place01,
+        validUntil: '2021-03-25',
+        status: 'past'
+    },
+    {
+        id: 'reward-007',
+        type: 'Discount',
+        title: 'Birthday rewards',
+        image: ImageAsset.places.place01,
+        validUntil: '2024-03-31',
+        status: 'past'
+    },
+    {
+        id: 'reward-008',
+        type: 'Discount',
+        title: '10% discount',
+        image: ImageAsset.places.place01,
+        validUntil: '2024-03-31',
+        status: 'past'
+    },
+];
 const RewardsScreen = ({ navigation }) => {
-    const [selectedTab, setSelectedTab] = useState('available');
+    const [selectedTab, setSelectedTab] = useState('active');
+    const [filteredRewards, setFilteredRewards] = useState(rewards.filter(item => item.status == 'active'))
 
     const userStats = {
         totalPoints: 1250,
@@ -23,266 +94,118 @@ const RewardsScreen = ({ navigation }) => {
         pointsToNextLevel: 250,
     };
 
-    const availableRewards = [
-        {
-            id: '1',
-            title: 'Free Coffee',
-            description: 'Redeem at any participating coffee shop',
-            points: 100,
-            image: '☕',
-            validUntil: '2024-12-31',
-        },
-        {
-            id: '2',
-            title: 'Movie Ticket',
-            description: '50% off on any movie ticket',
-            points: 200,
-            image: '🎬',
-            validUntil: '2024-12-31',
-        },
-        {
-            id: '3',
-            title: 'Shopping Discount',
-            description: '20% off on your next purchase',
-            points: 150,
-            image: '🛍️',
-            validUntil: '2024-12-31',
-        },
-    ];
 
-    const redeemedRewards = [
-        {
-            id: '1',
-            title: 'Free Coffee',
-            redeemedDate: '2024-01-15',
-            expiryDate: '2024-02-15',
-            status: 'active',
-        },
-        {
-            id: '2',
-            title: 'Movie Ticket',
-            redeemedDate: '2024-01-10',
-            expiryDate: '2024-02-10',
-            status: 'expired',
-        },
-    ];
+    const renderRewardCard = (reward) => {
+        // date format 03/25/2021
+        let validUntil = new Date(reward.validUntil)
+        let validUntilDate = validUntil.getDate()
+        let validUntilMonth = validUntil.getMonth()
+        let validUntilYear = validUntil.getFullYear()
+        let validUntilDateString = `${validUntilMonth}/${validUntilDate}/${validUntilYear}`
 
-    const achievements = [
-        {
-            id: '1',
-            title: 'First Purchase',
-            description: 'Complete your first purchase',
-            icon: '🎯',
-            completed: true,
-            points: 50,
-        },
-        {
-            id: '2',
-            title: 'Loyal Customer',
-            description: 'Make 10 purchases',
-            icon: '👑',
-            completed: true,
-            points: 100,
-        },
-        {
-            id: '3',
-            title: 'Social Butterfly',
-            description: 'Share with 5 friends',
-            icon: '🦋',
-            completed: false,
-            points: 75,
-        },
-    ];
+        return (
+            <>
+                <TouchableOpacity
+                    key={reward.id}
+                    style={[styles.rewardCard, { filter: reward.status == 'past' ? 'grayscale(100%) brightness(120%) contrast(70%)' : 'none' }]}
+                    activeOpacity={0.8}
+                    onPress={() => { }}
 
-    const renderPointsCard = () => (
-        <View style={styles.pointsCard}>
-            <View style={styles.pointsHeader}>
-                <Text style={styles.pointsTitle}>Your Points</Text>
-                <Text style={styles.pointsValue}>{userStats.totalPoints}</Text>
-            </View>
+                >
+                    <View style={styles.rewardCardHeader}>
+                        <View style={styles.rewardCardImage}>
+                            <AppImage
+                                source={reward.image}
 
-            <View style={styles.levelContainer}>
-                <Text style={styles.levelText}>Level: {userStats.level}</Text>
-                <View style={styles.progressContainer}>
-                    <View style={styles.progressBar}>
-                        <View
-                            style={[
-                                styles.progressFill,
-                                { width: `${((userStats.totalPoints % 1000) / 1000) * 100}%` }
-                            ]}
-                        />
+                                style={{
+                                    width: '100%',
+                                    height: '100%',
+                                    borderRadius: theme.borderRadius.sm,
+                                }}
+                            />
+                        </View>
+                        <View style={styles.rewardCardInfo}>
+                            <View style={styles.rewardCardBadge}>
+                                <Text style={styles.rewardCardBadgeText}>{reward.type}</Text>
+                            </View>
+                            <Text style={styles.rewardCardTitle}>{reward.title}</Text>
+                            <Text style={styles.rewardCardValidText}>{`Valid until ${validUntilDateString}`}</Text>
+                        </View>
                     </View>
-                    <Text style={styles.progressText}>
-                        {userStats.pointsToNextLevel} points to {userStats.nextLevel}
-                    </Text>
-                </View>
-            </View>
-        </View>
-    );
-
-    const renderRewardCard = (reward) => (
-        <TouchableOpacity
-            key={reward.id}
-            style={styles.rewardCard}
-            activeOpacity={0.8}
-        >
-            <View style={styles.rewardHeader}>
-                <Text style={styles.rewardIcon}>{reward.image}</Text>
-                <View style={styles.rewardInfo}>
-                    <Text style={styles.rewardTitle}>{reward.title}</Text>
-                    <Text style={styles.rewardDescription}>{reward.description}</Text>
-                </View>
-                <View style={styles.pointsBadge}>
-                    <Text style={styles.pointsBadgeText}>{reward.points}</Text>
-                </View>
-            </View>
-
-            <View style={styles.rewardFooter}>
-                <Text style={styles.validUntilText}>
-                    Valid until: {reward.validUntil}
-                </Text>
-                <TouchableOpacity style={styles.redeemButton}>
-                    <Text style={styles.redeemButtonText}>Redeem</Text>
                 </TouchableOpacity>
-            </View>
-        </TouchableOpacity>
-    );
+            </>
+        )
+    };
 
-    const renderRedeemedCard = (reward) => (
-        <View
-            key={reward.id}
-            style={[
-                styles.redeemedCard,
-                reward.status === 'expired' && styles.expiredCard,
-            ]}
-        >
-            <View style={styles.redeemedHeader}>
-                <Text style={styles.redeemedTitle}>{reward.title}</Text>
-                <View style={[
-                    styles.statusBadge,
-                    reward.status === 'expired' ? styles.expiredBadge : styles.activeBadge,
-                ]}>
-                    <Text style={styles.statusBadgeText}>
-                        {reward.status === 'expired' ? 'Expired' : 'Active'}
-                    </Text>
-                </View>
-            </View>
-
-            <View style={styles.redeemedDetails}>
-                <Text style={styles.redeemedDate}>
-                    Redeemed: {reward.redeemedDate}
-                </Text>
-                <Text style={styles.expiryDate}>
-                    Expires: {reward.expiryDate}
-                </Text>
-            </View>
-        </View>
-    );
-
-    const renderAchievementCard = (achievement) => (
-        <View
-            key={achievement.id}
-            style={[
-                styles.achievementCard,
-                achievement.completed && styles.completedAchievement,
-            ]}
-        >
-            <View style={styles.achievementHeader}>
-                <Text style={styles.achievementIcon}>{achievement.icon}</Text>
-                <View style={styles.achievementInfo}>
-                    <Text style={styles.achievementTitle}>{achievement.title}</Text>
-                    <Text style={styles.achievementDescription}>
-                        {achievement.description}
-                    </Text>
-                </View>
-                <View style={styles.achievementPoints}>
-                    <Text style={styles.achievementPointsText}>+{achievement.points}</Text>
-                </View>
-            </View>
-
-            {achievement.completed && (
-                <View style={styles.completedBadge}>
-                    <Text style={styles.completedBadgeText}>✓ Completed</Text>
-                </View>
-            )}
-        </View>
-    );
+    React.useEffect(() => {
+        setFilteredRewards(rewards.filter(item => item.status == selectedTab))
+    }, [selectedTab])
 
     return (
-        <View style={styles.container}>
-            <StatusBar
-                barStyle="dark-content"
-                backgroundColor={theme.colors.background.primary}
-            />
+        <SafeAreaView style={styles.container}>
 
             {/* Header */}
             <View style={styles.header}>
-                <Text style={styles.headerTitle}>My Rewards</Text>
-                <TouchableOpacity style={styles.historyButton}>
-                    <Text style={styles.historyButtonText}>History</Text>
-                </TouchableOpacity>
+                <View style={styles.headerTitleContainer}>
+                    <Text style={styles.headerTitle}>Rewards</Text>
+                </View>
             </View>
 
             <ScrollView
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.scrollContent}
             >
-                {/* Points Card */}
-                {renderPointsCard()}
 
                 {/* Tab Navigation */}
                 <View style={styles.tabContainer}>
                     <TouchableOpacity
                         style={[
                             styles.tabButton,
-                            selectedTab === 'available' && styles.activeTabButton,
+                            selectedTab === 'active' && styles.activeTabButton,
                         ]}
-                        onPress={() => setSelectedTab('available')}
+                        onPress={() => setSelectedTab('active')}
                     >
                         <Text style={[
                             styles.tabButtonText,
-                            selectedTab === 'available' && styles.activeTabButtonText,
+                            selectedTab === 'active' && styles.activeTabButtonText,
                         ]}>
-                            Available ({availableRewards.length})
+                            Active
                         </Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
                         style={[
                             styles.tabButton,
-                            selectedTab === 'redeemed' && styles.activeTabButton,
+                            selectedTab === 'past' && styles.activeTabButton,
                         ]}
-                        onPress={() => setSelectedTab('redeemed')}
+                        onPress={() => setSelectedTab('past')}
                     >
                         <Text style={[
                             styles.tabButtonText,
-                            selectedTab === 'redeemed' && styles.activeTabButtonText,
+                            selectedTab === 'past' && styles.activeTabButtonText,
                         ]}>
-                            Redeemed ({redeemedRewards.length})
+                            Past
                         </Text>
                     </TouchableOpacity>
                 </View>
 
                 {/* Content */}
-                {selectedTab === 'available' && (
-                    <View style={styles.content}>
-                        {availableRewards.map(renderRewardCard)}
-                    </View>
-                )}
-
-                {selectedTab === 'redeemed' && (
-                    <View style={styles.content}>
-                        {redeemedRewards.map(renderRedeemedCard)}
-                    </View>
-                )}
-
-                {/* Achievements Section */}
-                <View style={styles.achievementsSection}>
-                    <Text style={styles.sectionTitle}>Achievements</Text>
-                    {achievements.map(renderAchievementCard)}
+                <View style={styles.content}>
+                    <FlatList
+                        showsHorizontalScrollIndicator={false}
+                        data={filteredRewards}
+                        renderItem={({ item }) => renderRewardCard(item)}
+                        keyExtractor={(item) => item.id}
+                        snapToInterval={theme.responsive.width(theme.responsive.screen().width * 0.8)}
+                        decelerationRate="fast"
+                        snapToAlignment="start"
+                        pagingEnabled={true}
+                        scrollEnabled={true}
+                        contentContainerStyle={styles.placeCardContainer}
+                    />
                 </View>
             </ScrollView>
-        </View>
+        </SafeAreaView>
     );
 };
 
@@ -292,16 +215,25 @@ const styles = StyleSheet.create({
         backgroundColor: theme.colors.background.primary,
     },
     header: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
+        alignItems: 'flex-end',
+        justifyContent: 'center',
         paddingHorizontal: theme.spacing.lg,
-        paddingTop: theme.responsive.isSmall() ? theme.spacing.xxl : theme.spacing.xxxl,
-        paddingBottom: theme.spacing.md,
+        height: theme.responsive.headerHeight(),
+    },
+    headerTitleContainer: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        top: 0,
+        bottom: 0,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     headerTitle: {
-        ...theme.typography.h2,
+        ...theme.typography.h4,
         color: theme.colors.text.primary,
+        fontWeight: theme.fontWeight.bold,
+        textAlign: 'center',
     },
     historyButton: {
         paddingHorizontal: theme.spacing.md,
@@ -367,93 +299,103 @@ const styles = StyleSheet.create({
     },
     tabContainer: {
         flexDirection: 'row',
-        backgroundColor: theme.colors.neutral[100],
+        backgroundColor: theme.colors.background.light,
         borderRadius: theme.borderRadius.md,
         padding: theme.spacing.xs,
-        marginBottom: theme.spacing.lg,
+        marginVertical: theme.spacing.xl,
     },
     tabButton: {
         flex: 1,
         paddingVertical: theme.spacing.sm,
         alignItems: 'center',
-        borderRadius: theme.borderRadius.sm,
+        borderRadius: theme.borderRadius.md,
     },
     activeTabButton: {
         backgroundColor: theme.colors.background.primary,
-        ...theme.shadows.small,
+        paddingHorizontal: theme.spacing.md,
+        ...theme.shadows.medium,
     },
     tabButtonText: {
         ...theme.typography.buttonSmall,
         color: theme.colors.text.secondary,
+        fontSize: theme.responsive.size(14),
+        paddingVertical: theme.spacing.xs,
     },
     activeTabButtonText: {
-        color: theme.colors.text.primary,
-        fontWeight: theme.fontWeight.semiBold,
+        color: theme.colors.text.accent,
+        fontWeight: theme.fontWeight.bold,
     },
     content: {
         marginBottom: theme.spacing.xl,
     },
     rewardCard: {
+        width: theme.responsive.width(theme.responsive.screen().width * 0.8),
         backgroundColor: theme.colors.background.primary,
         borderRadius: theme.borderRadius.md,
-        padding: theme.spacing.lg,
+        padding: theme.spacing.sm,
         marginBottom: theme.spacing.md,
         borderWidth: 1,
         borderColor: theme.colors.border.light,
-        ...theme.shadows.small,
+        ...theme.shadows.medium,
     },
-    rewardHeader: {
+    rewardCardHeader: {
         flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: theme.spacing.md,
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        gap: theme.spacing.md,
     },
-    rewardIcon: {
-        fontSize: 32,
-        marginRight: theme.spacing.md,
+    rewardCardImage: {
+        width: theme.responsive.size(90),
+        height: theme.responsive.size(90),
+        borderRadius: theme.borderRadius.sm,
+        overflow: 'hidden',
     },
-    rewardInfo: {
+    rewardCardInfo: {
         flex: 1,
+        justifyContent: 'center',
+        alignItems: 'flex-start',
+        gap: theme.spacing.sm,
     },
-    rewardTitle: {
-        ...theme.typography.h5,
+    rewardCardTitle: {
+        ...theme.typography.h4,
+        fontWeight: theme.fontWeight.bold,
         color: theme.colors.text.primary,
-        marginBottom: theme.spacing.xs,
     },
-    rewardDescription: {
-        ...theme.typography.bodySmall,
+    rewardCardValidText: {
+        ...theme.typography.bodyMedium,
         color: theme.colors.text.secondary,
     },
-    pointsBadge: {
+    rewardCardBadge: {
         backgroundColor: theme.colors.primary[100],
-        borderRadius: theme.borderRadius.round,
+        borderRadius: theme.borderRadius.sm,
         paddingHorizontal: theme.spacing.sm,
         paddingVertical: theme.spacing.xs,
     },
-    pointsBadgeText: {
+    rewardCardPointsBadgeText: {
         ...theme.typography.buttonSmall,
         color: theme.colors.primary[700],
         fontWeight: theme.fontWeight.semiBold,
     },
-    rewardFooter: {
+    rewardCardFooter: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
     },
-    validUntilText: {
+    rewardCardValidUntilText: {
         ...theme.typography.captionMedium,
         color: theme.colors.text.tertiary,
     },
-    redeemButton: {
+    rewardCardRedeemButton: {
         backgroundColor: theme.colors.primary[500],
         borderRadius: theme.borderRadius.sm,
         paddingHorizontal: theme.spacing.md,
         paddingVertical: theme.spacing.sm,
     },
-    redeemButtonText: {
+    rewardCardRedeemButtonText: {
         ...theme.typography.buttonSmall,
         color: theme.colors.background.primary,
     },
-    redeemedCard: {
+    rewardCardRedeemedCard: {
         backgroundColor: theme.colors.background.primary,
         borderRadius: theme.borderRadius.md,
         padding: theme.spacing.lg,
@@ -461,43 +403,43 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: theme.colors.border.light,
     },
-    expiredCard: {
+    rewardCardRedeemedCardExpired: {
         opacity: 0.6,
     },
-    redeemedHeader: {
+    rewardCardRedeemedCardHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
         marginBottom: theme.spacing.sm,
     },
-    redeemedTitle: {
+    rewardCardRedeemedCardTitle: {
         ...theme.typography.h5,
         color: theme.colors.text.primary,
     },
-    statusBadge: {
+    rewardCardRedeemedCardStatusBadge: {
         paddingHorizontal: theme.spacing.sm,
         paddingVertical: theme.spacing.xs,
         borderRadius: theme.borderRadius.round,
     },
-    activeBadge: {
+    rewardCardRedeemedCardActiveBadge: {
         backgroundColor: theme.colors.success[100],
     },
-    expiredBadge: {
+    rewardCardRedeemedCardExpiredBadge: {
         backgroundColor: theme.colors.error[100],
     },
-    statusBadgeText: {
+    rewardCardRedeemedCardStatusBadgeText: {
         ...theme.typography.captionSmall,
         fontWeight: theme.fontWeight.semiBold,
     },
-    redeemedDetails: {
+    rewardCardRedeemedCardDetails: {
         marginTop: theme.spacing.sm,
     },
-    redeemedDate: {
+    rewardCardRedeemedCardDate: {
         ...theme.typography.bodySmall,
         color: theme.colors.text.secondary,
         marginBottom: theme.spacing.xs,
     },
-    expiryDate: {
+    rewardCardRedeemedCardExpiryDate: {
         ...theme.typography.bodySmall,
         color: theme.colors.text.secondary,
     },

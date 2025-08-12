@@ -104,6 +104,7 @@ export const colors = {
         white: '#FFFFFF',
         transparent: 'transparent',
         searchFilter: '#E9E5FF',
+        light: '#EEF0F6',
     },
 
     // Text Colors
@@ -116,6 +117,7 @@ export const colors = {
         disabled: '#BDBDBD',
         white: '#FFFFFF',
         black: '#000000',
+        accent: '#7362EE',
     },
 
     // Border Colors

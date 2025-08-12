@@ -54,21 +54,6 @@ const SearchBar = ({ handleBackPress, setSearchText, onFilterPress, activeFilter
                         <Text style={styles.clearButtonText}>✕</Text>
                     </TouchableOpacity>
                 )}
-
-                <TouchableOpacity
-                    style={styles.filterButton}
-                    onPress={onFilterPress}
-                    activeOpacity={0.7}
-                >
-                    <View style={styles.filterButtonContainer}>
-                        <IconAsset.filterIcon width={responsiveSize(20)} height={responsiveSize(20)} fill={theme.colors.text.secondary} />
-                        {activeFilterCount > 0 && (
-                            <View style={styles.filterBadge}>
-                                <Text style={styles.filterBadgeText}>{activeFilterCount}</Text>
-                            </View>
-                        )}
-                    </View>
-                </TouchableOpacity>
             </View>
         </View>
     )
