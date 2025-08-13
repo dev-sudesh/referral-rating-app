@@ -35,6 +35,12 @@ export const borderRadius = {
 
 export const shadows = {
     ...(Platform.OS === 'ios' ? {
+        custom: ({ color, offset, opacity, radius }) => ({
+            shadowColor: color,
+            shadowOffset: offset,
+            shadowOpacity: opacity,
+            shadowRadius: radius,
+        }),
         small: {
             shadowColor: colors.neutral[900],
             shadowOffset: { width: 0, height: 1 },
@@ -54,6 +60,9 @@ export const shadows = {
             shadowRadius: 8,
         },
     } : {
+        custom: ({ radius }) => ({
+            elevation: radius,
+        }),
         small: {
             elevation: 2,
         },

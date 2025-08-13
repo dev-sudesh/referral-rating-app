@@ -105,6 +105,8 @@ export const colors = {
         transparent: 'transparent',
         searchFilter: '#E9E5FF',
         light: '#EEF0F6',
+        tagStyle1: '#FFFBF0',
+        tagStyle2: '#EBF4FF',
     },
 
     // Text Colors
@@ -118,6 +120,8 @@ export const colors = {
         white: '#FFFFFF',
         black: '#000000',
         accent: '#7362EE',
+        tagStyle1: '#FF9800',
+        tagStyle2: '#065BC6',
     },
 
     // Border Colors

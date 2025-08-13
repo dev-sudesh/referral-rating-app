@@ -97,9 +97,8 @@ const ProfileScreen = ({ navigation }) => {
     );
 
     const renderMenuItem = ({ item, isLastItem }) => (
-        <View>
+        <View key={item.id}>
             <TouchableOpacity
-                key={item.id}
                 style={styles.menuItem}
                 onPress={() => {
                     if (item.action === 'navigate') {

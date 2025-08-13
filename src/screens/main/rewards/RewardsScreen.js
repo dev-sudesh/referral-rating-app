@@ -151,10 +151,7 @@ const RewardsScreen = ({ navigation }) => {
                 </View>
             </View>
 
-            <ScrollView
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={styles.scrollContent}
-            >
+            <View style={styles.innerContainer}>
 
                 {/* Tab Navigation */}
                 <View style={styles.tabContainer}>
@@ -190,7 +187,7 @@ const RewardsScreen = ({ navigation }) => {
                 </View>
 
                 {/* Content */}
-                <View style={styles.content}>
+                <View style={styles.rewardsContainer}>
                     <FlatList
                         showsHorizontalScrollIndicator={false}
                         data={filteredRewards}
@@ -204,7 +201,7 @@ const RewardsScreen = ({ navigation }) => {
                         contentContainerStyle={styles.placeCardContainer}
                     />
                 </View>
-            </ScrollView>
+            </View>
         </SafeAreaView>
     );
 };
@@ -213,6 +210,11 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: theme.colors.background.primary,
+    },
+    innerContainer: {
+        flex: 1,
+        paddingHorizontal: theme.spacing.lg,
+        paddingBottom: theme.spacing.xl,
     },
     header: {
         alignItems: 'flex-end',
@@ -325,7 +327,7 @@ const styles = StyleSheet.create({
         color: theme.colors.text.accent,
         fontWeight: theme.fontWeight.bold,
     },
-    content: {
+    rewardsContainer: {
         marginBottom: theme.spacing.xl,
     },
     rewardCard: {

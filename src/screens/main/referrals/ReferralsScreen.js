@@ -9,265 +9,297 @@ import {
     Alert,
     Share,
     Dimensions,
+    FlatList,
 } from 'react-native';
 import { theme } from '../../../constants/theme';
 import ScreenContainer from '../../../components/common/ScreenContainer';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import ImageAsset from '../../../assets/images/ImageAsset';
+import AppImage from '../../../components/common/AppImage';
+import IconAsset from '../../../assets/icons/IconAsset';
 
 const { width, height } = Dimensions.get('window');
+
+// Filter data for the staggered horizontal list
+const filterData = [
+    { id: '1', label: 'All (12)', selected: false },
+    { id: '2', label: 'Food (2)', selected: true },
+    { id: '3', label: 'Parking lots (5)', selected: false },
+    { id: '4', label: 'Cinemas (5)', selected: true },
+    { id: '5', label: 'Shopping (8)', selected: false },
+    { id: '6', label: 'Museums (3)', selected: false },
+    { id: '7', label: 'Restaurants (3)', selected: false },
+    { id: '8', label: 'Bars (3)', selected: false },
+    { id: '9', label: 'Clubs (3)', selected: false },
+    { id: '10', label: 'Hotels (3)', selected: false },
+    { id: '11', label: 'Shops (3)', selected: false },
+    { id: '12', label: 'Other (3)', selected: false },
+    { id: '13', label: 'Other (3)', selected: false },
+    { id: '14', label: 'Other (3)', selected: false },
+    { id: '15', label: 'Other (3)', selected: false },
+    { id: '16', label: 'Other (3)', selected: false },
+    { id: '17', label: 'Other (3)', selected: false },
+    { id: '18', label: 'Other (3)', selected: false },
+    { id: '19', label: 'Other (3)', selected: false },
+];
+
+// Helper: split array into chunks of given size
+function chunkData(array, chunkSize) {
+    const chunks = [];
+    for (let i = 0; i < array.length; i += chunkSize) {
+        chunks.push(array.slice(i, i + chunkSize));
+    }
+    return chunks;
+}
+
+const referrals = [
+    {
+        id: 'referral-001',
+        tags: [{
+            title: 'No.1',
+            style: 'tagStyle1',
+        }, {
+            title: 'Food',
+            style: 'tagStyle2',
+        }],
+        title: 'Boucherie Union Square',
+        image: ImageAsset.places.place01,
+        address: '225 Park Ave, New York, NY 10177',
+        validUntil: '2025-03-25',
+        status: 'active'
+    },
+    {
+        id: 'referral-002',
+        tags: [{
+            title: 'Cinema',
+            style: 'tagStyle2',
+        }],
+        title: 'AMC Empire 25',
+        image: ImageAsset.places.place01,
+        address: '234 West 42nd St, New York, NY 10036',
+        validUntil: '2025-03-25',
+        status: 'active'
+    },
+    {
+        id: 'referral-003',
+        tags: [{
+            title: 'Food',
+            style: 'tagStyle2',
+        }],
+        title: 'Piccola Cucina Osteria',
+        image: ImageAsset.places.place01,
+        address: '225 Park Ave, New York, NY 10177',
+        validUntil: '2025-03-25',
+        status: 'active'
+    },
+    {
+        id: 'referral-004',
+        tags: [{
+            title: 'No.3',
+            style: 'tagStyle1',
+        }, {
+            title: 'Drinks',
+            style: 'tagStyle2',
+        }],
+        title: 'Talk Story Rooftop',
+        image: ImageAsset.places.place01,
+        address: '160 N 12th Street Brooklyn',
+        validUntil: '2024-03-31',
+        status: 'active'
+    },
+    {
+        id: 'referral-005',
+        tags: [{
+            title: 'Steak House',
+            style: 'tagStyle2',
+        }],
+        title: 'Boucherie Union Square',
+        image: ImageAsset.places.place01,
+        address: '225 Park Ave, New York, NY 10177',
+        validUntil: '2025-03-25',
+        status: 'active'
+    },
+    {
+        id: 'referral-006',
+        tags: [{
+            title: 'Steak House',
+            style: 'tagStyle2',
+        }],
+        title: 'Boucherie Union Square',
+        image: ImageAsset.places.place01,
+        address: '225 Park Ave, New York, NY 10177',
+        validUntil: '2025-03-25',
+        status: 'active'
+    },
+    {
+        id: 'referral-007',
+        tags: [{
+            title: 'Steak House',
+            style: 'tagStyle2',
+        }],
+        title: 'Boucherie Union Square',
+        image: ImageAsset.places.place01,
+        address: '225 Park Ave, New York, NY 10177',
+        validUntil: '2025-03-25',
+        status: 'active'
+    }
+];
 
 const ReferralsScreen = ({ navigation }) => {
     const [referralCode, setReferralCode] = useState('RNFRIEND2024');
     const [totalReferrals, setTotalReferrals] = useState(8);
     const [totalEarnings, setTotalEarnings] = useState(240);
+    const [selectedFilter, setSelectedFilter] = useState('active');
+    const [filteredReferrals, setFilteredReferrals] = useState([]);
+    const [filters, setFilters] = useState(filterData);
 
-    const referralHistory = [
-        {
-            id: '1',
-            name: 'John Doe',
-            email: 'john@example.com',
-            date: '2024-01-15',
-            status: 'completed',
-            earnings: 30,
-        },
-        {
-            id: '2',
-            name: 'Jane Smith',
-            email: 'jane@example.com',
-            date: '2024-01-12',
-            status: 'pending',
-            earnings: 30,
-        },
-        {
-            id: '3',
-            name: 'Mike Johnson',
-            email: 'mike@example.com',
-            date: '2024-01-10',
-            status: 'completed',
-            earnings: 30,
-        },
-    ];
-
-    const referralRewards = [
-        {
-            id: '1',
-            title: 'First Referral',
-            description: 'Get $10 when your friend makes their first purchase',
-            icon: '🎉',
-            completed: true,
-        },
-        {
-            id: '2',
-            title: '5 Referrals',
-            description: 'Earn $50 bonus when you reach 5 successful referrals',
-            icon: '🏆',
-            completed: false,
-        },
-        {
-            id: '3',
-            title: '10 Referrals',
-            description: 'Unlock VIP status and exclusive rewards',
-            icon: '👑',
-            completed: false,
-        },
-    ];
-
-    const handleShareReferral = async () => {
-        try {
-            const shareMessage = `Hey! I'm using RNFramework and I think you'd love it too. Use my referral code ${referralCode} to get $10 off your first purchase! Download the app here: https://rnframework.app`;
-
-            await Share.share({
-                message: shareMessage,
-                title: 'Join RNFramework with my referral code!',
-            });
-        } catch (error) {
-            Alert.alert('Error', 'Failed to share referral code');
-        }
+    // Function to handle filter selection
+    const handleFilterPress = (filterId) => {
+        setFilters(prevFilters =>
+            prevFilters.map(filter =>
+                filter.id === filterId
+                    ? { ...filter, selected: !filter.selected }
+                    : filter
+            )
+        );
     };
 
-    const handleCopyCode = () => {
-        // In a real app, you would use Clipboard API
-        Alert.alert('Copied!', 'Referral code copied to clipboard');
-    };
-
-    const renderReferralStats = () => (
-        <View style={styles.statsContainer}>
-            <View style={styles.statCard}>
-                <Text style={styles.statValue}>{totalReferrals}</Text>
-                <Text style={styles.statLabel}>Total Referrals</Text>
-            </View>
-            <View style={styles.statCard}>
-                <Text style={styles.statValue}>${totalEarnings}</Text>
-                <Text style={styles.statLabel}>Total Earnings</Text>
-            </View>
-            <View style={styles.statCard}>
-                <Text style={styles.statValue}>$30</Text>
-                <Text style={styles.statLabel}>Per Referral</Text>
-            </View>
-        </View>
-    );
-
-    const renderReferralCode = () => (
-        <View style={styles.referralCodeContainer}>
-            <Text style={styles.referralCodeTitle}>Your Referral Code</Text>
-            <View style={styles.codeContainer}>
-                <Text style={styles.referralCode}>{referralCode}</Text>
-                <TouchableOpacity
-                    style={styles.copyButton}
-                    onPress={handleCopyCode}
-                >
-                    <Text style={styles.copyButtonText}>Copy</Text>
-                </TouchableOpacity>
-            </View>
+    // Render individual filter chip
+    const renderFilterChip = (chip) => {
+        return (
             <TouchableOpacity
-                style={styles.shareButton}
-                onPress={handleShareReferral}
-                activeOpacity={0.8}
+                style={[
+                    styles.filterOption,
+                    chip.selected && styles.filterOptionSelected
+                ]}
+                onPress={() => handleFilterPress(chip.id)}
+                activeOpacity={0.7}
             >
-                <Text style={styles.shareButtonText}>Share Referral Code</Text>
+                <View style={[
+                    styles.filterOptionIcon,
+                    chip.selected && styles.filterOptionSelectedIcon
+                ]}>
+                    {chip.selected ? (
+                        <IconAsset.checkIcon width={18} height={18} fill={theme.colors.background.white} />
+                    ) : (
+                        <IconAsset.plusIcon width={18} height={18} fill={theme.colors.text.primary} />
+                    )}
+                </View>
+                <Text style={[
+                    styles.filterOptionText,
+                    chip.selected && styles.filterOptionTextSelected
+                ]}>
+                    {chip.label}
+                </Text>
             </TouchableOpacity>
-        </View>
-    );
+        );
+    };
 
-    const renderReferralHistory = () => (
-        <View style={styles.historyContainer}>
-            <Text style={styles.sectionTitle}>Referral History</Text>
-            {referralHistory.map((referral) => (
-                <View key={referral.id} style={styles.historyCard}>
-                    <View style={styles.historyHeader}>
-                        <View style={styles.historyInfo}>
-                            <Text style={styles.historyName}>{referral.name}</Text>
-                            <Text style={styles.historyEmail}>{referral.email}</Text>
-                        </View>
-                        <View style={[
-                            styles.statusBadge,
-                            referral.status === 'completed' ? styles.completedBadge : styles.pendingBadge,
-                        ]}>
-                            <Text style={styles.statusText}>
-                                {referral.status === 'completed' ? 'Completed' : 'Pending'}
-                            </Text>
-                        </View>
-                    </View>
+    const renderReferralCard = (referral) => {
+        // date format 03/25/2021
+        let validUntil = new Date(referral.validUntil)
+        let validUntilDate = validUntil.getDate()
+        let validUntilMonth = validUntil.getMonth()
+        let validUntilYear = validUntil.getFullYear()
+        let validUntilDateString = `${validUntilMonth}/${validUntilDate}/${validUntilYear}`
 
-                    <View style={styles.historyFooter}>
-                        <Text style={styles.historyDate}>{referral.date}</Text>
-                        <Text style={styles.historyEarnings}>+${referral.earnings}</Text>
-                    </View>
-                </View>
-            ))}
-        </View>
-    );
+        return (
+            <>
+                <TouchableOpacity
+                    key={referral.id}
+                    style={[styles.referralCard, { filter: referral.status == 'past' ? 'grayscale(100%) brightness(120%) contrast(70%)' : 'none' }]}
+                    activeOpacity={0.8}
+                    onPress={() => { }}
 
-    const renderRewards = () => (
-        <View style={styles.rewardsContainer}>
-            <Text style={styles.sectionTitle}>Referral Rewards</Text>
-            {referralRewards.map((reward) => (
-                <View
-                    key={reward.id}
-                    style={[
-                        styles.rewardCard,
-                        reward.completed && styles.completedReward,
-                    ]}
                 >
-                    <View style={styles.rewardHeader}>
-                        <Text style={styles.rewardIcon}>{reward.icon}</Text>
-                        <View style={styles.rewardInfo}>
-                            <Text style={styles.rewardTitle}>{reward.title}</Text>
-                            <Text style={styles.rewardDescription}>{reward.description}</Text>
+                    <View style={styles.referralCardHeader}>
+                        <View style={styles.referralCardImage}>
+                            <AppImage
+                                source={referral.image}
+
+                                style={{
+                                    width: '100%',
+                                    height: '100%',
+                                    borderRadius: theme.borderRadius.sm,
+                                }}
+                            />
                         </View>
-                        {reward.completed && (
-                            <View style={styles.completedCheck}>
-                                <Text style={styles.completedCheckText}>✓</Text>
+                        <View style={styles.referralCardInfo}>
+                            <View style={styles.referralCardTags}>
+                                {referral.tags.map((tag, index) => (
+                                    <View style={[styles.referralCardTag, { backgroundColor: styles[tag.style].backgroundColor }]}>
+                                        <Text style={[styles.referralCardTagText, { color: styles[tag.style].color }]}>{tag.title}</Text>
+                                    </View>
+                                ))}
                             </View>
-                        )}
+                            <Text style={styles.referralCardTitle}>{referral.title}</Text>
+                            <Text style={styles.referralCardValidText}>{`Valid until ${validUntilDateString}`}</Text>
+                        </View>
                     </View>
-                </View>
-            ))}
-        </View>
-    );
+                </TouchableOpacity>
+            </>
+        )
+    };
+
+    React.useEffect(() => {
+        setFilteredReferrals(referrals.filter(item => item.status == selectedFilter))
+    }, [selectedFilter])
 
     return (
-        <ScreenContainer {...ScreenContainer.presets.full}
-            paddingCustom={{
-                paddingHorizontal: theme.spacing.lg,
-                paddingTop: theme.spacing.xxxl,
-                paddingBottom: theme.spacing.md,
-            }}>
-            <Text>Referrals Screen</Text>
-        </ScreenContainer>
-    )
-
-    return (
-        <View style={styles.container}>
-            <StatusBar
-                barStyle="dark-content"
-                backgroundColor={theme.colors.background.primary}
-            />
+        <SafeAreaView style={styles.container}>
 
             {/* Header */}
             <View style={styles.header}>
-                <Text style={styles.headerTitle}>Referrals</Text>
-                <TouchableOpacity style={styles.helpButton}>
-                    <Text style={styles.helpButtonText}>?</Text>
-                </TouchableOpacity>
+                <View style={styles.headerTitleContainer}>
+                    <Text style={styles.headerTitle}>Referrals</Text>
+                </View>
             </View>
 
-            <ScrollView
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={styles.scrollContent}
-            >
-                {/* Stats */}
-                {renderReferralStats()}
+            <View style={styles.innerContainer}>
 
-                {/* Referral Code */}
-                {renderReferralCode()}
-
-                {/* Referral History */}
-                {renderReferralHistory()}
-
-                {/* Rewards */}
-                {renderRewards()}
-
-                {/* How it Works */}
-                <View style={styles.howItWorksContainer}>
-                    <Text style={styles.sectionTitle}>How It Works</Text>
-                    <View style={styles.stepContainer}>
-                        <View style={styles.stepNumber}>
-                            <Text style={styles.stepNumberText}>1</Text>
+                {/* Tab Navigation */}
+                <View style={styles.filterContainer}>
+                    {/* Staggered horizontal list with 2 rows */}
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={[styles.filterListContainer, { paddingHorizontal: theme.spacing.lg }]}
+                    >
+                        <View style={{ flexDirection: 'column', gap: theme.spacing.sm }}>
+                            <View style={{ flexDirection: 'row', gap: theme.spacing.sm }}>
+                                {filters.slice(0, Math.ceil(filters.length / 2)).map((item, index) => (
+                                    <View key={index} style={[
+                                        styles.filterColumn,
+                                    ]}>
+                                        {renderFilterChip(item)}
+                                    </View>
+                                ))}
+                            </View>
+                            <View style={{ flexDirection: 'row', gap: theme.spacing.sm }}>
+                                {filters.slice(Math.ceil(filters.length / 2)).map((item, index) => (
+                                    <View key={index} style={[
+                                        styles.filterColumn,
+                                    ]}>
+                                        {renderFilterChip(item)}
+                                    </View>
+                                ))}</View>
                         </View>
-                        <View style={styles.stepContent}>
-                            <Text style={styles.stepTitle}>Share Your Code</Text>
-                            <Text style={styles.stepDescription}>
-                                Share your unique referral code with friends and family
-                            </Text>
-                        </View>
-                    </View>
-
-                    <View style={styles.stepContainer}>
-                        <View style={styles.stepNumber}>
-                            <Text style={styles.stepNumberText}>2</Text>
-                        </View>
-                        <View style={styles.stepContent}>
-                            <Text style={styles.stepTitle}>They Sign Up</Text>
-                            <Text style={styles.stepDescription}>
-                                Your friend uses your code when they create their account
-                            </Text>
-                        </View>
-                    </View>
-
-                    <View style={styles.stepContainer}>
-                        <View style={styles.stepNumber}>
-                            <Text style={styles.stepNumberText}>3</Text>
-                        </View>
-                        <View style={styles.stepContent}>
-                            <Text style={styles.stepTitle}>Both Get Rewarded</Text>
-                            <Text style={styles.stepDescription}>
-                                You both get $10 when they make their first purchase
-                            </Text>
-                        </View>
-                    </View>
+                    </ScrollView>
                 </View>
-            </ScrollView>
-        </View>
+
+                {/* Content */}
+                <View style={styles.referralsContainer}>
+                    <FlatList
+                        showsVerticalScrollIndicator={false}
+                        data={filteredReferrals}
+                        renderItem={({ item }) => renderReferralCard(item)}
+                        keyExtractor={(item) => item.id}
+                        decelerationRate="fast"
+
+                    />
+                </View>
+            </View>
+        </SafeAreaView>
     );
 };
 
@@ -276,182 +308,254 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: theme.colors.background.primary,
     },
+    innerContainer: {
+        flex: 1,
+        paddingBottom: theme.spacing.xl,
+        marginTop: theme.spacing.lg,
+    },
     header: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
+        alignItems: 'flex-end',
+        justifyContent: 'center',
         paddingHorizontal: theme.spacing.lg,
-        paddingTop: theme.responsive.isSmall() ? theme.spacing.xxl : theme.spacing.xxxl,
-        paddingBottom: theme.spacing.md,
+        height: theme.responsive.headerHeight(),
     },
-    headerTitle: {
-        ...theme.typography.h2,
-        color: theme.colors.text.primary,
-    },
-    helpButton: {
-        width: theme.responsive.size(32),
-        height: theme.responsive.size(32),
-        borderRadius: theme.borderRadius.round,
-        backgroundColor: theme.colors.neutral[100],
+    headerTitleContainer: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        top: 0,
+        bottom: 0,
         justifyContent: 'center',
         alignItems: 'center',
     },
-    helpButtonText: {
-        ...theme.typography.bodyMedium,
+    headerTitle: {
+        ...theme.typography.h4,
         color: theme.colors.text.primary,
-        fontWeight: theme.fontWeight.semiBold,
+        fontWeight: theme.fontWeight.bold,
+        textAlign: 'center',
+    },
+    historyButton: {
+        paddingHorizontal: theme.spacing.md,
+        paddingVertical: theme.spacing.sm,
+        minHeight: theme.responsive.size(44),
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    historyButtonText: {
+        ...theme.typography.bodyMedium,
+        color: theme.colors.primary[500],
     },
     scrollContent: {
         paddingHorizontal: theme.spacing.lg,
         paddingBottom: theme.spacing.xl,
     },
-    statsContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginBottom: theme.spacing.lg,
-    },
-    statCard: {
-        flex: 1,
-        backgroundColor: theme.colors.background.primary,
-        borderRadius: theme.borderRadius.md,
-        padding: theme.spacing.md,
-        alignItems: 'center',
-        marginHorizontal: theme.spacing.xs,
-        borderWidth: 1,
-        borderColor: theme.colors.border.light,
-        ...theme.shadows.small,
-    },
-    statValue: {
-        ...theme.typography.h3,
-        color: theme.colors.primary[500],
-        marginBottom: theme.spacing.xs,
-    },
-    statLabel: {
-        ...theme.typography.captionMedium,
-        color: theme.colors.text.secondary,
-        textAlign: 'center',
-    },
-    referralCodeContainer: {
-        backgroundColor: theme.colors.primary[50],
+    pointsCard: {
+        backgroundColor: theme.colors.primary[500],
         borderRadius: theme.borderRadius.lg,
         padding: theme.spacing.lg,
         marginBottom: theme.spacing.lg,
-        borderWidth: 1,
-        borderColor: theme.colors.primary[200],
+        ...theme.shadows.medium,
     },
-    referralCodeTitle: {
-        ...theme.typography.h4,
-        color: theme.colors.text.primary,
-        marginBottom: theme.spacing.md,
-        textAlign: 'center',
-    },
-    codeContainer: {
+    pointsHeader: {
         flexDirection: 'row',
+        justifyContent: 'space-between',
         alignItems: 'center',
+        marginBottom: theme.spacing.md,
+    },
+    pointsTitle: {
+        ...theme.typography.h4,
+        color: theme.colors.background.primary,
+    },
+    pointsValue: {
+        ...theme.typography.h1,
+        color: theme.colors.background.primary,
+    },
+    levelContainer: {
+        marginTop: theme.spacing.md,
+    },
+    levelText: {
+        ...theme.typography.bodyMedium,
+        color: theme.colors.primary[100],
+        marginBottom: theme.spacing.sm,
+    },
+    progressContainer: {
+        marginTop: theme.spacing.sm,
+    },
+    progressBar: {
+        height: 8,
+        backgroundColor: theme.colors.primary[300],
+        borderRadius: theme.borderRadius.round,
+        marginBottom: theme.spacing.xs,
+    },
+    progressFill: {
+        height: '100%',
+        backgroundColor: theme.colors.background.primary,
+        borderRadius: theme.borderRadius.round,
+    },
+    progressText: {
+        ...theme.typography.captionMedium,
+        color: theme.colors.primary[100],
+    },
+    tabContainer: {
+        flexDirection: 'row',
+        backgroundColor: theme.colors.background.light,
+        borderRadius: theme.borderRadius.md,
+        padding: theme.spacing.xs,
+        marginVertical: theme.spacing.xl,
+    },
+    tabButton: {
+        flex: 1,
+        paddingVertical: theme.spacing.sm,
+        alignItems: 'center',
+        borderRadius: theme.borderRadius.md,
+    },
+    activeTabButton: {
+        backgroundColor: theme.colors.background.primary,
+        paddingHorizontal: theme.spacing.md,
+        ...theme.shadows.medium,
+    },
+    tabButtonText: {
+        ...theme.typography.buttonSmall,
+        color: theme.colors.text.secondary,
+        fontSize: theme.responsive.size(14),
+        paddingVertical: theme.spacing.xs,
+    },
+    activeTabButtonText: {
+        color: theme.colors.text.accent,
+        fontWeight: theme.fontWeight.bold,
+    },
+    referralsContainer: {
+        marginBottom: theme.spacing.xl,
+    },
+    referralCard: {
         backgroundColor: theme.colors.background.primary,
         borderRadius: theme.borderRadius.md,
-        paddingHorizontal: theme.spacing.md,
-        paddingVertical: theme.spacing.sm,
+        padding: theme.spacing.sm,
         marginBottom: theme.spacing.md,
+        marginHorizontal: theme.spacing.lg,
         borderWidth: 1,
         borderColor: theme.colors.border.light,
+        ...theme.shadows.custom({
+            color: theme.colors.neutral[500],
+            offset: { width: 0, height: 1 },
+            opacity: 0.05,
+            radius: 0.4,
+        }),
     },
-    referralCode: {
+    referralCardHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        gap: theme.spacing.md,
+    },
+    referralCardImage: {
+        width: theme.responsive.size(90),
+        height: theme.responsive.size(90),
+        borderRadius: theme.borderRadius.sm,
+        overflow: 'hidden',
+    },
+    referralCardInfo: {
         flex: 1,
-        ...theme.typography.h5,
-        color: theme.colors.text.primary,
-        textAlign: 'center',
-        fontFamily: theme.fontFamily.mono.medium,
+        justifyContent: 'center',
+        alignItems: 'flex-start',
+        gap: theme.spacing.sm,
     },
-    copyButton: {
+    referralCardTitle: {
+        ...theme.typography.h4,
+        fontWeight: theme.fontWeight.bold,
+        color: theme.colors.text.primary,
+    },
+    referralCardValidText: {
+        ...theme.typography.bodyMedium,
+        color: theme.colors.text.secondary,
+    },
+    referralCardBadge: {
+        backgroundColor: theme.colors.primary[100],
+        borderRadius: theme.borderRadius.sm,
+        paddingHorizontal: theme.spacing.sm,
+        paddingVertical: theme.spacing.xs,
+    },
+    referralCardPointsBadgeText: {
+        ...theme.typography.buttonSmall,
+        color: theme.colors.primary[700],
+        fontWeight: theme.fontWeight.semiBold,
+    },
+    referralCardFooter: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    referralCardValidUntilText: {
+        ...theme.typography.captionMedium,
+        color: theme.colors.text.tertiary,
+    },
+    referralCardRedeemButton: {
         backgroundColor: theme.colors.primary[500],
         borderRadius: theme.borderRadius.sm,
         paddingHorizontal: theme.spacing.md,
         paddingVertical: theme.spacing.sm,
     },
-    copyButtonText: {
+    referralCardRedeemButtonText: {
         ...theme.typography.buttonSmall,
         color: theme.colors.background.primary,
     },
-    shareButton: {
-        backgroundColor: theme.colors.primary[500],
+    referralCardRedeemedCard: {
+        backgroundColor: theme.colors.background.primary,
         borderRadius: theme.borderRadius.md,
-        paddingVertical: theme.spacing.md,
+        padding: theme.spacing.lg,
+        marginBottom: theme.spacing.md,
+        borderWidth: 1,
+        borderColor: theme.colors.border.light,
+    },
+    referralCardRedeemedCardExpired: {
+        opacity: 0.6,
+    },
+    referralCardRedeemedCardHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
         alignItems: 'center',
-        ...theme.shadows.small,
+        marginBottom: theme.spacing.sm,
     },
-    shareButtonText: {
-        ...theme.typography.buttonLarge,
-        color: theme.colors.background.primary,
+    referralCardRedeemedCardTitle: {
+        ...theme.typography.h5,
+        color: theme.colors.text.primary,
     },
-    historyContainer: {
-        marginBottom: theme.spacing.xl,
+    referralCardRedeemedCardStatusBadge: {
+        paddingHorizontal: theme.spacing.sm,
+        paddingVertical: theme.spacing.xs,
+        borderRadius: theme.borderRadius.round,
+    },
+    referralCardRedeemedCardActiveBadge: {
+        backgroundColor: theme.colors.success[100],
+    },
+    referralCardRedeemedCardExpiredBadge: {
+        backgroundColor: theme.colors.error[100],
+    },
+    referralCardRedeemedCardStatusBadgeText: {
+        ...theme.typography.captionSmall,
+        fontWeight: theme.fontWeight.semiBold,
+    },
+    referralCardRedeemedCardDetails: {
+        marginTop: theme.spacing.sm,
+    },
+    referralCardRedeemedCardDate: {
+        ...theme.typography.bodySmall,
+        color: theme.colors.text.secondary,
+        marginBottom: theme.spacing.xs,
+    },
+    referralCardRedeemedCardExpiryDate: {
+        ...theme.typography.bodySmall,
+        color: theme.colors.text.secondary,
+    },
+    achievementsSection: {
+        marginTop: theme.spacing.lg,
     },
     sectionTitle: {
         ...theme.typography.h4,
         color: theme.colors.text.primary,
         marginBottom: theme.spacing.md,
     },
-    historyCard: {
-        backgroundColor: theme.colors.background.primary,
-        borderRadius: theme.borderRadius.md,
-        padding: theme.spacing.lg,
-        marginBottom: theme.spacing.md,
-        borderWidth: 1,
-        borderColor: theme.colors.border.light,
-        ...theme.shadows.small,
-    },
-    historyHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'flex-start',
-        marginBottom: theme.spacing.sm,
-    },
-    historyInfo: {
-        flex: 1,
-    },
-    historyName: {
-        ...theme.typography.h5,
-        color: theme.colors.text.primary,
-        marginBottom: theme.spacing.xs,
-    },
-    historyEmail: {
-        ...theme.typography.bodySmall,
-        color: theme.colors.text.secondary,
-    },
-    statusBadge: {
-        paddingHorizontal: theme.spacing.sm,
-        paddingVertical: theme.spacing.xs,
-        borderRadius: theme.borderRadius.round,
-    },
-    completedBadge: {
-        backgroundColor: theme.colors.success[100],
-    },
-    pendingBadge: {
-        backgroundColor: theme.colors.warning[100],
-    },
-    statusText: {
-        ...theme.typography.captionSmall,
-        fontWeight: theme.fontWeight.semiBold,
-    },
-    historyFooter: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-    },
-    historyDate: {
-        ...theme.typography.bodySmall,
-        color: theme.colors.text.secondary,
-    },
-    historyEarnings: {
-        ...theme.typography.bodyMedium,
-        color: theme.colors.success[600],
-        fontWeight: theme.fontWeight.semiBold,
-    },
-    rewardsContainer: {
-        marginBottom: theme.spacing.xl,
-    },
-    rewardCard: {
+    achievementCard: {
         backgroundColor: theme.colors.background.primary,
         borderRadius: theme.borderRadius.md,
         padding: theme.spacing.lg,
@@ -459,78 +563,165 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: theme.colors.border.light,
     },
-    completedReward: {
+    completedAchievement: {
         borderColor: theme.colors.success[200],
         backgroundColor: theme.colors.success[50],
     },
-    rewardHeader: {
+    achievementHeader: {
         flexDirection: 'row',
         alignItems: 'center',
     },
-    rewardIcon: {
+    achievementIcon: {
         fontSize: 24,
         marginRight: theme.spacing.md,
     },
-    rewardInfo: {
+    achievementInfo: {
         flex: 1,
     },
-    rewardTitle: {
+    achievementTitle: {
         ...theme.typography.h5,
         color: theme.colors.text.primary,
         marginBottom: theme.spacing.xs,
     },
-    rewardDescription: {
+    achievementDescription: {
         ...theme.typography.bodySmall,
         color: theme.colors.text.secondary,
     },
-    completedCheck: {
+    achievementPoints: {
+        backgroundColor: theme.colors.warning[100],
+        borderRadius: theme.borderRadius.round,
+        paddingHorizontal: theme.spacing.sm,
+        paddingVertical: theme.spacing.xs,
+    },
+    achievementPointsText: {
+        ...theme.typography.buttonSmall,
+        color: theme.colors.warning[700],
+        fontWeight: theme.fontWeight.semiBold,
+    },
+    completedBadge: {
         backgroundColor: theme.colors.success[500],
-        borderRadius: theme.borderRadius.round,
-        width: 24,
-        height: 24,
-        justifyContent: 'center',
-        alignItems: 'center',
+        borderRadius: theme.borderRadius.sm,
+        paddingHorizontal: theme.spacing.sm,
+        paddingVertical: theme.spacing.xs,
+        alignSelf: 'flex-start',
+        marginTop: theme.spacing.sm,
     },
-    completedCheckText: {
-        color: theme.colors.background.primary,
-        fontSize: 12,
-        fontWeight: theme.fontWeight.bold,
-    },
-    howItWorksContainer: {
-        marginBottom: theme.spacing.xl,
-    },
-    stepContainer: {
-        flexDirection: 'row',
-        alignItems: 'flex-start',
-        marginBottom: theme.spacing.lg,
-    },
-    stepNumber: {
-        width: 32,
-        height: 32,
-        borderRadius: theme.borderRadius.round,
-        backgroundColor: theme.colors.primary[500],
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: theme.spacing.md,
-        marginTop: 2,
-    },
-    stepNumberText: {
-        ...theme.typography.buttonMedium,
+    completedBadgeText: {
+        ...theme.typography.captionMedium,
         color: theme.colors.background.primary,
         fontWeight: theme.fontWeight.semiBold,
     },
-    stepContent: {
-        flex: 1,
+    referralCardTags: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: theme.spacing.sm,
+
     },
-    stepTitle: {
-        ...theme.typography.h5,
-        color: theme.colors.text.primary,
-        marginBottom: theme.spacing.xs,
+    referralCardTag: {
+        borderRadius: theme.borderRadius.sm,
+        paddingHorizontal: theme.spacing.sm,
+        paddingVertical: theme.spacing.xs,
+        ...theme.shadows.custom({
+            color: theme.colors.neutral[500],
+            offset: { width: 0, height: 1 },
+            opacity: 0.05,
+            radius: 1,
+        }),
     },
-    stepDescription: {
-        ...theme.typography.bodySmall,
+    referralCardTagText: {
+        fontSize: theme.responsive.size(12),
+        color: theme.colors.text.white,
+        fontWeight: theme.fontWeight.bold,
+
+    },
+    tagStyle1: {
+        backgroundColor: theme.colors.background.tagStyle1,
+        color: theme.colors.text.tagStyle1,
+    },
+    tagStyle2: {
+        backgroundColor: theme.colors.background.tagStyle2,
+        color: theme.colors.text.tagStyle2,
+    },
+    filterContainer: {
+        marginBottom: theme.spacing.lg,
+    },
+    filterListContainer: {
+        paddingHorizontal: theme.spacing.sm,
+    },
+    filterColumn: {
+        flexDirection: 'column',
+        gap: theme.spacing.sm,
+        alignItems: 'flex-start', // Align chips to the start
+    },
+    filterColumnStaggered: {
+        marginTop: theme.spacing.md, // Creates staggered effect
+    },
+    filterChip: {
+        backgroundColor: theme.colors.background.light,
+        borderRadius: theme.borderRadius.lg,
+        paddingHorizontal: theme.spacing.md,
+        paddingVertical: theme.spacing.sm,
+        borderWidth: 1,
+        borderColor: theme.colors.border.light,
+        alignSelf: 'flex-start', // Allow chips to size based on content
+        minWidth: theme.responsive.size(60), // Minimum width
+    },
+    filterChipSelected: {
+        backgroundColor: theme.colors.primary[500],
+        borderColor: theme.colors.primary[500],
+    },
+    filterChipText: {
+        ...theme.typography.buttonSmall,
         color: theme.colors.text.secondary,
-        lineHeight: 20,
+    },
+    filterChipTextSelected: {
+        color: theme.colors.background.primary,
+        fontWeight: theme.fontWeight.bold,
+    },
+
+
+    filterOption: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: theme.colors.background.primary,
+        borderWidth: 1,
+        borderColor: theme.colors.border.light,
+        borderRadius: theme.borderRadius.full,
+        paddingVertical: 6,
+        paddingHorizontal: 4,
+        gap: theme.spacing.xs,
+    },
+    filterOptionSelected: {
+        backgroundColor: theme.colors.background.searchFilter,
+        borderColor: theme.colors.background.searchFilter,
+    },
+    filterOptionText: {
+        ...theme.typography.bodyMedium,
+        color: theme.colors.text.primary,
+        paddingHorizontal: 4,
+    },
+    filterOptionTextSelected: {
+        color: theme.colors.text.primary,
+        fontWeight: theme.fontWeight.medium,
+    },
+    iconText: {
+        fontSize: 16,
+        color: theme.colors.text.secondary,
+        fontWeight: 'bold',
+    },
+    iconTextSelected: {
+        color: theme.colors.background.white,
+    },
+    filterOptionIcon: {
+        width: 24,
+        height: 24,
+        borderRadius: theme.borderRadius.full,
+        backgroundColor: theme.colors.background.white,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    filterOptionSelectedIcon: {
+        backgroundColor: theme.colors.tertiary[500],
     },
 });
 
