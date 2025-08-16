@@ -12,9 +12,18 @@ import Constants from '../constants/data';
 
 const SplashScreen = ({ navigation }) => {
     React.useEffect(() => {
-        setTimeout(() => {
-            NativeModuleUtils.SplashScreen.hide();
+
+        const timer = setTimeout(() => {
+            try {
+                console.log('Attempting to hide splash screen...');
+                NativeModuleUtils.SplashScreen.hide();
+                console.log('Splash screen hide called successfully');
+            } catch (error) {
+                console.error('Error hiding splash screen:', error);
+            }
         }, 500);
+
+        return () => clearTimeout(timer);
     }, []);
 
     React.useEffect(() => {
@@ -109,9 +118,8 @@ const styles = StyleSheet.create({
         opacity: 1,
     },
     logoImage: {
-        width: theme.responsive.size(250),
-        height: theme.responsive.size(250),
-        borderRadius: theme.borderRadius.lg,
+        width: 250,
+        height: 250,
     },
 });
 

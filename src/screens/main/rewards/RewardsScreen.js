@@ -188,17 +188,14 @@ const RewardsScreen = ({ navigation }) => {
 
                 {/* Content */}
                 <View style={styles.rewardsContainer}>
+
                     <FlatList
-                        showsHorizontalScrollIndicator={false}
+                        showsVerticalScrollIndicator={false}
                         data={filteredRewards}
                         renderItem={({ item }) => renderRewardCard(item)}
                         keyExtractor={(item) => item.id}
-                        snapToInterval={theme.responsive.width(theme.responsive.screen().width * 0.8)}
                         decelerationRate="fast"
-                        snapToAlignment="start"
-                        pagingEnabled={true}
-                        scrollEnabled={true}
-                        contentContainerStyle={styles.placeCardContainer}
+
                     />
                 </View>
             </View>
@@ -213,8 +210,8 @@ const styles = StyleSheet.create({
     },
     innerContainer: {
         flex: 1,
-        paddingHorizontal: theme.spacing.lg,
         paddingBottom: theme.spacing.xl,
+        marginTop: theme.spacing.lg,
     },
     header: {
         alignItems: 'flex-end',
@@ -302,15 +299,16 @@ const styles = StyleSheet.create({
     tabContainer: {
         flexDirection: 'row',
         backgroundColor: theme.colors.background.light,
-        borderRadius: theme.borderRadius.md,
+        borderRadius: theme.borderRadius.lg,
         padding: theme.spacing.xs,
+        marginHorizontal: theme.spacing.lg,
         marginVertical: theme.spacing.xl,
     },
     tabButton: {
         flex: 1,
         paddingVertical: theme.spacing.sm,
         alignItems: 'center',
-        borderRadius: theme.borderRadius.md,
+        borderRadius: theme.borderRadius.lg,
     },
     activeTabButton: {
         backgroundColor: theme.colors.background.primary,
@@ -331,14 +329,19 @@ const styles = StyleSheet.create({
         marginBottom: theme.spacing.xl,
     },
     rewardCard: {
-        width: theme.responsive.width(theme.responsive.screen().width * 0.8),
         backgroundColor: theme.colors.background.primary,
         borderRadius: theme.borderRadius.md,
         padding: theme.spacing.sm,
         marginBottom: theme.spacing.md,
+        marginHorizontal: theme.spacing.lg,
         borderWidth: 1,
         borderColor: theme.colors.border.light,
-        ...theme.shadows.medium,
+        ...theme.shadows.custom({
+            color: theme.colors.neutral[500],
+            offset: { width: 0, height: 1 },
+            opacity: 0.05,
+            radius: 0.4,
+        }),
     },
     rewardCardHeader: {
         flexDirection: 'row',

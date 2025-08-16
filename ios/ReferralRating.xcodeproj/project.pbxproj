@@ -7,8 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		085EC8496479F1515D8A72E2 /* Pods_ReferralRating.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2495908B48BF86339FB7B3E0 /* Pods_ReferralRating.framework */; };
 		0C37395142254D5897AA1DD6 /* Inter_28pt-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 4790308F6EE34DFBB2FC8259 /* Inter_28pt-Medium.ttf */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
+		244658162E4FAA80000DE675 /* SplashScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 244658152E4FAA80000DE675 /* SplashScreen.swift */; };
 		24F529EC2E47710D006542D7 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 24F529EB2E47710D006542D7 /* GoogleService-Info.plist */; };
 		2AE412F1E46E4999BA0D67E9 /* Inter_28pt-ExtraBoldItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 011BB3B07213403AA82C985A /* Inter_28pt-ExtraBoldItalic.ttf */; };
 		2F8C45113AF7045CF7082596 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
@@ -22,7 +24,6 @@
 		776E67B5906C450E8DD37195 /* Inter_28pt-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 264CB14617B745E3B7EA9993 /* Inter_28pt-SemiBold.ttf */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 		9E9A96C6A6CA49CEA71CC135 /* Inter_28pt-ThinItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 9DE3EC90BDA54EB494BDE37F /* Inter_28pt-ThinItalic.ttf */; };
-		B3F89B2ED12CBFA2259A7AD3 /* libPods-ReferralRating.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 17CBDB70B56B8F122CD7938E /* libPods-ReferralRating.a */; };
 		B845CEC5CDC64966AFA249C0 /* Inter_28pt-ExtraBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 8384ACA0CD884DDB8E27115B /* Inter_28pt-ExtraBold.ttf */; };
 		C37F9F9A1F314A53B9C51DE9 /* Inter_28pt-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 4A83ED96BA33466BA57EC803 /* Inter_28pt-Regular.ttf */; };
 		CDEA2C8AF9F346D08B26F380 /* Inter_28pt-MediumItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 01493FA08C8C44A2B1477640 /* Inter_28pt-MediumItalic.ttf */; };
@@ -41,8 +42,11 @@
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = ReferralRating/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = ReferralRating/Info.plist; sourceTree = "<group>"; };
 		13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = PrivacyInfo.xcprivacy; path = ReferralRating/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		17CBDB70B56B8F122CD7938E /* libPods-ReferralRating.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-ReferralRating.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		1AF1FAC4EA3645EE99E819AD /* Inter_28pt-ExtraLight.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Inter_28pt-ExtraLight.ttf"; path = "../src/assets/fonts/Inter/Inter_28pt-ExtraLight.ttf"; sourceTree = "<group>"; };
+		244658152E4FAA80000DE675 /* SplashScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashScreen.swift; sourceTree = "<group>"; };
+		244658172E4FAABB000DE675 /* SplashScreen.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SplashScreen.h; sourceTree = "<group>"; };
+		2495908B48BF86339FB7B3E0 /* Pods_ReferralRating.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ReferralRating.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		24E4FE942E4FC20500FEE961 /* ReferralRating-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "ReferralRating-Bridging-Header.h"; sourceTree = "<group>"; };
 		24F529EB2E47710D006542D7 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		264CB14617B745E3B7EA9993 /* Inter_28pt-SemiBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Inter_28pt-SemiBold.ttf"; path = "../src/assets/fonts/Inter/Inter_28pt-SemiBold.ttf"; sourceTree = "<group>"; };
 		343B8FA35A7E4F3DA8D1D434 /* Inter_28pt-Bold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Inter_28pt-Bold.ttf"; path = "../src/assets/fonts/Inter/Inter_28pt-Bold.ttf"; sourceTree = "<group>"; };
@@ -70,7 +74,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				B3F89B2ED12CBFA2259A7AD3 /* libPods-ReferralRating.a in Frameworks */,
+				085EC8496479F1515D8A72E2 /* Pods_ReferralRating.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -85,6 +89,9 @@
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */,
 				13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */,
+				244658172E4FAABB000DE675 /* SplashScreen.h */,
+				244658152E4FAA80000DE675 /* SplashScreen.swift */,
+				24E4FE942E4FC20500FEE961 /* ReferralRating-Bridging-Header.h */,
 			);
 			name = ReferralRating;
 			sourceTree = "<group>";
@@ -93,7 +100,7 @@
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				17CBDB70B56B8F122CD7938E /* libPods-ReferralRating.a */,
+				2495908B48BF86339FB7B3E0 /* Pods_ReferralRating.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -344,6 +351,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				244658162E4FAA80000DE675 /* SplashScreen.swift in Sources */,
 				761780ED2CA45674006654EE /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

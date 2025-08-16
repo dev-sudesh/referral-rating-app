@@ -2,12 +2,12 @@ import UIKit
 import React
 import React_RCTAppDelegate
 import ReactAppDependencyProvider
-import GoogleMaps
-import Firebase
+import FirebaseCore
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
   var window: UIWindow?
+  var splashWindow: UIWindow?
 
   var reactNativeDelegate: ReactNativeDelegate?
   var reactNativeFactory: RCTReactNativeFactory?
@@ -16,23 +16,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
   ) -> Bool {
-    // Initialize Google Maps with API key from secret file
-    if let path = Bundle.main.path(forResource: "GoogleMapsApiKey", ofType: "plist"),
-       let plist = NSDictionary(contentsOfFile: path),
-       let apiKey = plist["GMSApiKey"] as? String {
-      GMSServices.provideAPIKey(apiKey)
-    } else {
-      // Fallback to hardcoded key (for development only)
-      GMSServices.provideAPIKey("AIzaSyB9iSb8G1Hz9Ozb5VVQRf5qWqWu85rganM")
-    }
     FirebaseApp.configure()
     let delegate = ReactNativeDelegate()
     let factory = RCTReactNativeFactory(delegate: delegate)
     delegate.dependencyProvider = RCTAppDependencyProvider()
-
     reactNativeDelegate = delegate
     reactNativeFactory = factory
-
+    
     window = UIWindow(frame: UIScreen.main.bounds)
 
     factory.startReactNative(
@@ -40,7 +30,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
       in: window,
       launchOptions: launchOptions
     )
-
+    
+    SplashScreen.show()
     return true
   }
 }
