@@ -8,6 +8,9 @@ import AuthStack from './stacks/AuthStack';
 import MainTabs from './tabs/MainTabs';
 import Constants from '../constants/data';
 import SearchScreen from '../screens/main/search/SearchScreen';
+import PersonalInfo from '../screens/main/personal-info/PersonalInfo';
+import NotificationSettings from '../screens/main/notificaiton-settings/NotificationSettings';
+import FavoriteFilters from '../screens/main/favorite-filters/FavoriteFilters';
 
 const Stack = createStackNavigator();
 
@@ -25,7 +28,9 @@ const AppNavigator = () => {
                 <Stack.Screen name={Constants.Screen.Stack.Auth} component={AuthStack} />
                 <Stack.Screen name={Constants.Screen.Stack.Main} component={MainTabs} />
                 <Stack.Screen name={Constants.Screen.Search} component={SearchScreen} />
-
+                <Stack.Screen name={Constants.Screen.PersonalInfo} component={PersonalInfo} />
+                <Stack.Screen name={Constants.Screen.NotificationSettings} component={NotificationSettings} />
+                <Stack.Screen name={Constants.Screen.FavoriteFilters} component={FavoriteFilters} />
             </Stack.Navigator>
         </NavigationContainer>
     );

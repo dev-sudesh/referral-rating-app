@@ -17,6 +17,7 @@ import IconAsset from '../../../assets/icons/IconAsset';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AppImage from '../../../components/common/AppImage';
 import ImageAsset from '../../../assets/images/ImageAsset';
+import Constants from '../../../constants/data';
 
 const ProfileScreen = ({ navigation }) => {
     const [notificationsEnabled, setNotificationsEnabled] = useState(true);
@@ -32,10 +33,14 @@ const ProfileScreen = ({ navigation }) => {
         {
             id: 'personal-info',
             title: 'Personal Information',
+            action: 'navigate',
+            navigateTo: Constants.Screen.PersonalInfo,
         },
         {
             id: 'favorites-filters',
             title: 'Favorites Filters',
+            action: 'navigate',
+            navigateTo: Constants.Screen.FavoriteFilters,
         },
         {
             id: 'sign-in-options',
@@ -44,6 +49,8 @@ const ProfileScreen = ({ navigation }) => {
         {
             id: 'notifications-settings',
             title: 'Notifications Settings',
+            action: 'navigate',
+            navigateTo: Constants.Screen.NotificationSettings,
         },
     ];
 
@@ -51,6 +58,7 @@ const ProfileScreen = ({ navigation }) => {
         {
             id: 'faq-contact-us',
             title: 'FAQ / Contact Us',
+
         },
         {
             id: 'terms-of-service',
@@ -102,7 +110,7 @@ const ProfileScreen = ({ navigation }) => {
                 style={styles.menuItem}
                 onPress={() => {
                     if (item.action === 'navigate') {
-                        Alert.alert(item.title, `${item.title} functionality`);
+                        navigation.navigate(item.navigateTo);
                     }
                 }}
                 activeOpacity={0.8}

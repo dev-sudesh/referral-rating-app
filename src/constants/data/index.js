@@ -67,6 +67,10 @@ const Constants = {
             Profile: 'Profile',
         },
         Search: 'Search',
+        PersonalInfo: 'PersonalInfo',
+        FavoriteFilters: 'FavoriteFilters',
+        NotificationSettings: 'NotificationSettings',
+        SignInOptions: 'SignInOptions',
     },
 }
 
