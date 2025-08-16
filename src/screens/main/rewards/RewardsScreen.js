@@ -211,7 +211,6 @@ const styles = StyleSheet.create({
     innerContainer: {
         flex: 1,
         paddingBottom: theme.spacing.xl,
-        marginTop: theme.spacing.lg,
     },
     header: {
         alignItems: 'flex-end',
@@ -302,7 +301,8 @@ const styles = StyleSheet.create({
         borderRadius: theme.borderRadius.lg,
         padding: theme.spacing.xs,
         marginHorizontal: theme.spacing.lg,
-        marginVertical: theme.spacing.xl,
+        marginTop: theme.spacing.xl,
+        marginBottom: theme.spacing.lg,
     },
     tabButton: {
         flex: 1,
