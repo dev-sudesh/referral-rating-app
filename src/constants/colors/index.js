@@ -107,6 +107,7 @@ export const colors = {
         light: '#EEF0F6',
         tagStyle1: '#FFFBF0',
         tagStyle2: '#EBF4FF',
+        tagStyle3: '#FFF0C2',
     },
 
     // Text Colors
@@ -122,6 +123,8 @@ export const colors = {
         accent: '#7362EE',
         tagStyle1: '#FF9800',
         tagStyle2: '#065BC6',
+        tagStyle3: '#9E7700',
+        success: '#16C568',
     },
 
     // Border Colors
@@ -136,6 +139,7 @@ export const colors = {
         light: 'rgba(0, 0, 0, 0.1)',
         medium: 'rgba(0, 0, 0, 0.3)',
         dark: 'rgba(0, 0, 0, 0.7)',
+        map: 'rgb(114, 98, 238, 0.30)',
     },
 };
 

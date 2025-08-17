@@ -1,4 +1,5 @@
 import { Platform } from 'react-native';
+import { getApps, getApp } from '@react-native-firebase/app';
 
 /**
  * Firebase Initializer - Ensures Firebase is properly set up before use
@@ -22,16 +23,16 @@ class FirebaseInitializer {
 
     static async _doInitialize() {
         try {
-            // Import Firebase app
-            const firebase = require('@react-native-firebase/app').default;
+            // Use modular SDK API instead of deprecated namespaced API
+            const apps = getApps();
 
             // Wait for Firebase to be ready
-            if (!firebase.apps.length) {
+            if (!apps.length) {
                 throw new Error('Firebase not initialized. Check your config files.');
             }
 
             console.log('Firebase initialized successfully');
-            console.log('Firebase apps:', firebase.apps.map(app => app.name));
+            console.log('Firebase apps:', apps.map(app => app.name));
 
             this.isInitialized = true;
             return true;

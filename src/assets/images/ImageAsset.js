@@ -18,6 +18,7 @@ const ImageAsset = {
         placeFullBg: require('../../assets/images/others/place-image-full-bg.png'),
     },
     profileImage: require('../../assets/images/others/profile-image.png'),
+    markerIcon: require('../../assets/icons/markers/marker-icon.svg'),
 }
 
 

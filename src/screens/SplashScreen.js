@@ -44,8 +44,9 @@ const SplashScreen = ({ navigation }) => {
                             localKey="logo-full"
                             source={ImageAsset.logos.logoFull}
                             style={styles.logoImage}
-                            width={theme.responsive.size(250)}
-                            height={theme.responsive.size(250)}
+                            width={250}
+                            height={250}
+                            resizeMode="contain"
                             borderRadius={theme.borderRadius.lg}
                             showLoadingIndicator={false}
                             showErrorPlaceholder={false}

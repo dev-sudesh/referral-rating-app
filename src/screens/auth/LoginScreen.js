@@ -17,6 +17,7 @@ import ScreenHeader from '../../components/ui/ScreenHeader';
 import KeyboardAvoidingView from '../../components/common/KeyboardAvoidingView';
 import TextInputField from '../../components/ui/TextInputField';
 import Button from '../../components/ui/Button';
+import ToastUtils from '../../utils/ToastUtils';
 
 const LoginScreen = ({ navigation }) => {
     const [formData, setFormData] = useState({
@@ -82,18 +83,14 @@ const LoginScreen = ({ navigation }) => {
             await new Promise(resolve => setTimeout(resolve, 2000));
 
             // For demo purposes, show success and navigate
-            Alert.alert(
-                'Success',
-                'Successfully logged in!',
-                [
-                    {
-                        text: 'OK',
-                        onPress: () => navigation.replace('MainTabs'),
-                    },
-                ]
-            );
+            ToastUtils.success('Successfully logged in!', 'Welcome!');
+
+            // Navigate after showing toast
+            setTimeout(() => {
+                navigation.replace('MainTabs');
+            }, 1500);
         } catch (error) {
-            Alert.alert('Error', 'Invalid email or password. Please try again.');
+            ToastUtils.error('Invalid email or password. Please try again.');
         } finally {
             setIsLoading(false);
         }

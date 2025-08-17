@@ -1,4 +1,12 @@
-import auth from '@react-native-firebase/auth';
+import auth, {
+    getAuth,
+    signInWithCredential,
+    signOut,
+    onAuthStateChanged,
+    GoogleAuthProvider,
+    FacebookAuthProvider,
+    AppleAuthProvider
+} from '@react-native-firebase/auth';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { LoginManager, AccessToken } from 'react-native-fbsdk-next';
 import { appleAuth } from '@invertase/react-native-apple-authentication';
@@ -32,10 +40,11 @@ class FirebaseAuthService {
             const { idToken } = await GoogleSignin.signIn();
 
             // Create a Google credential with the token
-            const googleCredential = auth.GoogleAuthProvider.credential(idToken);
+            const googleCredential = GoogleAuthProvider.credential(idToken);
 
             // Sign-in the user with the credential
-            const userCredential = await auth().signInWithCredential(googleCredential);
+            const authInstance = getAuth();
+            const userCredential = await signInWithCredential(authInstance, googleCredential);
 
             return {
                 success: true,
@@ -78,10 +87,11 @@ class FirebaseAuthService {
             }
 
             // Create a Facebook credential with the AccesToken
-            const facebookCredential = auth.FacebookAuthProvider.credential(data.accessToken);
+            const facebookCredential = FacebookAuthProvider.credential(data.accessToken);
 
             // Sign-in the user with the credential
-            const userCredential = await auth().signInWithCredential(facebookCredential);
+            const authInstance = getAuth();
+            const userCredential = await signInWithCredential(authInstance, facebookCredential);
 
             return {
                 success: true,
@@ -126,10 +136,11 @@ class FirebaseAuthService {
 
             // Create a Firebase credential from the response
             const { identityToken, nonce } = appleAuthRequestResponse;
-            const appleCredential = auth.AppleAuthProvider.credential(identityToken, nonce);
+            const appleCredential = AppleAuthProvider.credential(identityToken, nonce);
 
             // Sign the user in with the credential
-            const userCredential = await auth().signInWithCredential(appleCredential);
+            const authInstance = getAuth();
+            const userCredential = await signInWithCredential(authInstance, appleCredential);
 
             return {
                 success: true,
@@ -168,7 +179,8 @@ class FirebaseAuthService {
             LoginManager.logOut();
 
             // Sign out from Firebase
-            await auth().signOut();
+            const authInstance = getAuth();
+            await signOut(authInstance);
 
             return { success: true };
         } catch (error) {
@@ -182,12 +194,14 @@ class FirebaseAuthService {
 
     // Get current user
     getCurrentUser() {
-        return auth().currentUser;
+        const authInstance = getAuth();
+        return authInstance.currentUser;
     }
 
     // Auth state listener
     onAuthStateChanged(callback) {
-        return auth().onAuthStateChanged(callback);
+        const authInstance = getAuth();
+        return onAuthStateChanged(authInstance, callback);
     }
 
     // Handle authentication errors

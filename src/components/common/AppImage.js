@@ -54,7 +54,10 @@ const AppImage = ({
                 finalSource = cachedImage;
                 console.log(`📸 Using preloaded image: ${localKey}`);
             } else {
-                console.log(`⚠️ Preloaded image not found: ${localKey}, using original source`);
+                // Use debug level logging instead of warning for missing preloaded images
+                if (__DEV__) {
+                    console.log(`📋 Preloaded image not found: ${localKey}, using original source`);
+                }
             }
         }
 

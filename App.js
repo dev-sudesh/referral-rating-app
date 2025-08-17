@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { View, Text, StyleSheet } from 'react-native';
+import Toast from 'react-native-toast-message';
 import AppNavigator from './src/navigation/AppNavigator';
 import DeviceInfo from './src/utils/deviceInfo/DeviceInfo';
 import FirebaseInitializer from './src/utils/FirebaseInitializer';
@@ -45,6 +46,7 @@ const App = () => {
     <SafeAreaProvider>
       <AppNavigator />
       <SearchFilter />
+      <Toast />
     </SafeAreaProvider>
   );
 };
