@@ -87,36 +87,18 @@ const NotificationSettings = ({ navigation }) => {
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.contentContainer}
             >
-                <NotificationItem
-                    label="Enable all notifications"
-                    settingKey="enableAllNotifications"
-                    value={notificationSettings.enableAllNotifications}
-                    style={styles.notificationItemEnableAll}
-                />
+                {
+                    notificationSettings.map((item, index) => (
+                        <NotificationItem
+                            key={index}
+                            style={index === 0 ? styles.notificationItemEnableAll : null}
+                            label={item.label}
+                            settingKey={item.settingKey}
+                            value={item.value}
+                        />
+                    ))
+                }
 
-                <NotificationItem
-                    label="Notification #1"
-                    settingKey="notification1"
-                    value={notificationSettings.notification1}
-                />
-
-                <NotificationItem
-                    label="Notification #2"
-                    settingKey="notification2"
-                    value={notificationSettings.notification2}
-                />
-
-                <NotificationItem
-                    label="Notification #3"
-                    settingKey="notification3"
-                    value={notificationSettings.notification3}
-                />
-
-                <NotificationItem
-                    label="Notification #4"
-                    settingKey="notification4"
-                    value={notificationSettings.notification4}
-                />
             </ScrollView>
         </ScreenContainer>
     );
