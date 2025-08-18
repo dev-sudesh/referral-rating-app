@@ -1,21 +1,16 @@
 import Foundation
 import React
-import UIKit
 
 // MARK: - SplashScreen Class
 @objc(SplashScreen)
-class SplashScreen: NSObject, RCTBridgeModule {
+class SplashScreen: NSObject {
     
     // Static properties to manage splash screen state
-    private static var isVisible = false
+    private static var waiting = true
     private static var addedJsLoadErrorObserver = false
-    private static var splashWindow: UIWindow?
+    private static var loadingView: UIView?
     
     // Required for RCTBridgeModule
-    static func moduleName() -> String! {
-        return "SplashScreen"
-    }
-    
     @objc
     static func requiresMainQueueSetup() -> Bool {
         return true
@@ -23,58 +18,36 @@ class SplashScreen: NSObject, RCTBridgeModule {
     
     // MARK: - Public Methods
     
-    /// Shows the splash screen
+    /// Shows the splash screen and waits until hide is called
     @objc
     class func show() {
-        DispatchQueue.main.async {
-            guard !isVisible else { return }
-            
-            // Add JavaScript load error observer if not already added
-            if !addedJsLoadErrorObserver {
-                NotificationCenter.default.addObserver(
-                    self,
-                    selector: #selector(jsLoadError),
-                    name: NSNotification.Name("RCTJavaScriptDidFailToLoadNotification"),
-                    object: nil
-                )
-                addedJsLoadErrorObserver = true
-            }
-            
-            // Create launch screen from storyboard
-            let storyboard = UIStoryboard(name: "LaunchScreen", bundle: nil)
-            guard let launchViewController = storyboard.instantiateInitialViewController() else {
-                print("SplashScreen: Could not load LaunchScreen.storyboard")
-                return
-            }
-            
-            // Create a new window to display the splash screen
-            splashWindow = UIWindow(frame: UIScreen.main.bounds)
-            splashWindow?.windowLevel = UIWindow.Level.normal + 1
-            splashWindow?.rootViewController = launchViewController
-            splashWindow?.makeKeyAndVisible()
-            
-            isVisible = true
-            print("SplashScreen: Splash screen is now visible")
+        // Add JavaScript load error observer if not already added
+        if !addedJsLoadErrorObserver {
+            NotificationCenter.default.addObserver(
+                self,
+                selector: #selector(jsLoadError),
+                name: NSNotification.Name("RCTJavaScriptDidFailToLoadNotification"),
+                object: nil
+            )
+            addedJsLoadErrorObserver = true
+        }
+        
+        // Wait until hide is called
+        while waiting {
+            RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.1))
         }
     }
     
     /// Hides the splash screen
     @objc
     class func hide() {
-        DispatchQueue.main.async {
-            guard isVisible, let window = splashWindow else { 
-                print("SplashScreen: No splash screen to hide")
-                return 
+        if waiting {
+            DispatchQueue.main.async {
+                waiting = false
             }
-            
-            UIView.animate(withDuration: 0.3, animations: {
-                window.alpha = 0
-            }) { _ in
-                window.isHidden = true
-                window.rootViewController = nil
-                splashWindow = nil
-                isVisible = false
-                print("SplashScreen: Splash screen hidden")
+        } else {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                loadingView?.removeFromSuperview()
             }
         }
     }
@@ -84,7 +57,8 @@ class SplashScreen: NSObject, RCTBridgeModule {
     /// Handles JavaScript load errors
     @objc
     private class func jsLoadError(_ notification: Notification) {
-        print("SplashScreen: JavaScript load error detected, hiding splash screen")
+        // If there was an error loading javascript, hide the splash screen
+        // Otherwise the splash screen will remain forever, which is a hassle to debug
         hide()
     }
     
@@ -93,14 +67,12 @@ class SplashScreen: NSObject, RCTBridgeModule {
     /// Exposed method to hide splash screen from React Native
     @objc
     func hide() {
-        print("SplashScreen: Hide called from React Native")
         SplashScreen.hide()
     }
     
     /// Exposed method to show splash screen from React Native
     @objc
     func show() {
-        print("SplashScreen: Show called from React Native")
         SplashScreen.show()
     }
 }
