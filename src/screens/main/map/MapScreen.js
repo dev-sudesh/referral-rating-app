@@ -11,7 +11,7 @@ import {
     Pressable,
     Platform,
 } from 'react-native';
-import MapView, { Animated as AnimatedMap, AnimatedRegion, Marker, PROVIDER_GOOGLE, AnimatedMapView } from 'react-native-maps';
+import MapView, { Animated as AnimatedMap, AnimatedRegion, Marker, AnimatedMapView } from 'react-native-maps';
 import Geolocation from '@react-native-community/geolocation';
 import { request, PERMISSIONS, RESULTS, check } from 'react-native-permissions';
 import { theme } from '../../../constants/theme';
@@ -26,6 +26,7 @@ import CurvedCard from '../../../components/ui/CurvedCard';
 import CurrentLocationMarker from '../../../components/ui/CurrentLocationMarker';
 import ToastUtils from '../../../utils/ToastUtils';
 import Animated from 'react-native-reanimated';
+import MapUtils from '../../../utils/MapUtils';
 
 const nearbyPlaces = [
     {
@@ -393,7 +394,7 @@ const MapScreen = ({ navigation }) => {
                 </CurvedCard>
 
                 <Pressable style={styles.placeCardFooter} onPress={() => referPlace(selectedPlace)}>
-                    <View style={[styles.placeCardFooterContent, selectedPlace.isReferred && { filter: 'grayscale(100%)' }]}>
+                    <View style={[styles.placeCardFooterContent, selectedPlace.isReferred && styles.placeCardFooterContentReferred]}>
                         <AppImage
                             source={ImageAsset.logos.logoSmall}
                             style={styles.placeLogo}
@@ -499,7 +500,7 @@ const MapScreen = ({ navigation }) => {
                     <MapView
                         ref={mapRef}
                         style={styles.map}
-                        provider={PROVIDER_GOOGLE}
+                        provider={MapUtils.Provider}
                         onPress={handleMapPress}
                         region={region}
                         onMapReady={() => setIsMapReady(true)}
@@ -747,7 +748,7 @@ const MapScreen = ({ navigation }) => {
                                 </View>
                             </CurvedCard>
                             <Pressable style={styles.placeCardFooter} onPress={() => referPlace(selectedPlace)}>
-                                <View style={[styles.placeCardFooterContent, selectedPlace?.isReferred && { filter: 'grayscale(100%)' }]}>
+                                <View style={[styles.placeCardFooterContent, selectedPlace?.isReferred && styles.placeCardFooterContentReferred]}>
                                     <AppImage
                                         source={ImageAsset.logos.logoSmall}
                                         style={styles.placeLogo}
@@ -1335,6 +1336,9 @@ const styles = StyleSheet.create({
         height: 56,
         borderRadius: theme.borderRadius.round,
         backgroundColor: theme.colors.primary[500],
+    },
+    placeCardFooterContentReferred: {
+        backgroundColor: theme.colors.neutral[500],
     },
     placeLogo: {
         width: 50,

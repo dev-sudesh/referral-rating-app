@@ -11,6 +11,7 @@ const DeviceInfo = {
     buildNumber: RNDeviceInfo.getBuildNumber(),
     buildVersion: RNDeviceInfo.getVersion(),
     statusBarHeight: StatusBar.currentHeight || 0,
+    isEmulator: RNDeviceInfo.isEmulator(),
     init: function () {
         this.isIOS = Platform.OS === 'ios';
         this.isAndroid = Platform.OS === 'android';
@@ -21,6 +22,7 @@ const DeviceInfo = {
         this.buildNumber = RNDeviceInfo.getBuildNumber();
         this.buildVersion = RNDeviceInfo.getVersion();
         this.statusBarHeight = StatusBar.currentHeight || 0;
+        this.isEmulator = RNDeviceInfo.isEmulator();
     },
 };
 

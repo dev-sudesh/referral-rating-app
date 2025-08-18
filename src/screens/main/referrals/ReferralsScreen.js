@@ -56,9 +56,11 @@ const referrals = [
     {
         id: 'referral-001',
         tags: [{
+            id: 'referral-001-tag-001',
             title: 'No.1',
             style: 'tagStyle1',
         }, {
+            id: 'referral-001-tag-002',
             title: 'Food',
             style: 'tagStyle2',
         }],
@@ -71,6 +73,7 @@ const referrals = [
     {
         id: 'referral-002',
         tags: [{
+            id: 'referral-002-tag-001',
             title: 'Cinema',
             style: 'tagStyle2',
         }],
@@ -83,6 +86,7 @@ const referrals = [
     {
         id: 'referral-003',
         tags: [{
+            id: 'referral-003-tag-001',
             title: 'Food',
             style: 'tagStyle2',
         }],
@@ -95,9 +99,11 @@ const referrals = [
     {
         id: 'referral-004',
         tags: [{
+            id: 'referral-004-tag-001',
             title: 'No.3',
             style: 'tagStyle1',
         }, {
+            id: 'referral-004-tag-002',
             title: 'Drinks',
             style: 'tagStyle2',
         }],
@@ -110,6 +116,7 @@ const referrals = [
     {
         id: 'referral-005',
         tags: [{
+            id: 'referral-005-tag-001',
             title: 'Steak House',
             style: 'tagStyle2',
         }],
@@ -122,6 +129,7 @@ const referrals = [
     {
         id: 'referral-006',
         tags: [{
+            id: 'referral-006-tag-001',
             title: 'Steak House',
             style: 'tagStyle2',
         }],
@@ -134,6 +142,7 @@ const referrals = [
     {
         id: 'referral-007',
         tags: [{
+            id: 'referral-007-tag-001',
             title: 'Steak House',
             style: 'tagStyle2',
         }],
@@ -227,7 +236,7 @@ const ReferralsScreen = ({ navigation }) => {
                         <View style={styles.referralCardInfo}>
                             <View style={styles.referralCardTags}>
                                 {referral.tags.map((tag, index) => (
-                                    <View style={[styles.referralCardTag, { backgroundColor: styles[tag.style].backgroundColor }]}>
+                                    <View key={tag.id} style={[styles.referralCardTag, { backgroundColor: styles[tag.style].backgroundColor }]}>
                                         <Text style={[styles.referralCardTagText, { color: styles[tag.style].color }]}>{tag.title}</Text>
                                     </View>
                                 ))}
@@ -268,7 +277,7 @@ const ReferralsScreen = ({ navigation }) => {
                         <View style={{ flexDirection: 'column', gap: theme.spacing.sm }}>
                             <View style={{ flexDirection: 'row', gap: theme.spacing.sm }}>
                                 {filters.slice(0, Math.ceil(filters.length / 2)).map((item, index) => (
-                                    <View key={index} style={[
+                                    <View key={item.id} style={[
                                         styles.filterColumn,
                                     ]}>
                                         {renderFilterChip(item)}
@@ -277,7 +286,7 @@ const ReferralsScreen = ({ navigation }) => {
                             </View>
                             <View style={{ flexDirection: 'row', gap: theme.spacing.sm }}>
                                 {filters.slice(Math.ceil(filters.length / 2)).map((item, index) => (
-                                    <View key={index} style={[
+                                    <View key={item.id} style={[
                                         styles.filterColumn,
                                     ]}>
                                         {renderFilterChip(item)}

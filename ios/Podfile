@@ -37,6 +37,7 @@ use_modular_headers!
 target 'ReferralRating' do
   pod 'Firebase/Core'
   pod 'Firebase/Auth'
+  pod 'GoogleMaps'
   config = use_native_modules!
   
 

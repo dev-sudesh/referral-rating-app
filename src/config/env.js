@@ -1,0 +1,14 @@
+import ENV from '../../env.json';
+
+export const Env = {
+    ENVIRONMENT: ENV.ENVIRONMENT,
+    GOOGLE_MAPS_API_KEY: ENV.GOOGLE_MAPS_API_KEY[ENV.ENVIRONMENT],
+    API_BASE_URL: ENV.API_BASE_URL[ENV.ENVIRONMENT],
+    init: function () {
+        this.ENVIRONMENT = ENV.ENVIRONMENT;
+        this.GOOGLE_MAPS_API_KEY = ENV.GOOGLE_MAPS_API_KEY[ENV.ENVIRONMENT];
+        this.API_BASE_URL = ENV.API_BASE_URL[ENV.ENVIRONMENT];
+    }
+};
+
+export default Env;

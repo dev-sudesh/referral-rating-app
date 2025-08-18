@@ -9,6 +9,7 @@ import FirebaseInitializer from './src/utils/FirebaseInitializer';
 // Initialize Firebase
 import '@react-native-firebase/app';
 import SearchFilter from './src/components/ui/SearchFilter';
+import MapUtils from './src/utils/MapUtils';
 
 const App = () => {
   const [firebaseReady, setFirebaseReady] = useState(false);
@@ -19,6 +20,7 @@ const App = () => {
       try {
         DeviceInfo.init();
         await FirebaseInitializer.initialize();
+        MapUtils.init();
         setFirebaseReady(true);
       } catch (err) {
         console.error('App initialization error:', err);

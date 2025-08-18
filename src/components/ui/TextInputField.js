@@ -309,6 +309,7 @@ const styles = StyleSheet.create({
         ...theme.typography.bodyMedium,
         color: theme.colors.text.primary,
         minHeight: theme.responsive.inputHeight(),
+        lineHeight: theme.responsive.size(18),
     },
     inputFocused: {
         color: theme.colors.text.primary,

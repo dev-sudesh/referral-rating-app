@@ -3,6 +3,7 @@ import React
 import React_RCTAppDelegate
 import ReactAppDependencyProvider
 import FirebaseCore
+import GoogleMaps
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -16,6 +17,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
   ) -> Bool {
+    // get key from GoogleMapsApiKey.plist
+    guard let path = Bundle.main.path(forResource: "GoogleMapsApiKey", ofType: "plist"),
+          let dict = NSDictionary(contentsOfFile: path),
+          let key = dict.object(forKey: "GMSApiKey") as? String else {
+      print("ERROR: Could not find GoogleMapsApiKey.plist or GMSApiKey in the bundle")
+      fatalError("GoogleMaps API key not found")
+    }
+    GMSServices.provideAPIKey(key)
     let delegate = ReactNativeDelegate()
     let factory = RCTReactNativeFactory(delegate: delegate)
     delegate.dependencyProvider = RCTAppDependencyProvider()
