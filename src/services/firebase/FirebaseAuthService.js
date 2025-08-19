@@ -1,6 +1,7 @@
 import auth, {
     getAuth,
     signInWithCredential,
+    signInAnonymously,
     signOut,
     onAuthStateChanged,
     GoogleAuthProvider,
@@ -157,6 +158,27 @@ class FirebaseAuthService {
         }
     }
 
+    // Anonymous Sign-In
+    async signInAnonymously() {
+        try {
+            const authInstance = getAuth();
+            const userCredential = await signInAnonymously(authInstance);
+
+            return {
+                success: true,
+                user: userCredential.user,
+                provider: 'anonymous'
+            };
+        } catch (error) {
+            console.error('Anonymous Sign-In Error:', error);
+            return {
+                success: false,
+                error: this.handleAuthError(error),
+                provider: 'anonymous'
+            };
+        }
+    }
+
     // Twitter Sign-In - Not implemented (requires complex OAuth flow)
     async signInWithTwitter() {
         return {
@@ -212,7 +234,7 @@ class FirebaseAuthService {
             case 'auth/invalid-credential':
                 return 'The credential is invalid or has expired.';
             case 'auth/operation-not-allowed':
-                return 'This sign-in method is not enabled.';
+                return 'This sign-in method is not enabled. Please check your Firebase console settings.';
             case 'auth/user-disabled':
                 return 'Your account has been disabled.';
             case 'auth/user-not-found':
@@ -221,6 +243,8 @@ class FirebaseAuthService {
                 return 'Incorrect password.';
             case 'auth/network-request-failed':
                 return 'Network error occurred. Please check your connection.';
+            case 'auth/too-many-requests':
+                return 'Too many unsuccessful attempts. Please try again later.';
             default:
                 return error.message || 'An unexpected error occurred. Please try again.';
         }

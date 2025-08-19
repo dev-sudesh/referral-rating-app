@@ -11,6 +11,9 @@ import {
 import { theme } from '../../constants/theme';
 import Constants from '../../constants/data';
 import ScreenContainer from '../../components/common/ScreenContainer';
+import FirebaseAuthService from '../../services/firebase/FirebaseAuthService';
+import ToastUtils from '../../utils/ToastUtils';
+import AsyncStoreUtils from '../../utils/AsyncStoreUtils';
 
 const OnboardingScreen = ({ navigation }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -80,6 +83,25 @@ const OnboardingScreen = ({ navigation }) => {
         </View>
     );
 
+    const getStarted = async () => {
+        // anonymous login
+        try {
+            const result = await FirebaseAuthService.signInAnonymously();
+            if (result.success) {
+                await AsyncStoreUtils.setItem(AsyncStoreUtils.Keys.IS_LOGIN, 'true');
+                await AsyncStoreUtils.setItem(AsyncStoreUtils.Keys.USER_DETAILS, result.user);
+                navigation.replace(Constants.Screen.Stack.Main);
+            } else {
+                navigation.replace(Constants.Screen.Stack.Auth);
+            }
+        } catch (error) {
+            navigation.replace(Constants.Screen.Stack.Auth);
+        } finally {
+            await AsyncStoreUtils.setItem(AsyncStoreUtils.Keys.IS_ONBOARDING_COMPLETED, 'true');
+        }
+
+    }
+
     const handleNext = () => {
         // Pause auto scroll when user manually navigates
         setIsAutoScrollActive(false);
@@ -90,14 +112,14 @@ const OnboardingScreen = ({ navigation }) => {
                 animated: true,
             });
         } else {
-            navigation.replace(Constants.Screen.Stack.Auth);
+            getStarted();
         }
     };
 
     const handleSkip = () => {
         // Pause auto scroll when user skips
         setIsAutoScrollActive(false);
-        navigation.replace(Constants.Screen.Stack.Auth);
+        getStarted();
     };
 
     const handleViewableItemsChanged = useRef(({ viewableItems }) => {

@@ -9,10 +9,10 @@ import BuildVersion from '../components/ui/BuildVersion';
 import NativeModuleUtils from '../utils/nativeModules/NativeModuleUtils';
 import ImageAsset from '../assets/images/ImageAsset';
 import Constants from '../constants/data';
+import AsyncStoreUtils from '../utils/AsyncStoreUtils';
 
 const SplashScreen = ({ navigation }) => {
     React.useEffect(() => {
-
         const timer = setTimeout(() => {
             try {
                 console.log('Attempting to hide splash screen...');
@@ -26,9 +26,27 @@ const SplashScreen = ({ navigation }) => {
         return () => clearTimeout(timer);
     }, []);
 
+    const checkLoginStatus = async () => {
+        try {
+            const isOnboardingCompleted = await AsyncStoreUtils.getItem(AsyncStoreUtils.Keys.IS_ONBOARDING_COMPLETED);
+            if (isOnboardingCompleted) {
+                const isLogin = await AsyncStoreUtils.getItem(AsyncStoreUtils.Keys.IS_LOGIN);
+                if (isLogin) {
+                    navigation.replace(Constants.Screen.Stack.Main);
+                } else {
+                    navigation.replace(Constants.Screen.Stack.Auth);
+                }
+            } else {
+                navigation.replace(Constants.Screen.Onboarding);
+            }
+        } catch (error) {
+            console.error('Error checking login status:', error);
+        }
+    }
+
     React.useEffect(() => {
         const timer = setTimeout(() => {
-            navigation.replace(Constants.Screen.Onboarding);
+            checkLoginStatus();
         }, 2000);
 
         return () => clearTimeout(timer);

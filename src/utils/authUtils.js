@@ -35,10 +35,19 @@ export const formatUserData = (firebaseUser) => {
 /**
  * Get the primary sign-in provider for a user
  * @param {Object} firebaseUser - Firebase user object
- * @returns {string} - Provider ID (google.com, facebook.com, apple.com, etc.)
+ * @returns {string} - Provider ID (google.com, facebook.com, apple.com, anonymous, etc.)
  */
 export const getPrimaryProvider = (firebaseUser) => {
-    if (!firebaseUser || !firebaseUser.providerData || firebaseUser.providerData.length === 0) {
+    if (!firebaseUser) {
+        return 'unknown';
+    }
+
+    // Check if user is anonymous
+    if (firebaseUser.isAnonymous) {
+        return 'anonymous';
+    }
+
+    if (!firebaseUser.providerData || firebaseUser.providerData.length === 0) {
         return 'email'; // Default for email/password users
     }
 
@@ -58,12 +67,26 @@ export const isSignedInWithProvider = (firebaseUser, providerId) => {
 };
 
 /**
+ * Check if user is anonymous
+ * @param {Object} firebaseUser - Firebase user object
+ * @returns {boolean} - True if user is anonymous
+ */
+export const isAnonymousUser = (firebaseUser) => {
+    return firebaseUser?.isAnonymous === true;
+};
+
+/**
  * Get display name with fallback
  * @param {Object} firebaseUser - Firebase user object
  * @returns {string} - Display name or email or 'User'
  */
 export const getDisplayName = (firebaseUser) => {
     if (!firebaseUser) return 'User';
+
+    // For anonymous users, return a specific label
+    if (firebaseUser.isAnonymous) {
+        return 'Guest User';
+    }
 
     return firebaseUser.displayName ||
         firebaseUser.email ||
@@ -112,4 +135,40 @@ export const getLastSignInDate = (firebaseUser) => {
 
     const date = new Date(firebaseUser.metadata.lastSignInTime);
     return date.toLocaleDateString();
+};
+
+/**
+ * Check if anonymous user can be upgraded to permanent account
+ * @param {Object} firebaseUser - Firebase user object
+ * @returns {boolean} - True if user is anonymous and can be upgraded
+ */
+export const canUpgradeAnonymousUser = (firebaseUser) => {
+    return firebaseUser?.isAnonymous === true;
+};
+
+/**
+ * Get user type description
+ * @param {Object} firebaseUser - Firebase user object
+ * @returns {string} - User type description
+ */
+export const getUserType = (firebaseUser) => {
+    if (!firebaseUser) return 'No user';
+
+    if (firebaseUser.isAnonymous) {
+        return 'Anonymous user';
+    }
+
+    const provider = getPrimaryProvider(firebaseUser);
+    switch (provider) {
+        case 'google.com':
+            return 'Google account';
+        case 'facebook.com':
+            return 'Facebook account';
+        case 'apple.com':
+            return 'Apple account';
+        case 'email':
+            return 'Email account';
+        default:
+            return 'Registered user';
+    }
 };

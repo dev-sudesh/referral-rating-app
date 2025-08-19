@@ -37,10 +37,28 @@ export const useFirebaseAuth = () => {
         }
     };
 
+    const signInAnonymously = async () => {
+        setIsLoading(true);
+        try {
+            const result = await FirebaseAuthService.signInAnonymously();
+            if (result.success) {
+                // User state will be updated by the auth state listener
+                setIsAuthenticated(true);
+            }
+            return result;
+        } catch (error) {
+            console.error('Anonymous sign in error:', error);
+            return { success: false, error: error.message };
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     return {
         user,
         isLoading,
         isAuthenticated,
         signOut,
+        signInAnonymously,
     };
 };
