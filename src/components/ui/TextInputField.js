@@ -288,12 +288,14 @@ const styles = StyleSheet.create({
         backgroundColor: theme.colors.background.white,
         minHeight: theme.responsive.inputHeight(),
         borderColor: theme.colors.border.light,
-        ...theme.shadows.medium,
+        ...theme.shadows.custom({
+            radius: 0.5,
+        }),
     },
     inputContainerFocused: {
         borderColor: theme.colors.primary[500],
         borderWidth: 2,
-        ...theme.shadows.small,
+        ...theme.shadows.large,
     },
     inputContainerError: {
         borderColor: theme.colors.error[500],

@@ -23,6 +23,7 @@ import CloseIcon from '../../assets/icons/others/close-icon.svg';
 import ShareIcon from '../../assets/icons/others/share-icon.svg';
 import WebsiteIcon from '../../assets/icons/others/website-icon.svg';
 import ClockIcon from '../../assets/icons/others/clock-icon.svg';
+import EditIcon from '../../assets/icons/others/edit-icon.svg';
 
 const IconAsset = {
     eyeOn: EyeOn,
@@ -57,6 +58,7 @@ const IconAsset = {
     shareIcon: ShareIcon,
     websiteIcon: WebsiteIcon,
     clockIcon: ClockIcon,
+    editIcon: EditIcon,
 }
 
 export default IconAsset;
