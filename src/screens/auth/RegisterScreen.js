@@ -7,15 +7,14 @@ import {
     TouchableOpacity,
     StatusBar,
     Alert,
-    KeyboardAvoidingView,
     Platform,
-    ScrollView,
 } from 'react-native';
 import { theme } from '../../constants/theme';
 import ScreenContainer from '../../components/common/ScreenContainer';
 import ScreenHeader from '../../components/ui/ScreenHeader';
 import TextInputField from '../../components/ui/TextInputField';
 import Button from '../../components/ui/Button';
+import KeyboardAvoidingView from '../../components/common/KeyboardAvoidingView';
 
 const RegisterScreen = ({ navigation }) => {
     const [formData, setFormData] = useState({
@@ -113,96 +112,94 @@ const RegisterScreen = ({ navigation }) => {
                 showBackButton
                 onBackPress={() => navigation.goBack()}
             />
-            <KeyboardAvoidingView>
-                <ScrollView
-                    contentContainerStyle={styles.scrollContent}
-                    showsVerticalScrollIndicator={false}
-                >
-
-                    {/* Form */}
-                    <View style={styles.form}>
-                        {/* Name Inputs */}
-                        <View style={styles.nameContainer}>
-                            <View style={[styles.inputContainer, styles.halfWidth]}>
-                                <TextInputField
-                                    label="First Name"
-                                    placeholder="Enter first name"
-                                    placeholderTextColor={theme.colors.text.tertiary}
-                                    value={formData.firstName}
-                                    onChangeText={(value) => handleInputChange('firstName', value)}
-                                    autoCapitalize="words"
-                                    autoCorrect={false}
-                                />
-                            </View>
-                            <View style={[styles.inputContainer, styles.halfWidth]}>
-                                <TextInputField
-                                    label="Last Name"
-                                    placeholder="Enter last name"
-                                    placeholderTextColor={theme.colors.text.tertiary}
-                                    value={formData.lastName}
-                                    onChangeText={(value) => handleInputChange('lastName', value)}
-                                    autoCapitalize="words"
-                                    autoCorrect={false}
-                                />
-                            </View>
-                        </View>
-
-                        {/* Email Input */}
-                        <View style={styles.inputContainer}>
+            <KeyboardAvoidingView
+                contentContainerStyle={styles.scrollContent}
+                showsVerticalScrollIndicator={false}
+                scrollEnabled={true}
+            >
+                {/* Form */}
+                <View style={styles.form}>
+                    {/* Name Inputs */}
+                    <View style={styles.nameContainer}>
+                        <View style={[styles.inputContainer, styles.halfWidth]}>
                             <TextInputField
-                                label="Email Address"
-                                placeholder="Enter your email"
+                                label="First Name"
+                                placeholder="Enter first name"
                                 placeholderTextColor={theme.colors.text.tertiary}
-                                value={formData.email}
-                                onChangeText={(value) => handleInputChange('email', value)}
+                                value={formData.firstName}
+                                onChangeText={(value) => handleInputChange('firstName', value)}
+                                autoCapitalize="words"
+                                autoCorrect={false}
                             />
                         </View>
-
-                        {/* Password Input */}
-                        <View style={styles.inputContainer}>
+                        <View style={[styles.inputContainer, styles.halfWidth]}>
                             <TextInputField
-                                type="password"
-                                label="Password"
-                                placeholder="Create a password"
+                                label="Last Name"
+                                placeholder="Enter last name"
                                 placeholderTextColor={theme.colors.text.tertiary}
-                                value={formData.password}
-                                onChangeText={(value) => handleInputChange('password', value)}
+                                value={formData.lastName}
+                                onChangeText={(value) => handleInputChange('lastName', value)}
+                                autoCapitalize="words"
+                                autoCorrect={false}
                             />
                         </View>
-
-                        {/* Confirm Password Input */}
-                        <View style={styles.inputContainer}>
-                            <TextInputField
-                                type="password"
-                                label="Confirm Password"
-                                placeholder="Confirm your password"
-                                placeholderTextColor={theme.colors.text.tertiary}
-                                value={formData.confirmPassword}
-                                onChangeText={(value) => handleInputChange('confirmPassword', value)}
-                            />
-                        </View>
-
-                        {/* Register Button */}
-                        <Button
-                            title={isLoading ? 'Creating Account...' : 'Create an account'}
-                            onPress={handleRegister}
-                            disabled={isLoading}
-                            loading={isLoading}
-                            variant="primary"
-                            size="medium"
-                        />
-
-                        {/* Terms and Conditions */}
-                        <View style={styles.termsContainer}>
-                            <Text style={styles.termsText}>
-                                By entering your number, you agreeing to our{'\n'}
-                                <Text style={styles.termsLink}>Terms of Service</Text> and{' '}
-                                <Text style={styles.termsLink}>Privacy Policy</Text>.
-                            </Text>
-                        </View>
-
                     </View>
-                </ScrollView>
+
+                    {/* Email Input */}
+                    <View style={styles.inputContainer}>
+                        <TextInputField
+                            label="Email Address"
+                            placeholder="Enter your email"
+                            placeholderTextColor={theme.colors.text.tertiary}
+                            value={formData.email}
+                            onChangeText={(value) => handleInputChange('email', value)}
+                        />
+                    </View>
+
+                    {/* Password Input */}
+                    <View style={styles.inputContainer}>
+                        <TextInputField
+                            type="password"
+                            label="Password"
+                            placeholder="Create a password"
+                            placeholderTextColor={theme.colors.text.tertiary}
+                            value={formData.password}
+                            onChangeText={(value) => handleInputChange('password', value)}
+                        />
+                    </View>
+
+                    {/* Confirm Password Input */}
+                    <View style={styles.inputContainer}>
+                        <TextInputField
+                            type="password"
+                            label="Confirm Password"
+                            placeholder="Confirm your password"
+                            placeholderTextColor={theme.colors.text.tertiary}
+                            value={formData.confirmPassword}
+                            onChangeText={(value) => handleInputChange('confirmPassword', value)}
+                        />
+                    </View>
+
+                    {/* Register Button */}
+                    <Button
+                        title={isLoading ? 'Creating Account...' : 'Create an account'}
+                        onPress={handleRegister}
+                        disabled={isLoading}
+                        loading={isLoading}
+                        variant="primary"
+                        size="medium"
+                    />
+
+                    {/* Terms and Conditions */}
+                    <View style={styles.termsContainer}>
+                        <Text style={styles.termsText}>
+                            By entering your number, you agreeing to our{'\n'}
+                            <Text style={styles.termsLink}>Terms of Service</Text> and{' '}
+                            <Text style={styles.termsLink}>Privacy Policy</Text>.
+                        </Text>
+                    </View>
+
+                </View>
             </KeyboardAvoidingView>
         </ScreenContainer>
     );

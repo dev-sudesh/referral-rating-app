@@ -11,6 +11,7 @@ import {
     Pressable,
     Platform,
 } from 'react-native';
+import { useFocusEffect, useIsFocused } from '@react-navigation/native';
 import MapView, { Animated as AnimatedMap, AnimatedRegion, Marker, AnimatedMapView } from 'react-native-maps';
 import Geolocation from '@react-native-community/geolocation';
 import { request, PERMISSIONS, RESULTS, check } from 'react-native-permissions';
@@ -127,10 +128,28 @@ const MapScreen = ({ navigation }) => {
     const animationTimeoutRef = useRef(null);
     const [showPlaceBigCard, setShowPlaceBigCard] = useState(false);
     const [showPlaceFullCard, setShowPlaceFullCard] = useState(false);
+    const [isScreenFocused, setIsScreenFocused] = useState(false);
+    const isFocused = useIsFocused();
+
+    const timeoutRef = useRef(null);
 
     useEffect(() => {
-        requestLocationPermission();
-    }, []);
+        if (isFocused) {
+            requestLocationPermission();
+        }
+    }, [isFocused]);
+
+    // Hide status bar when screen is focused
+    useFocusEffect(
+        React.useCallback(() => {
+            StatusBar.setHidden(true);
+            setIsScreenFocused(true);
+            return () => {
+                StatusBar.setHidden(false);
+                setIsScreenFocused(false);
+            };
+        }, [])
+    );
 
     const requestLocationPermission = async () => {
         try {
@@ -173,6 +192,10 @@ const MapScreen = ({ navigation }) => {
     const getCurrentLocation = () => {
         Geolocation.getCurrentPosition(
             (position) => {
+                if (!isFocused) {
+                    setIsLoadingLocation(false);
+                    return;
+                }
                 const { latitude, longitude } = position.coords;
                 const newUserLocation = { latitude, longitude };
 
@@ -228,8 +251,6 @@ const MapScreen = ({ navigation }) => {
             },
             {
                 enableHighAccuracy: true,
-                timeout: 15000,
-                maximumAge: 10000,
             }
         );
     };
@@ -309,8 +330,8 @@ const MapScreen = ({ navigation }) => {
     };
 
     const centerOnLocation = React.useCallback(() => {
-        if (!centerLocation || !mapRef.current || !isMapReady) {
-            console.warn('Cannot animate map: missing centerLocation, mapRef, or map not ready');
+        if (!centerLocation || !mapRef.current || !isMapReady || !isScreenFocused) {
+            console.warn('Cannot animate map: missing centerLocation, mapRef, map not ready, or screen not focused');
             return;
         }
 
@@ -325,23 +346,30 @@ const MapScreen = ({ navigation }) => {
                 console.error('Fallback setRegion also failed:', fallbackError);
             }
         } finally {
-            setTimeout(() => {
+            timeoutRef.current = setTimeout(() => {
                 setRegion(centerLocation);
-            }, 1500);
+            }, 1000);
         }
-    }, [centerLocation, isMapReady]);
+    }, [centerLocation, isMapReady, isScreenFocused]);
 
     const referPlace = (place) => {
         if (place.isReferred) {
-            ToastUtils.warning('Place already referred', {
-                title: 'Referred',
-            });
+            // unrefer place
+            setFilteredPlaces(filteredPlaces.map(p => p.id === place.id ? { ...p, isReferred: false } : p));
+            setPlaces(places.map(p => p.id === place.id ? { ...p, isReferred: false } : p));
+            setSelectedPlace(prev => prev.id === place.id ? { ...prev, isReferred: false } : prev);
             return;
         }
         setFilteredPlaces(filteredPlaces.map(p => p.id === place.id ? { ...p, isReferred: true } : p));
         setPlaces(places.map(p => p.id === place.id ? { ...p, isReferred: true } : p));
         setSelectedPlace(prev => prev.id === place.id ? { ...prev, isReferred: true } : prev);
     };
+
+    React.useEffect(() => {
+        if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+        }
+    }, [isScreenFocused]);
 
     const renderSelectedPlaceCard = React.useCallback(() => {
         return (
@@ -459,10 +487,10 @@ const MapScreen = ({ navigation }) => {
     };
 
     React.useEffect(() => {
-        if (centerLocation?.latitude && centerLocation?.longitude) {
+        if (centerLocation?.latitude && centerLocation?.longitude && isScreenFocused) {
             centerOnLocation();
         }
-    }, [centerLocation?.latitude, centerLocation?.longitude]);
+    }, [centerLocation?.latitude, centerLocation?.longitude, isScreenFocused]);
 
     React.useEffect(() => {
         if (userLocation) {
@@ -488,12 +516,6 @@ const MapScreen = ({ navigation }) => {
     return (
         <SafeAreaView style={{ flex: 1 }} edges={[]}>
             <View style={styles.container}>
-                <StatusBar
-                    barStyle="dark-content"
-                    translucent={true}
-                    backgroundColor={'transparent'}
-                />
-
 
                 {/* Interactive Map */}
                 <View style={styles.mapContainer}>
@@ -760,7 +782,7 @@ const MapScreen = ({ navigation }) => {
                     </View>
                 )
             }
-        </SafeAreaView >
+        </SafeAreaView>
     );
 };
 
@@ -801,7 +823,7 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
     },
     map: {
-        flex: 1,
+        position: 'absolute', top: 0, left: 0, right: 0, bottom: -25
     },
     locationButton: {
         position: 'absolute',

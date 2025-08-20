@@ -5,6 +5,7 @@ import {
     View,
     ScrollView,
     SafeAreaView,
+    StatusBar,
 } from 'react-native';
 import { theme } from '../../../constants/theme';
 import ScreenContainer from '../../../components/common/ScreenContainer';
@@ -74,6 +75,12 @@ const NotificationSettings = ({ navigation }) => {
                 paddingHorizontal: 0,
             }}
         >
+            <StatusBar
+                barStyle="dark-content"
+                translucent={true}
+                backgroundColor={'transparent'}
+            />
+
             <ScreenHeader
                 title="Notifications settings"
                 showBackButton

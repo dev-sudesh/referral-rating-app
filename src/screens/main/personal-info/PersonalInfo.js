@@ -7,9 +7,7 @@ import {
     TouchableOpacity,
     StatusBar,
     Alert,
-    KeyboardAvoidingView,
     Platform,
-    ScrollView,
 } from 'react-native';
 import { theme } from '../../../constants/theme';
 import ScreenContainer from '../../../components/common/ScreenContainer';
@@ -19,6 +17,7 @@ import Button from '../../../components/ui/Button';
 import AppImage from '../../../components/common/AppImage';
 import ImageAsset from '../../../assets/images/ImageAsset';
 import IconAsset from '../../../assets/icons/IconAsset';
+import KeyboardAvoidingView from '../../../components/common/KeyboardAvoidingView';
 
 const PersonalInfo = ({ navigation }) => {
     const [formData, setFormData] = useState({
@@ -121,6 +120,11 @@ const PersonalInfo = ({ navigation }) => {
                 paddingRight: 0,
             }}
         >
+            <StatusBar
+                barStyle="dark-content"
+                translucent={true}
+                backgroundColor={'transparent'}
+            />
             <ScreenHeader
                 style={styles.header}
                 title="Personal Informations"
@@ -132,65 +136,64 @@ const PersonalInfo = ({ navigation }) => {
                     </TouchableOpacity>
                 }
             />
-            <KeyboardAvoidingView>
-                <ScrollView
-                    contentContainerStyle={styles.scrollContent}
-                    showsVerticalScrollIndicator={false}
-                >
-
-                    {/* Form */}
-                    <View style={styles.form}>
-                        {renderProfileHeader()}
-                        {/* Name Inputs */}
-                        <View style={[styles.inputContainer]}>
-                            <TextInputField
-                                label="First Name"
-                                placeholder="Enter first name"
-                                placeholderTextColor={theme.colors.text.tertiary}
-                                value={formData.firstName}
-                                onChangeText={(value) => handleInputChange('firstName', value)}
-                                autoCapitalize="words"
-                                autoCorrect={false}
-                                style={styles.input}
-                            />
-                        </View>
-                        <View style={[styles.inputContainer]}>
-                            <TextInputField
-                                label="Last Name"
-                                placeholder="Enter last name"
-                                placeholderTextColor={theme.colors.text.tertiary}
-                                value={formData.lastName}
-                                onChangeText={(value) => handleInputChange('lastName', value)}
-                                autoCapitalize="words"
-                                autoCorrect={false}
-                            />
-                        </View>
-
-                        {/* Email Input */}
-                        <View style={styles.inputContainer}>
-                            <TextInputField
-                                label="Email Address"
-                                placeholder="Enter your email"
-                                placeholderTextColor={theme.colors.text.tertiary}
-                                value={formData.email}
-                                onChangeText={(value) => handleInputChange('email', value)}
-                            />
-                        </View>
-
-                        {/* Password Input */}
-                        <View style={styles.inputContainer}>
-                            <TextInputField
-                                type="password"
-                                label="Password"
-                                placeholder="Create a password"
-                                placeholderTextColor={theme.colors.text.tertiary}
-                                value={formData.password}
-                                onChangeText={(value) => handleInputChange('password', value)}
-                            />
-                        </View>
-
+            <KeyboardAvoidingView
+                contentContainerStyle={styles.scrollContent}
+                showsVerticalScrollIndicator={false}
+                scrollEnabled={true}
+                keyboardVerticalOffset={theme.responsive.size(50)}
+            >
+                {/* Form */}
+                <View style={styles.form}>
+                    {renderProfileHeader()}
+                    {/* Name Inputs */}
+                    <View style={[styles.inputContainer]}>
+                        <TextInputField
+                            label="First Name"
+                            placeholder="Enter first name"
+                            placeholderTextColor={theme.colors.text.tertiary}
+                            value={formData.firstName}
+                            onChangeText={(value) => handleInputChange('firstName', value)}
+                            autoCapitalize="words"
+                            autoCorrect={false}
+                            style={styles.input}
+                        />
                     </View>
-                </ScrollView>
+                    <View style={[styles.inputContainer]}>
+                        <TextInputField
+                            label="Last Name"
+                            placeholder="Enter last name"
+                            placeholderTextColor={theme.colors.text.tertiary}
+                            value={formData.lastName}
+                            onChangeText={(value) => handleInputChange('lastName', value)}
+                            autoCapitalize="words"
+                            autoCorrect={false}
+                        />
+                    </View>
+
+                    {/* Email Input */}
+                    <View style={styles.inputContainer}>
+                        <TextInputField
+                            label="Email Address"
+                            placeholder="Enter your email"
+                            placeholderTextColor={theme.colors.text.tertiary}
+                            value={formData.email}
+                            onChangeText={(value) => handleInputChange('email', value)}
+                        />
+                    </View>
+
+                    {/* Password Input */}
+                    <View style={styles.inputContainer}>
+                        <TextInputField
+                            type="password"
+                            label="Password"
+                            placeholder="Create a password"
+                            placeholderTextColor={theme.colors.text.tertiary}
+                            value={formData.password}
+                            onChangeText={(value) => handleInputChange('password', value)}
+                        />
+                    </View>
+
+                </View>
             </KeyboardAvoidingView>
         </ScreenContainer>
     );
@@ -203,7 +206,8 @@ const styles = StyleSheet.create({
     },
     scrollContent: {
         flexGrow: 1,
-        marginTop: theme.responsive.isSmall() ? theme.spacing.lg : theme.spacing.xl,
+        paddingTop: theme.responsive.isSmall() ? theme.spacing.lg : theme.spacing.xl,
+        paddingBottom: theme.spacing.xl,
     },
     header: {
         paddingHorizontal: theme.spacing.md,
@@ -231,7 +235,6 @@ const styles = StyleSheet.create({
         color: theme.colors.text.secondary,
     },
     form: {
-        marginBottom: theme.spacing.xl,
     },
     nameContainer: {
         flexDirection: theme.responsive.isSmall() ? 'column' : 'row',

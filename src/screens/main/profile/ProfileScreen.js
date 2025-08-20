@@ -11,6 +11,7 @@ import {
     Platform,
     FlatList,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { theme } from '../../../constants/theme';
 import ScreenContainer from '../../../components/common/ScreenContainer';
 import IconAsset from '../../../assets/icons/IconAsset';
@@ -23,6 +24,15 @@ const ProfileScreen = ({ navigation }) => {
     const [notificationsEnabled, setNotificationsEnabled] = useState(true);
     const [locationEnabled, setLocationEnabled] = useState(true);
     const [darkModeEnabled, setDarkModeEnabled] = useState(false);
+
+    // Show status bar when screen is focused
+    useFocusEffect(
+        React.useCallback(() => {
+            StatusBar.setHidden(false);
+            StatusBar.setBarStyle('dark-content');
+            return () => { };
+        }, [])
+    );
 
     const userProfile = {
         name: 'Thomas Monoghan',
@@ -147,6 +157,7 @@ const ProfileScreen = ({ navigation }) => {
 
     return (
         <SafeAreaView style={styles.container}>
+
 
             {/* Header */}
             <View style={styles.header}>

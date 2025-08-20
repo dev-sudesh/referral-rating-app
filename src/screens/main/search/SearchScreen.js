@@ -100,6 +100,12 @@ const SearchScreen = ({ navigation }) => {
             }}
         >
 
+            <StatusBar
+                barStyle="dark-content"
+                translucent={true}
+                backgroundColor={'transparent'}
+            />
+
             <SearchBar
                 handleBackPress={handleBackPress}
                 setSearchText={setSearchText}

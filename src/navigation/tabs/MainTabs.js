@@ -1,6 +1,6 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Text } from 'react-native';
+import { StatusBar, Text } from 'react-native';
 import MapScreen from '../../screens/main/map/MapScreen';
 import RewardsScreen from '../../screens/main/rewards/RewardsScreen';
 import ReferralsScreen from '../../screens/main/referrals/ReferralsScreen';

@@ -3,12 +3,8 @@ import {
     View,
     Text,
     StyleSheet,
-    TextInput,
     TouchableOpacity,
-    StatusBar,
     Alert,
-    Platform,
-    ScrollView,
 } from 'react-native';
 import { theme } from '../../constants/theme';
 import ScreenContainer from '../../components/common/ScreenContainer';
@@ -87,77 +83,74 @@ const ResetPasswordScreen = ({ navigation }) => {
                 showBackButton
                 onBackPress={() => navigation.goBack()}
             />
-            <KeyboardAvoidingView>
-                <ScrollView
-                    contentContainerStyle={styles.scrollContent}
-                    showsVerticalScrollIndicator={false}
-                >
-
-
-                    {/* Form */}
-                    <View style={styles.form}>
-                        {/* Email Input */}
-                        <View style={styles.inputContainer}>
-                            <TextInputField
-                                label="E-mail address"
-                                placeholder="Enter your e-mail address"
-                                placeholderTextColor={theme.colors.text.tertiary}
-                                value={email}
-                                onChangeText={setEmail}
-                                keyboardType="email-address"
-                                autoCapitalize="none"
-                                autoCorrect={false}
-                                editable={!isEmailSent}
-                                error={errors.email}
-                                onValidation={() => { }}
-                                inputId="email"
-                            />
-                        </View>
-
-                        {/* Reset Button */}
-                        {/* <TouchableOpacity
-                            style={[
-                                styles.resetButton,
-                                isLoading && styles.resetButtonDisabled,
-                            ]}
-                            onPress={handleResetPassword}
-                            disabled={isLoading || isEmailSent}
-                            activeOpacity={0.8}
-                        >
-                            <Text style={styles.resetButtonText}>
-                                {isLoading ? 'Sending...' : 'Send Reset Link'}
-                            </Text>
-                        </TouchableOpacity> */}
-                        <Button
-                            title={isLoading ? 'Sending...' : 'Reset password'}
-                            onPress={handleResetPassword}
-                            disabled={isLoading || isEmailSent}
-                            loading={isLoading}
-                            variant="primary"
-                            size="medium"
+            <KeyboardAvoidingView
+                contentContainerStyle={styles.scrollContent}
+                showsVerticalScrollIndicator={false}
+                scrollEnabled={true}
+            >
+                {/* Form */}
+                <View style={styles.form}>
+                    {/* Email Input */}
+                    <View style={styles.inputContainer}>
+                        <TextInputField
+                            label="E-mail address"
+                            placeholder="Enter your e-mail address"
+                            placeholderTextColor={theme.colors.text.tertiary}
+                            value={email}
+                            onChangeText={setEmail}
+                            keyboardType="email-address"
+                            autoCapitalize="none"
+                            autoCorrect={false}
+                            editable={!isEmailSent}
+                            error={errors.email}
+                            onValidation={() => { }}
+                            inputId="email"
                         />
-
-                        {/* Success Message */}
-                        {isEmailSent && (
-                            <View style={styles.successContainer}>
-                                <Text style={styles.successIcon}>✅</Text>
-                                <Text style={styles.successTitle}>Email Sent!</Text>
-                                <Text style={styles.successMessage}>
-                                    We've sent a password reset link to your email address. Please check your inbox and follow the instructions.
-                                </Text>
-                            </View>
-                        )}
                     </View>
 
-                    {/* Back to Login */}
-                    <TouchableOpacity
-                        style={styles.backToLoginButton}
-                        onPress={handleBackToLogin}
+                    {/* Reset Button */}
+                    {/* <TouchableOpacity
+                        style={[
+                            styles.resetButton,
+                            isLoading && styles.resetButtonDisabled,
+                        ]}
+                        onPress={handleResetPassword}
+                        disabled={isLoading || isEmailSent}
                         activeOpacity={0.8}
                     >
-                        <Text style={styles.backToLoginText}>Go to login page</Text>
-                    </TouchableOpacity>
-                </ScrollView>
+                        <Text style={styles.resetButtonText}>
+                            {isLoading ? 'Sending...' : 'Send Reset Link'}
+                        </Text>
+                    </TouchableOpacity> */}
+                    <Button
+                        title={isLoading ? 'Sending...' : 'Reset password'}
+                        onPress={handleResetPassword}
+                        disabled={isLoading || isEmailSent}
+                        loading={isLoading}
+                        variant="primary"
+                        size="medium"
+                    />
+
+                    {/* Success Message */}
+                    {isEmailSent && (
+                        <View style={styles.successContainer}>
+                            <Text style={styles.successIcon}>✅</Text>
+                            <Text style={styles.successTitle}>Email Sent!</Text>
+                            <Text style={styles.successMessage}>
+                                We've sent a password reset link to your email address. Please check your inbox and follow the instructions.
+                            </Text>
+                        </View>
+                    )}
+                </View>
+
+                {/* Back to Login */}
+                <TouchableOpacity
+                    style={styles.backToLoginButton}
+                    onPress={handleBackToLogin}
+                    activeOpacity={0.8}
+                >
+                    <Text style={styles.backToLoginText}>Go to login page</Text>
+                </TouchableOpacity>
             </KeyboardAvoidingView>
         </ScreenContainer>
     );

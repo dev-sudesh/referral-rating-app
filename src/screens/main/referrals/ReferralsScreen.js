@@ -11,6 +11,7 @@ import {
     Dimensions,
     FlatList,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { theme } from '../../../constants/theme';
 import ScreenContainer from '../../../components/common/ScreenContainer';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -161,6 +162,15 @@ const ReferralsScreen = ({ navigation }) => {
     const [selectedFilter, setSelectedFilter] = useState('active');
     const [filteredReferrals, setFilteredReferrals] = useState([]);
     const [filters, setFilters] = useState(filterData);
+
+    // Show status bar when screen is focused
+    useFocusEffect(
+        React.useCallback(() => {
+            StatusBar.setHidden(false);
+            StatusBar.setBarStyle('dark-content');
+            return () => { };
+        }, [])
+    );
 
     // Function to handle filter selection
     const handleFilterPress = (filterId) => {

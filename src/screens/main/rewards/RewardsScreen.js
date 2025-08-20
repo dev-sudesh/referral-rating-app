@@ -9,6 +9,7 @@ import {
     Dimensions,
     FlatList,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { theme } from '../../../constants/theme';
 import ScreenContainer from '../../../components/common/ScreenContainer';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -87,6 +88,15 @@ const RewardsScreen = ({ navigation }) => {
     const [selectedTab, setSelectedTab] = useState('active');
     const [filteredRewards, setFilteredRewards] = useState(rewards.filter(item => item.status == 'active'))
 
+    // Show status bar when screen is focused
+    useFocusEffect(
+        React.useCallback(() => {
+            StatusBar.setHidden(false);
+            StatusBar.setBarStyle('dark-content');
+            return () => { };
+        }, [])
+    );
+
     const userStats = {
         totalPoints: 1250,
         level: 'Gold',
@@ -143,6 +153,7 @@ const RewardsScreen = ({ navigation }) => {
 
     return (
         <SafeAreaView style={styles.container}>
+
 
             {/* Header */}
             <View style={styles.header}>
