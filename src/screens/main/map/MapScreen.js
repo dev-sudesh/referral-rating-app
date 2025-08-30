@@ -28,81 +28,13 @@ import CurrentLocationMarker from '../../../components/ui/CurrentLocationMarker'
 import ToastUtils from '../../../utils/ToastUtils';
 import Animated from 'react-native-reanimated';
 import MapUtils from '../../../utils/MapUtils';
+import Constants from '../../../constants/data';
+import ListScreen from './ListScreen';
+import MapsController from '../../../controllers/maps/MapsController';
+import FirebaseStoreService from '../../../services/firebase/FirebaseStoreService';
+import MethodUtils from '../../../utils/MethodUtils';
+import ReferralController from '../../../controllers/referrals/ReferralController';
 
-const nearbyPlaces = [
-    {
-        id: '1',
-        name: 'Boucherie Union Square',
-        address: '225 Park Ave, New York',
-        description: 'Boucherie is a traditional French restaurant, celebrating joie de vivre in the heart of West Village.',
-        category: 'restaurants',
-        website: 'boucherie.nyc',
-        openTime: 'Tue - Sun: 08:00 - 23:00',
-        distance: '0.2 km',
-        rating: 4.5,
-        isOpen: true,
-        latitude: 37.78725,
-        longitude: -122.4314,
-        rank: 1,
-        image: ImageAsset.places.place01,
-        imageFull: ImageAsset.places.placeFull01,
-        isReferred: false,
-    },
-    {
-        id: '2',
-        name: 'Grocery Store',
-        address: '225 Park Ave, New York',
-        description: 'Boucherie is a traditional French restaurant, celebrating joie de vivre in the heart of West Village.',
-        category: 'shops',
-        website: 'grocery.nyc',
-        openTime: 'Mon - Sat: 08:00 - 23:00',
-        distance: '0.5 km',
-        rating: 4.2,
-        isOpen: true,
-        latitude: 37.77925,
-        longitude: -122.4234,
-        rank: 2,
-        image: ImageAsset.places.place01,
-        imageFull: ImageAsset.places.placeFull01,
-        isReferred: false,
-    },
-    {
-        id: '3',
-        name: 'Bank Branch',
-        address: '225 Park Ave, New York',
-        description: 'Boucherie is a traditional French restaurant, celebrating joie de vivre in the heart of West Village.',
-        category: 'services',
-        website: 'bank.nyc',
-        openTime: 'Mon - Sat: 08:00 - 23:00',
-        distance: '0.8 km',
-        rating: 4.0,
-        isOpen: false,
-        latitude: 37.77725,
-        longitude: -122.4214,
-        rank: 3,
-        image: ImageAsset.places.place01,
-        imageFull: ImageAsset.places.placeFull01,
-        isReferred: false,
-    },
-    {
-        id: '4',
-        name: 'Pizza Place',
-        address: '225 Park Ave, New York',
-        description: 'Boucherie is a traditional French restaurant, celebrating joie de vivre in the heart of West Village.',
-        category: 'restaurants',
-        website: 'pizza.nyc',
-        openTime: 'Mon - Sat: 08:00 - 23:00',
-        distance: '1.1 km',
-        rating: 4.7,
-        isOpen: true,
-        latitude: 37.78025,
-        longitude: -122.4204,
-        rank: 4,
-        image: ImageAsset.places.place01,
-        imageFull: ImageAsset.places.placeFull01,
-        isReferred: false,
-    },
-];
 const MapScreen = ({ navigation }) => {
     const [selectedFilter, setSelectedFilter] = useState('all');
     const [region, setRegion] = useState({
@@ -111,31 +43,32 @@ const MapScreen = ({ navigation }) => {
         latitudeDelta: 0.032,
         longitudeDelta: 0.032,
     });
-    const [places, setPlaces] = useState(nearbyPlaces);
     const [placeUpdated, setPlaceUpdated] = useState(false);
     const [filteredPlaces, setFilteredPlaces] = useState([]);
-    const [userLocation, setUserLocation] = useState(null);
     const [centerLocation, setCenterLocation] = useState(null);
     const [locationPermissionGranted, setLocationPermissionGranted] = useState(false);
     const [isLoadingLocation, setIsLoadingLocation] = useState(false);
     const mapRef = useRef(null);
-    const [selectedPlace, setSelectedPlace] = useState(null);
     const bottomSheetRef = useRef(null);
     const { isSearchFilterVisible, setIsSearchFilterVisible } = SearchFilterController();
     const placesListRef = useRef(null);
-    const [selectedViewType, setSelectedViewType] = useState('map');
     const [isMapReady, setIsMapReady] = useState(false);
     const animationTimeoutRef = useRef(null);
     const [showPlaceBigCard, setShowPlaceBigCard] = useState(false);
-    const [showPlaceFullCard, setShowPlaceFullCard] = useState(false);
     const [isScreenFocused, setIsScreenFocused] = useState(false);
+    const [focusedPlaceIndex, setFocusedPlaceIndex] = useState(0);
     const isFocused = useIsFocused();
+
+    const { setShowReferralAlert, placeReferredStatus } = ReferralController();
 
     const timeoutRef = useRef(null);
 
     useEffect(() => {
         if (isFocused) {
-            requestLocationPermission();
+            setTimeout(() => {
+                requestLocationPermission();
+            }, 1000);
+
         }
     }, [isFocused]);
 
@@ -150,6 +83,8 @@ const MapScreen = ({ navigation }) => {
             };
         }, [])
     );
+
+    const { selectedViewType, setSelectedViewType, showPlaceFullCard, setShowPlaceFullCard, selectedPlace, setSelectedPlace, places, setPlaces, userLocation, setUserLocation } = MapsController();
 
     const requestLocationPermission = async () => {
         try {
@@ -183,7 +118,6 @@ const MapScreen = ({ navigation }) => {
                 handleLocationPermissionDenied();
             }
         } catch (error) {
-            console.log('Location permission error:', error);
             ToastUtils.error('Failed to request location permission');
             setIsLoadingLocation(false);
         }
@@ -216,16 +150,14 @@ const MapScreen = ({ navigation }) => {
                 }
 
                 // update places lat and long based on current location create new lat and long randomly within 3000 meters of the current location
-                const updatedPlaces = places.map(place => ({
-                    ...place,
-                    latitude: latitude + (Math.random() * 0.03 - 0.015),
-                    longitude: longitude + (Math.random() * 0.03 - 0.015),
-                }));
-                setPlaces(updatedPlaces);
-                setPlaceUpdated(true);
+                // const updatedPlaces = places.map(place => ({
+                //     ...place,
+                //     latitude: latitude + (Math.random() * 0.03 - 0.015),
+                //     longitude: longitude + (Math.random() * 0.03 - 0.015),
+                // }));
+                // setPlaces(updatedPlaces); 
             },
             (error) => {
-                console.log('Geolocation error:', error);
                 setIsLoadingLocation(false);
 
                 switch (error.code) {
@@ -324,7 +256,7 @@ const MapScreen = ({ navigation }) => {
             `${place.category} • ${place.distance} • ⭐ ${place.rating}`,
             [
                 { text: 'Cancel', style: 'cancel' },
-                { text: 'Directions', onPress: () => console.log('Directions to', place.name) },
+                { text: 'Directions', onPress: () => { } },
             ]
         );
     };
@@ -352,7 +284,14 @@ const MapScreen = ({ navigation }) => {
         }
     }, [centerLocation, isMapReady, isScreenFocused]);
 
-    const referPlace = (place) => {
+    const referPlace = async (place) => {
+        if (!place?.isReferred) {
+            setShowReferralAlert(true);
+        }
+    };
+
+    const referPlaceSubmit = async (place) => {
+        await FirebaseStoreService.storeReferredPlace(place);
         if (place.isReferred) {
             // unrefer place
             setFilteredPlaces(filteredPlaces.map(p => p.id === place.id ? { ...p, isReferred: false } : p));
@@ -373,7 +312,7 @@ const MapScreen = ({ navigation }) => {
 
     const renderSelectedPlaceCard = React.useCallback(() => {
         return (
-            <Pressable style={[styles.placeCardBig, { opacity: showPlaceFullCard ? 0 : 1 }]} activeOpacity={0.8} onPress={() => {
+            <Pressable style={[styles.placeCardBig, { opacity: showPlaceFullCard ? 0 : 1 }]} onPress={() => {
                 setShowPlaceFullCard(true);
                 setShowPlaceBigCard(false);
             }}>
@@ -390,7 +329,7 @@ const MapScreen = ({ navigation }) => {
                     </View>
                 )}
                 <CurvedCard
-                    width={theme.responsive.width(theme.responsive.screen().width * 0.8)}
+                    width={theme.responsive.screen().width - (theme.spacing.lg * 2)}
                     height={theme.responsive.size(220)}
                     curveDepth={40}
                     cornerRadius={theme.borderRadius.lg}
@@ -433,20 +372,25 @@ const MapScreen = ({ navigation }) => {
         )
     }, [selectedPlace, showPlaceFullCard, showPlaceBigCard]);
 
-    const renderPlaceCard = (place) => {
+    const renderPlaceCard = ({ item, index }) => {
+        const place = item;
         if (selectedPlace?.id === place.id && (showPlaceFullCard || showPlaceBigCard)) {
             return renderSelectedPlaceCard();
         }
+
+        // Calculate opacity based on distance from focused index
+        const distanceFromFocused = Math.abs(index - focusedPlaceIndex);
+        const opacity = distanceFromFocused === 0 ? 1 : Math.max(0.2, 1 - (distanceFromFocused * 0.7));
+
         return (
             <>
                 <TouchableOpacity
-
                     key={place.id}
-                    style={[styles.placeCard]}
-                    activeOpacity={0.8}
+                    style={[styles.placeCard,]}
+                    activeOpacity={0.95}
                     onPress={() => showPlaceCard({ place, scroll: false })}
                 >
-                    <View style={styles.placeCardHeader}>
+                    <View style={[styles.placeCardInner]}>
                         <View style={styles.placeCardImage}>
                             <AppImage
                                 source={place.image}
@@ -482,7 +426,6 @@ const MapScreen = ({ navigation }) => {
                 placesListRef.current.scrollToIndex({ index: place.rank - 1, viewPosition: 0.5 });
             }
         } catch (error) {
-            console.log('Error scrolling to place:', error);
         }
     };
 
@@ -501,8 +444,19 @@ const MapScreen = ({ navigation }) => {
                 longitudeDelta: 0.032,
             };
             setCenterLocation(location);
+
+            FirebaseStoreService.getPlacesOfCurrentLocation(userLocation).then(places => {
+                setPlaces(places);
+                setPlaceUpdated(true);
+            });
         }
     }, [userLocation]);
+
+    React.useEffect(() => {
+        if (placeReferredStatus) {
+            referPlaceSubmit(selectedPlace);
+        }
+    }, [placeReferredStatus]);
 
     // Cleanup animation timeout on unmount
     React.useEffect(() => {
@@ -535,7 +489,7 @@ const MapScreen = ({ navigation }) => {
                         showsIndoors={true}
                         mapType="standard"
                     >
-                        {filteredPlaces.map((place) => (
+                        {selectedViewType === 'map' && filteredPlaces.map((place, index) => (
                             <Marker
                                 key={place.id}
                                 coordinate={{
@@ -583,7 +537,7 @@ const MapScreen = ({ navigation }) => {
                                             fontSize: 14,
                                             fontWeight: '900',
                                         }}>
-                                            {place.rank}
+                                            {index + 1}
                                         </Text>
                                     </View>
                                 </View>
@@ -601,44 +555,56 @@ const MapScreen = ({ navigation }) => {
                             </Marker>
                         )}
                     </MapView>
-
-                    <View style={styles.placesContainer}>
-                        <View style={styles.viewTypeContainer}>
-                            <Pressable onPress={() => {
-                                ToastUtils.info('List view is not available yet', {
-                                    title: 'List view',
-                                });
-                            }} style={[styles.viewTypeIconContainer, selectedViewType === 'list' && styles.viewTypeIconContainerActive]}>
-                                <IconAsset.listViewIcon
-                                    width={24}
-                                    height={24}
+                    {
+                        selectedViewType === 'map'
+                            ? <View style={styles.placesContainer}>
+                                <View style={styles.viewTypeContainer}>
+                                    <Pressable onPress={() => setSelectedViewType('list')} style={[styles.viewTypeIconContainer, selectedViewType === 'list' && styles.viewTypeIconContainerActive]}>
+                                        <IconAsset.listViewIcon
+                                            width={24}
+                                            height={24}
+                                        />
+                                    </Pressable>
+                                    <Pressable onPress={() => setSelectedViewType('map')} style={[styles.viewTypeIconContainer, selectedViewType === 'map' && styles.viewTypeIconContainerActive]}>
+                                        <IconAsset.bottomTab.unSelected.mapIcon
+                                            width={24}
+                                            height={24}
+                                        />
+                                    </Pressable>
+                                </View>
+                                <FlatList
+                                    ref={placesListRef}
+                                    horizontal
+                                    showsHorizontalScrollIndicator={false}
+                                    data={filteredPlaces}
+                                    renderItem={renderPlaceCard}
+                                    keyExtractor={(item) => item.id}
+                                    snapToInterval={theme.responsive.screen().width}
+                                    decelerationRate="fast"
+                                    snapToAlignment="center"
+                                    pagingEnabled={true}
+                                    scrollEnabled={true}
+                                    contentContainerStyle={styles.placeCardContainer}
+                                    onScroll={(event) => {
+                                        const contentOffset = event.nativeEvent.contentOffset.x;
+                                        const itemWidth = theme.responsive.screen().width;
+                                        const focusedIndex = Math.round(contentOffset / itemWidth);
+                                        setFocusedPlaceIndex(Math.max(0, Math.min(focusedIndex, filteredPlaces.length - 1)));
+                                    }}
+                                    scrollEventThrottle={16}
                                 />
-                            </Pressable>
-                            <Pressable onPress={() => setSelectedViewType('map')} style={[styles.viewTypeIconContainer, selectedViewType === 'map' && styles.viewTypeIconContainerActive]}>
-                                <IconAsset.bottomTab.unSelected.mapIcon
-                                    width={24}
-                                    height={24}
-                                />
-                            </Pressable>
-                        </View>
-                        <FlatList
-                            ref={placesListRef}
-                            horizontal
-                            showsHorizontalScrollIndicator={false}
-                            data={filteredPlaces}
-                            renderItem={({ item }) => renderPlaceCard(item)}
-                            keyExtractor={(item) => item.id}
-                            snapToInterval={theme.responsive.width(theme.responsive.screen().width * 0.8) + theme.spacing.lg}
-                            decelerationRate="fast"
-                            snapToAlignment="center"
-                            pagingEnabled={true}
-                            scrollEnabled={true}
-                            contentContainerStyle={styles.placeCardContainer}
-                        />
 
-                    </View>
+                            </View>
+                            : <View style={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                backgroundColor: '#EFEFEFDC',
+                            }} />
+                    }
                 </View>
-
 
                 {/* Header */}
                 <View style={styles.header}>
@@ -661,127 +627,10 @@ const MapScreen = ({ navigation }) => {
                         />
                     </TouchableOpacity>
                 </View>
+
+                {/* list View */}
+                {selectedViewType === 'list' && <ListScreen />}
             </View>
-            {
-                showPlaceFullCard && (
-                    <View style={[styles.selectedPlaceFullCard, {
-                        transform: [{
-                            scale: showPlaceFullCard ? 1 : 0,
-                        }],
-                    }]}>
-                        <View style={styles.selectedPlaceFullCardBackground}>
-                            <AppImage
-                                source={selectedPlace?.imageFull}
-                                style={{
-                                    width: '100%',
-                                    height: '100%',
-                                    borderRadius: theme.borderRadius.sm,
-                                    resizeMode: 'stretch',
-                                }}
-                            />
-                        </View>
-                        <SafeAreaView>
-                            <View style={styles.selectedPlaceFullCardButtons}>
-                                <Pressable style={styles.selectedPlaceFullCardButtonItem} onPress={() => {
-                                    setShowPlaceFullCard(false);
-                                    setShowPlaceBigCard(false);
-                                }}>
-                                    <IconAsset.closeIcon
-                                        width={24}
-                                        height={24}
-                                    />
-                                </Pressable>
-                                <View style={styles.selectedPlaceFullCardButtonItem}>
-                                    <IconAsset.shareIcon
-                                        width={24}
-                                        height={24}
-                                    />
-                                </View>
-                            </View>
-                        </SafeAreaView>
-
-                        <View style={{
-                            width: theme.responsive.screen().width,
-                            paddingTop: theme.responsive.size(40),
-                        }}>
-                            {/* SVG Curved Card */}
-                            {selectedPlace.isReferred && (
-                                <View style={styles.placeCardReferred}>
-                                    <View style={styles.placeCardReferredContent}>
-                                        <AppImage
-                                            source={ImageAsset.logos.logoSmall}
-                                            style={styles.placeCardReferredLogo}
-                                        />
-                                        <Text style={styles.placeCardReferredText}>Referred Location</Text>
-                                    </View>
-                                </View>
-                            )}
-                            <CurvedCard
-                                width={theme.responsive.screen().width}
-                                height={theme.responsive.screen().height * 0.5}
-                                curveDepth={40}
-                                cornerRadius={theme.borderRadius.lg}
-                            >
-                                <View style={styles.selectedPlaceFullCardInfo}>
-                                    <View style={styles.selectedPlaceFullCardInfoItem}>
-                                        <Text style={styles.selectedPlaceFullCardInfoItemHeaderText}>
-                                            {selectedPlace?.name}
-                                        </Text>
-                                        <Text style={styles.selectedPlaceFullCardInfoItemSubText}>
-                                            {selectedPlace?.address}
-                                        </Text>
-                                        <View style={styles.selectedPlaceFullCardTagsContainer}>
-                                            <View style={styles.selectedPlaceFullCardTagItem}>
-                                                <Text style={styles.selectedPlaceFullCardTagItemText}>No. 1</Text>
-                                            </View>
-                                            <View style={styles.selectedPlaceFullCardTagItem}>
-                                                <Text style={styles.selectedPlaceFullCardTagItemText}>Steak house</Text>
-                                            </View>
-                                            <View style={styles.selectedPlaceFullCardTagItem}>
-                                                <Text style={styles.selectedPlaceFullCardTagItemText}>Meat</Text>
-                                            </View>
-                                        </View>
-                                        <Text style={styles.selectedPlaceFullCardInfoItemDescription}>
-                                            {selectedPlace?.description}
-                                        </Text>
-                                        <View style={styles.selectedPlaceFullCardExtraInfoContainer}>
-                                            <IconAsset.websiteIcon
-                                                width={18}
-                                                height={18}
-                                            />
-                                            <Text style={styles.selectedPlaceFullCardExtraInfoText}>
-                                                {selectedPlace?.website}
-                                            </Text>
-                                        </View>
-                                        <View style={styles.selectedPlaceFullCardExtraInfoContainer}>
-                                            <IconAsset.clockIcon
-                                                width={18}
-                                                height={18}
-                                            />
-                                            <View style={styles.selectedPlaceFullCardExtraInfoOpenContainer}>
-                                                <Text style={styles.selectedPlaceFullCardExtraInfoOpenText}>Open</Text>
-                                                <Text style={styles.selectedPlaceFullCardExtraInfoOpenSeparator}> ∙ </Text>
-                                                <Text style={styles.selectedPlaceFullCardExtraInfoText}>
-                                                    {selectedPlace?.openTime}
-                                                </Text>
-                                            </View>
-                                        </View>
-                                    </View>
-                                </View>
-                            </CurvedCard>
-                            <Pressable style={styles.placeCardFooter} onPress={() => referPlace(selectedPlace)}>
-                                <View style={[styles.placeCardFooterContent, selectedPlace?.isReferred && styles.placeCardFooterContentReferred]}>
-                                    <AppImage
-                                        source={ImageAsset.logos.logoSmall}
-                                        style={styles.placeLogo}
-                                    />
-                                </View>
-                            </Pressable>
-                        </View>
-
-                    </View>
-                )
-            }
         </SafeAreaView>
     );
 };
@@ -897,8 +746,6 @@ const styles = StyleSheet.create({
         color: theme.colors.background.primary,
     },
     placeCardContainer: {
-        paddingHorizontal: theme.spacing.lg,
-        gap: theme.spacing.md,
         alignItems: 'flex-end',
     },
     placesContainer: {
@@ -916,12 +763,13 @@ const styles = StyleSheet.create({
         paddingBottom: theme.spacing.xl,
     },
     placeCardBig: {
-        width: theme.responsive.width(theme.responsive.screen().width * 0.8),
+        width: theme.responsive.screen().width,
         marginBottom: theme.spacing.md,
         paddingTop: theme.responsive.size(35),
         borderTopLeftRadius: theme.borderRadius.lg,
         borderTopRightRadius: theme.borderRadius.lg,
         overflow: 'hidden',
+        alignItems: 'center',
         zIndex: 1000,
     },
     // SVG Curved Card Styles
@@ -1250,7 +1098,14 @@ const styles = StyleSheet.create({
         elevation: 15,
     },
     placeCard: {
-        width: theme.responsive.width(theme.responsive.screen().width * 0.8),
+        width: theme.responsive.screen().width,
+        paddingHorizontal: theme.spacing.lg,
+    },
+    placeCardInner: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        gap: theme.spacing.md,
         height: theme.responsive.size(100),
         backgroundColor: theme.colors.background.primary,
         borderRadius: theme.borderRadius.md,
@@ -1259,12 +1114,6 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: theme.colors.border.light,
         ...theme.shadows.medium,
-    },
-    placeCardHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'flex-start',
-        gap: theme.spacing.md,
     },
     placeCardImageFullBg: {
         width: theme.responsive.width(theme.responsive.screen().width * 0.8),
@@ -1436,8 +1285,8 @@ const styles = StyleSheet.create({
     placeCardReferred: {
         position: 'absolute',
         top: 0,
-        left: 0,
-        right: 1,
+        left: theme.spacing.lg,
+        right: theme.spacing.lg,
         paddingVertical: theme.spacing.sm,
         paddingHorizontal: theme.spacing.md,
         height: theme.responsive.size(100),

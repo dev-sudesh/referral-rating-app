@@ -54,8 +54,7 @@ const MyScreen = () => {
 import KeyboardAvoidingView from '../components/common/KeyboardAvoidingView';
 
 const MyForm = () => {
-    const handleKeyboardShow = (event) => {
-        console.log('Keyboard height:', event.endCoordinates.height);
+    const handleKeyboardShow = (event) => { 
     };
 
     return (
@@ -65,7 +64,7 @@ const MyForm = () => {
             scrollEnabled={true}
             showsVerticalScrollIndicator={false}
             onKeyboardShow={handleKeyboardShow}
-            onKeyboardHide={() => console.log('Keyboard hidden')}
+            onKeyboardHide={() => {}}
         >
             {/* Your form content */}
         </KeyboardAvoidingView>

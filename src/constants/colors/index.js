@@ -108,6 +108,7 @@ export const colors = {
         tagStyle1: '#FFFBF0',
         tagStyle2: '#EBF4FF',
         tagStyle3: '#FFF0C2',
+        referralAlert: 'rgba(0, 0, 0, 0.25)',
     },
 
     // Text Colors
@@ -125,6 +126,7 @@ export const colors = {
         tagStyle2: '#065BC6',
         tagStyle3: '#9E7700',
         success: '#16C568',
+        error: '#FF5722',
     },
 
     // Border Colors

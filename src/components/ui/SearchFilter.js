@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import {
     StyleSheet,
     Text,
@@ -8,61 +8,40 @@ import {
     TextInput,
     FlatList,
     Dimensions,
+    Platform,
+    StatusBar,
 } from 'react-native';
 import RBSheet from 'react-native-raw-bottom-sheet';
 import { theme } from '../../constants/theme';
 import IconAsset from '../../assets/icons/IconAsset';
 import SearchFilterController from '../../controllers/filters/SearchFilterController';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Constants from '../../constants/data';
+import FirebaseStoreService from '../../services/firebase/FirebaseStoreService';
+import MapsController from '../../controllers/maps/MapsController';
 
-const SearchFilter = () => {
-    const [filters, setFilters] = useState({});
+const SearchFilter = ({
+    initialFilters = {},
+    loading = false
+}) => {
+    const [filterCategories, setFilterCategories] = useState(Constants.filters);
+    const [filters, setFilters] = useState([]);
     const [searchFilterText, setSearchFilterText] = useState('');
     const bottomSheetRef = useRef(null);
+    const initialFiltersRef = useRef(JSON.stringify(initialFilters));
     const { isSearchFilterVisible, setIsSearchFilterVisible } = SearchFilterController();
+    const { places, setPlaces, userLocation } = MapsController();
+    const insets = useSafeAreaInsets();
 
-    // Filter categories data
-    const filterCategories = {
-        favorites: {
-            title: 'Favorites',
-            options: [
-                { id: 'fav1', label: 'Favorite 1' },
-                { id: 'fav2', label: 'Favorite 2' },
-                { id: 'fav3', label: 'Fav 3' },
-                { id: 'fav4', label: 'Favorite 4' },
-                { id: 'fav5', label: 'Fav 5' },
-                { id: 'fav6', label: 'Favorite 6' },
-            ]
-        },
-        category: {
-            title: 'Category',
-            options: [
-                { id: 'food', label: 'Food' },
-                { id: 'drinks', label: 'Drinks' },
-                { id: 'entertainment', label: 'Entertainment' },
-                { id: 'cinemas', label: 'Cinemas' },
-                { id: 'sport', label: 'Sport' },
-                { id: 'parking', label: 'Parking lots' },
-            ]
-        },
-        cuisine: {
-            title: 'Cuisine',
-            options: [
-                { id: 'italian', label: 'Italian' },
-                { id: 'german', label: 'German' },
-                { id: 'asian', label: 'Asian' },
-                { id: 'eastEuropean', label: 'East European' },
-                { id: 'spanish', label: 'Spanish' },
-            ]
-        },
-        otherCategory: {
-            title: 'Other category',
-            options: [
-                { id: 'other1', label: 'Other 1' },
-                { id: 'other2', label: 'Other 2' },
-                { id: 'other3', label: 'Other 3' },
-            ]
+    // Handle visibility changes
+    useEffect(() => {
+        if (isSearchFilterVisible) {
+            bottomSheetRef.current?.open();
+            getFilters();
+        } else {
+            bottomSheetRef.current?.close();
         }
-    };
+    }, [isSearchFilterVisible]);
 
     // Calculate active filter count
     const getActiveFilterCount = () => {
@@ -70,33 +49,40 @@ const SearchFilter = () => {
     };
 
     // Toggle filter selection
-    const toggleFilter = (category, filterId) => {
+    const toggleFilter = (filterId) => {
         setFilters(prev => {
-            const currentCategory = prev[category] || [];
+            const currentCategory = prev || [];
             const isSelected = currentCategory.includes(filterId);
 
             if (isSelected) {
-                return {
-                    ...prev,
-                    [category]: currentCategory.filter(id => id !== filterId)
-                };
-            } else {
-                return {
-                    ...prev,
-                    [category]: [...currentCategory, filterId]
-                };
+                return currentCategory.filter(id => id !== filterId);
             }
+            return [...currentCategory, filterId];
         });
     };
 
     // Clear all filters
     const clearAllFilters = () => {
-        setFilters({});
+        setFilters([]);
+    };
+    const onClose = () => {
+        setIsSearchFilterVisible(false);
     };
 
     // Apply filters and close
-    const handleApplyFilters = () => {
-        setIsSearchFilterVisible(false);
+    const handleApplyFilters = async () => {
+        const places = await FirebaseStoreService.getFilteredPlaces(userLocation, filters);
+        setPlaces(places);
+        if (onClose) {
+            onClose();
+        }
+    };
+
+    // Handle close
+    const handleClose = () => {
+        if (onClose) {
+            onClose();
+        }
     };
 
     // Filter options based on search text
@@ -108,8 +94,8 @@ const SearchFilter = () => {
     };
 
     // Render filter option
-    const renderFilterOption = ({ item, category }) => {
-        const isSelected = filters[category]?.includes(item.id);
+    const renderFilterOption = ({ item }) => {
+        const isSelected = filters?.includes(item.id);
 
         return (
             <TouchableOpacity
@@ -117,7 +103,7 @@ const SearchFilter = () => {
                     styles.filterOption,
                     isSelected && styles.filterOptionSelected
                 ]}
-                onPress={() => toggleFilter(category, item.id)}
+                onPress={() => toggleFilter(item.id)}
                 activeOpacity={0.7}
             >
                 <View style={[
@@ -153,7 +139,7 @@ const SearchFilter = () => {
                 <View style={styles.filterOptionsContainer}>
                     {filteredOptions.map((option) => (
                         <View key={option.id}>
-                            {renderFilterOption({ item: option, category: categoryKey })}
+                            {renderFilterOption({ item: option })}
                         </View>
                     ))}
                 </View>
@@ -161,13 +147,23 @@ const SearchFilter = () => {
         );
     };
 
+    const getFilters = async () => {
+        const filters = await FirebaseStoreService.getUserFilters();
+        // get all filters from filterCategories which is in filters
+        const favoriteFilters = Constants.filters.map(filter => filter.options.filter(option => filters.includes(option.id))).flat();
+        setFilterCategories([
+            {
+                id: 'favorite',
+                title: 'Favorite',
+                options: favoriteFilters,
+            },
+            ...Constants.filters
+        ]);
+    };
+
     React.useEffect(() => {
-        if (isSearchFilterVisible) {
-            bottomSheetRef.current.open();
-        } else {
-            bottomSheetRef.current.close();
-        }
-    }, [isSearchFilterVisible]);
+        getFilters();
+    }, []);
 
     return (
         <RBSheet
@@ -182,15 +178,26 @@ const SearchFilter = () => {
                 container: styles.bottomSheetContainer,
                 draggableIcon: styles.draggableIcon,
             }}
-            onClose={() => setIsSearchFilterVisible(false)}
+            onClose={handleClose}
             height={Dimensions.get('window').height * 0.9}
+            animationType="slide"
+            closeOnPressBack={true}
+            keyboardAvoidingViewEnabled={true}
+            keyboardAvoidingViewProps={{
+                behavior: Platform.OS === 'ios' ? 'padding' : 'height',
+            }}
         >
+            <StatusBar
+                barStyle="dark-content"
+                translucent={true}
+                backgroundColor="transparent"
+            />
             <View style={styles.container}>
                 {/* Header */}
-                <View style={styles.header}>
+                <View style={[styles.header, { paddingTop: theme.spacing.md }]}>
                     <TouchableOpacity
                         style={styles.closeButton}
-                        onPress={() => setIsSearchFilterVisible(false)}
+                        onPress={handleClose}
                         activeOpacity={0.7}
                     >
                         <Text style={styles.closeButtonText}>✕</Text>
@@ -253,11 +260,19 @@ const SearchFilter = () => {
 const styles = StyleSheet.create({
     bottomSheetWrapper: {
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 1000,
+        elevation: 1000,
     },
     bottomSheetContainer: {
         borderTopLeftRadius: theme.borderRadius.lg,
         borderTopRightRadius: theme.borderRadius.lg,
         backgroundColor: theme.colors.background.white,
+        paddingTop: 0,
     },
     draggableIcon: {
         backgroundColor: theme.colors.neutral[300],

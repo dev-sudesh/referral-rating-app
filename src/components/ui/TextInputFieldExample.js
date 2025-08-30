@@ -71,7 +71,7 @@ const TextInputFieldExample = () => {
     const handleSubmit = () => {
         if (validateForm()) {
             Alert.alert('Success', 'Form is valid!', [
-                { text: 'OK', onPress: () => console.log('Form submitted') }
+                { text: 'OK', onPress: () => { } }
             ]);
         }
     };

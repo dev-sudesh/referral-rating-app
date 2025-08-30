@@ -31,16 +31,13 @@ The utility uses the following dependencies that are already installed in your p
 import DeviceInfo from '../utils/deviceInfo/DeviceInfo';
 
 // Get screen dimensions
-const screen = DeviceInfo.getScreenDimensions();
-console.log(screen); // { width: 375, height: 812, aspectRatio: 0.461 }
+const screen = DeviceInfo.getScreenDimensions(); 
 
 // Get platform info
-const platform = DeviceInfo.getPlatformInfo();
-console.log(platform); // { isIOS: true, isAndroid: false, platform: 'ios', ... }
+const platform = DeviceInfo.getPlatformInfo(); 
 
 // Check device type
-const deviceType = DeviceInfo.getDeviceType();
-console.log(deviceType); // { type: 'phone-portrait', isPhone: true, ... }
+const deviceType = DeviceInfo.getDeviceType(); 
 ```
 
 ### Responsive Design
@@ -75,8 +72,7 @@ const isLandscape = DeviceInfo.isLandscape();
 const isPortrait = DeviceInfo.isPortrait();
 
 // Listen for orientation changes
-const removeListener = DeviceInfo.addDimensionChangeListener((dimensions) => {
-  console.log('Screen dimensions changed:', dimensions);
+const removeListener = DeviceInfo.addDimensionChangeListener((dimensions) => { 
   // Handle orientation change
 });
 
@@ -88,32 +84,26 @@ const removeListener = DeviceInfo.addDimensionChangeListener((dimensions) => {
 
 ```javascript
 // Get device brand and model
-const deviceInfo = await DeviceInfo.getDeviceBrandAndModel();
-console.log(deviceInfo); // { brand: 'Apple', model: 'iPhone 14', ... }
+const deviceInfo = await DeviceInfo.getDeviceBrandAndModel(); 
 
 // Get device ID
-const deviceId = await DeviceInfo.getDeviceId();
-console.log(deviceId); // "unique-device-identifier"
+const deviceId = await DeviceInfo.getDeviceId(); 
 
 // Check if device has notch
-const hasNotch = await DeviceInfo.hasNotch();
-console.log(hasNotch); // true/false
+const hasNotch = await DeviceInfo.hasNotch(); 
 
 // Get app version
-const appVersion = await DeviceInfo.getAppVersion();
-console.log(appVersion); // { version: '1.0.0', buildNumber: '1', ... }
+const appVersion = await DeviceInfo.getAppVersion(); 
 
 // Get battery info
-const batteryInfo = await DeviceInfo.getBatteryInfo();
-console.log(batteryInfo); // { batteryLevel: 0.75, isCharging: false, ... }
+const batteryInfo = await DeviceInfo.getBatteryInfo(); 
 ```
 
 ### Complete Device Information
 
 ```javascript
 // Get all device information at once
-const allInfo = DeviceInfo.getAllDeviceInfo();
-console.log(allInfo);
+const allInfo = DeviceInfo.getAllDeviceInfo(); 
 // {
 //   screen: { width: 375, height: 812, aspectRatio: 0.461 },
 //   platform: { isIOS: true, isAndroid: false, ... },
@@ -260,8 +250,7 @@ All async methods include error handling and will return fallback values if the 
 ```javascript
 // Example of error handling
 try {
-  const deviceInfo = await DeviceInfo.getDeviceBrandAndModel();
-  console.log(deviceInfo);
+  const deviceInfo = await DeviceInfo.getDeviceBrandAndModel(); 
 } catch (error) {
   console.error('Failed to get device info:', error);
   // Fallback values will be returned automatically

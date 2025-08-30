@@ -36,8 +36,8 @@ const KeyboardAvoidingViewExample = () => {
             keyboardVerticalOffset={20}
             scrollEnabled={true}
             showsVerticalScrollIndicator={false}
-            onKeyboardShow={() => console.log('Keyboard shown')}
-            onKeyboardHide={() => console.log('Keyboard hidden')}
+            onKeyboardShow={() => { }}
+            onKeyboardHide={() => { }}
         >
             <View style={styles.header}>
                 <Text style={styles.title}>Contact Form</Text>

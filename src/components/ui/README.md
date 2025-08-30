@@ -32,8 +32,7 @@ const MyComponent = () => {
     };
 
     const handleApplyFilters = (filters) => {
-        setActiveFilters(filters);
-        console.log('Applied filters:', filters);
+        setActiveFilters(filters); 
         // Implement your filter logic here
     };
 

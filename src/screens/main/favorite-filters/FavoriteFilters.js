@@ -16,74 +16,49 @@ import { responsiveSize } from '../../../utils/responsive/ResponsiveUi';
 import SearchBar from '../../../components/ui/SearchBar';
 import SearchFilter from '../../../components/ui/SearchFilter';
 import ScreenHeader from '../../../components/ui/ScreenHeader';
+import Constants from '../../../constants/data';
+import FirebaseStoreService from '../../../services/firebase/FirebaseStoreService';
+import ToastUtils from '../../../utils/ToastUtils';
 
 const FavoriteFilters = ({ navigation }) => {
 
-    const [filters, setFilters] = useState({});
-    // Filter categories data
-    const filterCategories = {
-        category: {
-            title: 'Category',
-            options: [
-                { id: 'food', label: 'Food' },
-                { id: 'drinks', label: 'Drinks' },
-                { id: 'entertainment', label: 'Entertainment' },
-                { id: 'cinemas', label: 'Cinemas' },
-                { id: 'sport', label: 'Sport' },
-                { id: 'parking', label: 'Parking lots' },
-            ]
-        },
-        cuisine: {
-            title: 'Cuisine',
-            options: [
-                { id: 'italian', label: 'Italian' },
-                { id: 'german', label: 'German' },
-                { id: 'asian', label: 'Asian' },
-                { id: 'eastEuropean', label: 'East European' },
-                { id: 'spanish', label: 'Spanish' },
-            ]
-        },
-        otherCategory: {
-            title: 'Other category',
-            options: [
-                { id: 'other1', label: 'Other 1' },
-                { id: 'other2', label: 'Other 2' },
-                { id: 'other3', label: 'Other 3' },
-            ]
-        }
-    };
-
-
+    const [filters, setFilters] = useState([]);
+    const [filterCategories, setFilterCategories] = useState(Constants.filters);
 
     // Toggle filter selection
-    const toggleFilter = (category, filterId) => {
+    const toggleFilter = (filter) => {
+        // store filter categories wise
         setFilters(prev => {
-            const currentCategory = prev[category] || [];
-            const isSelected = currentCategory.includes(filterId);
+            const currentCategory = prev || [];
+            const isSelected = currentCategory.includes(filter.id);
 
             if (isSelected) {
-                return {
-                    ...prev,
-                    [category]: currentCategory.filter(id => id !== filterId)
-                };
-            } else {
-                return {
-                    ...prev,
-                    [category]: [...currentCategory, filterId]
-                };
+                return currentCategory.filter(id => id !== filter.id);
             }
+            return [...currentCategory, filter.id];
         });
     };
 
     // Clear all filters
     const clearAllFilters = () => {
-        setFilters({});
+        setFilters([]);
+    };
+
+    const saveFilters = async () => {
+
+        await FirebaseStoreService.storeUserFilters(filters.filter(filter => filter.length > 0));
+        ToastUtils.success('Filters saved successfully');
+    };
+
+    const getFilters = async () => {
+        const filters = await FirebaseStoreService.getUserFilters();
+        setFilters(filters);
     };
 
 
     // Render filter option
-    const renderFilterOption = ({ item, category }) => {
-        const isSelected = filters[category]?.includes(item.id);
+    const renderFilterOption = ({ item }) => {
+        const isSelected = filters?.includes(item.id);
 
         return (
             <TouchableOpacity
@@ -91,7 +66,7 @@ const FavoriteFilters = ({ navigation }) => {
                     styles.filterOption,
                     isSelected && styles.filterOptionSelected
                 ]}
-                onPress={() => toggleFilter(category, item.id)}
+                onPress={() => toggleFilter(item)}
                 activeOpacity={0.7}
             >
                 <View style={[
@@ -127,13 +102,17 @@ const FavoriteFilters = ({ navigation }) => {
                 <View style={styles.filterOptionsContainer}>
                     {filteredOptions.map((option) => (
                         <View key={option.id}>
-                            {renderFilterOption({ item: option, category: categoryKey })}
+                            {renderFilterOption({ item: option })}
                         </View>
                     ))}
                 </View>
             </View>
         );
     };
+
+    React.useEffect(() => {
+        getFilters();
+    }, []);
 
     return (
         <ScreenContainer {...ScreenContainer.presets.full}
@@ -152,7 +131,7 @@ const FavoriteFilters = ({ navigation }) => {
                 showBackButton
                 onBackPress={() => navigation.goBack()}
                 rightComponent={
-                    <TouchableOpacity style={styles.saveButton} onPress={() => navigation.goBack()}>
+                    <TouchableOpacity style={styles.saveButton} onPress={saveFilters}>
                         <Text style={styles.saveButtonText}>Save</Text>
                     </TouchableOpacity>
                 }

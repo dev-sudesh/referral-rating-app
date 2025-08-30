@@ -47,17 +47,17 @@ const AppImage = ({
     useEffect(() => {
         let finalSource = source;
 
+        if (finalSource && typeof finalSource === 'string' && finalSource.includes('http')) {
+            finalSource = { uri: finalSource };
+        }
+
         // Try to use preloaded image if available
         if (usePreloaded && localKey) {
             const cachedImage = getCachedImage(localKey);
             if (cachedImage) {
                 finalSource = cachedImage;
-                console.log(`📸 Using preloaded image: ${localKey}`);
             } else {
-                // Use debug level logging instead of warning for missing preloaded images
-                if (__DEV__) {
-                    console.log(`📋 Preloaded image not found: ${localKey}, using original source`);
-                }
+                // Use debug level logging instead of warning for missing preloaded images 
             }
         }
 
@@ -78,7 +78,6 @@ const AppImage = ({
 
         // Try fallback source if available
         if (fallbackSource && imageSource !== fallbackSource) {
-            console.log('🔄 Trying fallback image source');
             setImageSource(fallbackSource);
             setIsLoading(true);
             setHasError(false);

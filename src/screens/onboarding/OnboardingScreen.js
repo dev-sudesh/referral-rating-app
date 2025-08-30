@@ -1,136 +1,68 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useCallback, useMemo } from 'react';
 import {
     View,
     Text,
     StyleSheet,
     FlatList,
     TouchableOpacity,
-    StatusBar,
-    Platform,
+    ActivityIndicator,
 } from 'react-native';
 import { theme } from '../../constants/theme';
 import Constants from '../../constants/data';
 import ScreenContainer from '../../components/common/ScreenContainer';
-import FirebaseAuthService from '../../services/firebase/FirebaseAuthService';
-import ToastUtils from '../../utils/ToastUtils';
-import AsyncStoreUtils from '../../utils/AsyncStoreUtils';
+import OnboardingItem from '../../components/onboarding/OnboardingItem';
+import { useOnboarding } from '../../hooks/useOnboarding';
 
 const OnboardingScreen = ({ navigation }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
-    const [isAutoScrollActive, setIsAutoScrollActive] = useState(true);
     const flatListRef = useRef(null);
-    const autoScrollTimer = useRef(null);
+    const { isLoading, getStarted } = useOnboarding(navigation);
 
-    // Auto scroll functionality
-    useEffect(() => {
-        const startAutoScroll = () => {
-            if (autoScrollTimer.current) {
-                clearInterval(autoScrollTimer.current);
-            }
+    // Memoize onboarding data to prevent unnecessary re-renders
+    const onboardingData = useMemo(() => Constants.onboarding, []);
+    const isLastSlide = useMemo(() => currentIndex === onboardingData.length - 1, [currentIndex, onboardingData.length]);
 
-            autoScrollTimer.current = setInterval(() => {
-                if (isAutoScrollActive) {
-                    setCurrentIndex(prevIndex => {
-                        const nextIndex = prevIndex + 1;
-                        if (nextIndex < Constants.onboarding.length) {
-                            flatListRef.current?.scrollToIndex({
-                                index: nextIndex,
-                                animated: true,
-                            });
-                            return nextIndex;
-                        } else {
-                            if (autoScrollTimer.current) {
-                                clearInterval(autoScrollTimer.current);
-                            }
-                            return Constants.onboarding.length - 1;
-                        }
-                    });
-                }
-            }, 10000); // 10 seconds
-        };
+    // Memoize the render item function to prevent unnecessary re-renders
+    const renderOnboardingItem = useCallback(({ item }) => (
+        <OnboardingItem item={item} />
+    ), []);
 
-        if (isAutoScrollActive) {
-            startAutoScroll();
-        }
+    // Memoize the key extractor function
+    const keyExtractor = useCallback((item) => item.id, []);
 
-        return () => {
-            if (autoScrollTimer.current) {
-                clearInterval(autoScrollTimer.current);
-            }
-        };
-    }, [isAutoScrollActive, navigation]);
+    // Memoize the viewability config
+    const viewabilityConfig = useMemo(() => ({
+        itemVisiblePercentThreshold: 50,
+        minimumViewTime: 100,
+    }), []);
 
-    // Pause auto scroll when component unmounts or navigation happens
-    useEffect(() => {
-        return () => {
-            if (autoScrollTimer.current) {
-                clearInterval(autoScrollTimer.current);
-            }
-        };
-    }, []);
 
-    const renderOnboardingItem = ({ item, index }) => (
-        <View style={styles.slide}>
-            <View style={styles.iconContainer}>
-                <item.icon width={'100%'} height={'100%'} style={styles.icon} />
-            </View>
 
-            <View style={styles.contentContainer}>
-                <Text style={styles.title}>{item.title}</Text>
-                {item.subtitle && <Text style={styles.subtitle}>{item.subtitle}</Text>}
-                {item.description && <Text style={styles.description}>{item.description}</Text>}
-            </View>
-        </View>
-    );
-
-    const getStarted = async () => {
-        // anonymous login
-        try {
-            const result = await FirebaseAuthService.signInAnonymously();
-            if (result.success) {
-                await AsyncStoreUtils.setItem(AsyncStoreUtils.Keys.IS_LOGIN, 'true');
-                await AsyncStoreUtils.setItem(AsyncStoreUtils.Keys.USER_DETAILS, result.user);
-                navigation.replace(Constants.Screen.Stack.Main);
-            } else {
-                navigation.replace(Constants.Screen.Stack.Auth);
-            }
-        } catch (error) {
-            navigation.replace(Constants.Screen.Stack.Auth);
-        } finally {
-            await AsyncStoreUtils.setItem(AsyncStoreUtils.Keys.IS_ONBOARDING_COMPLETED, 'true');
-        }
-
-    }
-
-    const handleNext = () => {
-        // Pause auto scroll when user manually navigates
-        setIsAutoScrollActive(false);
-
-        if (currentIndex < Constants.onboarding.length - 1) {
+    const handleNext = useCallback(() => {
+        if (isLastSlide) {
+            getStarted();
+        } else {
             flatListRef.current?.scrollToIndex({
                 index: currentIndex + 1,
                 animated: true,
             });
-        } else {
-            getStarted();
         }
-    };
+    }, [currentIndex, isLastSlide, getStarted]);
 
-    const handleSkip = () => {
-        // Pause auto scroll when user skips
-        setIsAutoScrollActive(false);
+    const handleSkip = useCallback(() => {
         getStarted();
-    };
+    }, [getStarted]);
 
-    const handleViewableItemsChanged = useRef(({ viewableItems }) => {
+    const handleViewableItemsChanged = useCallback(({ viewableItems }) => {
         if (viewableItems.length > 0) {
             setCurrentIndex(viewableItems[0].index);
         }
-    }).current;
+    }, []);
 
-    const renderPagination = () => (
+    // Memoize pagination dots to prevent unnecessary re-renders
+    const renderPagination = useCallback(() => (
         <View style={styles.paginationContainer}>
-            {Constants.onboarding.map((_, index) => (
+            {onboardingData.map((_, index) => (
                 <View
                     key={index}
                     style={[
@@ -140,10 +72,17 @@ const OnboardingScreen = ({ navigation }) => {
                 />
             ))}
         </View>
+    ), [currentIndex, onboardingData.length]);
+
+    // Memoize button text
+    const buttonText = useMemo(() =>
+        isLastSlide ? 'Get Started' : 'Next',
+        [isLastSlide]
     );
 
     return (
-        <ScreenContainer {...ScreenContainer.presets.default}
+        <ScreenContainer {...ScreenContainer.presets.full}
+            safeArea={false}
             paddingCustom={{
                 paddingTop: 0,
                 paddingBottom: 0,
@@ -153,25 +92,40 @@ const OnboardingScreen = ({ navigation }) => {
 
             <View style={styles.container}>
                 {/* Skip Button */}
-                <TouchableOpacity style={styles.skipButton} onPress={handleSkip}>
-                    <Text style={styles.skipText}>Skip</Text>
+                <TouchableOpacity
+                    style={styles.skipButton}
+                    onPress={handleSkip}
+                    disabled={isLoading}
+                    activeOpacity={0.7}
+                >
+                    <Text style={[styles.skipText, isLoading && styles.disabledText]}>
+                        Skip
+                    </Text>
                 </TouchableOpacity>
 
                 {/* Onboarding Slides */}
                 <View style={styles.flatListContainer}>
                     <FlatList
                         ref={flatListRef}
-                        data={Constants.onboarding}
+                        data={onboardingData}
                         renderItem={renderOnboardingItem}
-                        keyExtractor={(item) => item.id}
+                        keyExtractor={keyExtractor}
                         horizontal
                         pagingEnabled
                         showsHorizontalScrollIndicator={false}
                         onViewableItemsChanged={handleViewableItemsChanged}
-                        viewabilityConfig={{ itemVisiblePercentThreshold: 50 }}
-                        onScrollBeginDrag={() => setIsAutoScrollActive(false)}
+                        viewabilityConfig={viewabilityConfig}
                         style={styles.flatList}
                         contentContainerStyle={styles.flatListContent}
+                        removeClippedSubviews={true}
+                        maxToRenderPerBatch={2}
+                        windowSize={3}
+                        initialNumToRender={1}
+                        getItemLayout={(data, index) => ({
+                            length: theme.responsive.screen().width,
+                            offset: theme.responsive.screen().width * index,
+                            index,
+                        })}
                     />
                 </View>
 
@@ -182,13 +136,18 @@ const OnboardingScreen = ({ navigation }) => {
                     {/* Navigation Buttons */}
                     <View style={styles.buttonContainer}>
                         <TouchableOpacity
-                            style={styles.nextButton}
+                            style={[styles.nextButton]}
                             onPress={handleNext}
                             activeOpacity={0.8}
+                            disabled={isLoading}
                         >
-                            <Text style={styles.nextButtonText}>
-                                {currentIndex === Constants.onboarding.length - 1 ? 'Get Started' : 'Next'}
-                            </Text>
+                            {isLoading ? (
+                                <ActivityIndicator color={theme.colors.background.primary} size="small" />
+                            ) : (
+                                <Text style={styles.nextButtonText}>
+                                    {buttonText}
+                                </Text>
+                            )}
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -209,7 +168,7 @@ const styles = StyleSheet.create({
     },
     skipButton: {
         position: 'absolute',
-        top: theme.responsive.height(20),
+        top: theme.responsive.height(theme.responsive.screen().height * 0.05),
         right: theme.spacing.md,
         zIndex: 1,
         padding: theme.spacing.sm,
@@ -222,6 +181,9 @@ const styles = StyleSheet.create({
         ...theme.typography.bodyMedium,
         color: theme.colors.text.secondary,
     },
+    disabledText: {
+        opacity: 0.5,
+    },
     flatList: {
         height: '100%',
     },
@@ -231,50 +193,7 @@ const styles = StyleSheet.create({
     flatListContent: {
         flexGrow: 1,
     },
-    slide: {
-        flex: 1,
-        width: theme.responsive.screen().width,
-        alignItems: 'center',
-    },
-    iconContainer: {
-        flex: 1,
-        width: '100%',
-        height: '100%',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    icon: {
-        flex: 1,
-        width: '100%',
-        height: '100%',
-    },
-    contentContainer: {
-        width: theme.responsive.screen().width,
-        height: theme.responsive.height(theme.responsive.screen().height * 0.14),
-        minHeight: theme.responsive.height(100),
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: theme.colors.background.white,
-        paddingHorizontal: theme.responsive.width(theme.responsive.screen().width * 0.2),
-    },
-    title: {
-        ...theme.typography.h3,
-        fontWeight: theme.fontWeight.bold,
-        color: theme.colors.text.primary,
-        textAlign: 'center',
-    },
-    subtitle: {
-        ...theme.typography.h4,
-        color: theme.colors.primary[500],
-        textAlign: 'center',
-        marginBottom: theme.spacing.md,
-    },
-    description: {
-        ...theme.typography.bodyMedium,
-        color: theme.colors.text.secondary,
-        textAlign: 'center',
-        lineHeight: 24,
-    },
+
     paginationContainer: {
         width: theme.responsive.screen().width,
         flexDirection: 'row',
@@ -307,6 +226,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         minHeight: theme.responsive.buttonHeight('large'),
         ...theme.shadows.small,
+    },
+    disabledButton: {
+        backgroundColor: theme.colors.tertiary[300],
     },
     nextButtonText: {
         ...theme.typography.buttonLarge,

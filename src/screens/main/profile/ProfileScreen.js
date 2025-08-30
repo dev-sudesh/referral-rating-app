@@ -30,7 +30,6 @@ const ProfileScreen = ({ navigation }) => {
         React.useCallback(() => {
             StatusBar.setHidden(false);
             StatusBar.setBarStyle('dark-content');
-            return () => { };
         }, [])
     );
 
@@ -52,10 +51,10 @@ const ProfileScreen = ({ navigation }) => {
             action: 'navigate',
             navigateTo: Constants.Screen.FavoriteFilters,
         },
-        {
-            id: 'sign-in-options',
-            title: 'Sign in options',
-        },
+        // {
+        //     id: 'sign-in-options',
+        //     title: 'Sign in options',
+        // },
         {
             id: 'notifications-settings',
             title: 'Notifications Settings',

@@ -24,6 +24,7 @@ import ShareIcon from '../../assets/icons/others/share-icon.svg';
 import WebsiteIcon from '../../assets/icons/others/website-icon.svg';
 import ClockIcon from '../../assets/icons/others/clock-icon.svg';
 import EditIcon from '../../assets/icons/others/edit-icon.svg';
+import CheckSquareIcon from '../../assets/icons/others/check-square.svg';
 
 const IconAsset = {
     eyeOn: EyeOn,
@@ -59,6 +60,7 @@ const IconAsset = {
     websiteIcon: WebsiteIcon,
     clockIcon: ClockIcon,
     editIcon: EditIcon,
+    checkSquareIcon: CheckSquareIcon,
 }
 
 export default IconAsset;

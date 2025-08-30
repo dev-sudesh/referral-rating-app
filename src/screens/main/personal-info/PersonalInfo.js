@@ -98,7 +98,6 @@ const PersonalInfo = ({ navigation }) => {
     };
 
     const handleSave = () => {
-        console.log('handleSave');
     };
 
     const renderProfileHeader = () => (
@@ -182,7 +181,7 @@ const PersonalInfo = ({ navigation }) => {
                     </View>
 
                     {/* Password Input */}
-                    <View style={styles.inputContainer}>
+                    {/* <View style={styles.inputContainer}>
                         <TextInputField
                             type="password"
                             label="Password"
@@ -191,7 +190,7 @@ const PersonalInfo = ({ navigation }) => {
                             value={formData.password}
                             onChangeText={(value) => handleInputChange('password', value)}
                         />
-                    </View>
+                    </View> */}
 
                 </View>
             </KeyboardAvoidingView>

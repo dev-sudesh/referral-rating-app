@@ -150,7 +150,6 @@ const LoginScreen = ({ navigation }) => {
                             label="Password"
                             value={formData.password}
                             onChangeText={useCallback((value) => {
-                                console.log('Password onChangeText called with:', value);
                                 handleInputChange('password', value);
                             }, [handleInputChange])}
                             autoCapitalize="none"
@@ -158,8 +157,6 @@ const LoginScreen = ({ navigation }) => {
                             error={errors.password}
                             placeholder="Enter your password"
                             onValidation={useCallback((result, value) => {
-                                console.log('Password Validation result:', result);
-                                console.log('Password Input value:', value);
                             }, [])}
                             focusManager={focusManager}
                             inputId="password"

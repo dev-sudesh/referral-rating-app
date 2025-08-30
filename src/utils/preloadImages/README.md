@@ -40,8 +40,7 @@ const SplashScreen = ({ navigation }) => {
         <View style={styles.container}>
             <ImagePreloader
                 localImageKeys={imagesToPreload}
-                onComplete={(results) => {
-                    console.log('Preloading complete:', results);
+                onComplete={(results) => { 
                     navigation.replace('MainApp');
                 }}
                 showProgress={true}
@@ -90,8 +89,7 @@ A component that handles the preloading process with progress tracking and error
 ```javascript
 <ImagePreloader
     localImageKeys={['logo-full', 'logo-icon']}
-    remoteImageUrls={['https://example.com/image.jpg']}
-    onComplete={(results) => console.log('Complete:', results)}
+    remoteImageUrls={['https://example.com/image.jpg']} 
     showProgress={true}
     autoStart={true}
 >
@@ -185,9 +183,7 @@ import { preloadLocalImages, getCachedImage } from '../utils/preloadImages/Prelo
 
 // Preload images
 await preloadLocalImages(
-    ['logo-full', 'logo-icon'],
-    (progress) => console.log(`Progress: ${progress}%`),
-    (results) => console.log('Complete:', results)
+    ['logo-full', 'logo-icon'], 
 );
 
 // Use cached image
@@ -230,8 +226,7 @@ Always provide fallback options:
 <AppImage
     source={LOCAL_IMAGES['user-avatar']}
     localKey="user-avatar"
-    fallbackSource={LOCAL_IMAGES['default-avatar']}
-    onError={() => console.log('Avatar failed to load')}
+    fallbackSource={LOCAL_IMAGES['default-avatar']} 
 />
 ```
 
@@ -240,8 +235,7 @@ Always provide fallback options:
 Track preloading performance:
 
 ```javascript
-const handlePreloadComplete = (results) => {
-    console.log(`Preloaded ${results.successful}/${results.total} images`);
+const handlePreloadComplete = (results) => { 
     if (results.failed > 0) {
         console.warn(`${results.failed} images failed to preload`);
     }

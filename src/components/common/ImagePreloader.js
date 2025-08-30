@@ -46,7 +46,6 @@ const ImagePreloader = ({
                 localImageKeys,
                 remoteImageUrls,
                 (result) => {
-                    console.log('Image preloading completed:', result);
                     onComplete?.(result);
                 },
                 (error) => {

@@ -146,7 +146,6 @@ const TextInputField = ({
                 onValidation(validationResult, value);
             }
         } else {
-            console.log(`[${uniqueId}] Skipping validation for: ${label} - hasInteracted: ${hasInteracted}, isInitialized: ${isInitialized}`);
         }
     }, [onValidation, value, validateField, uniqueId, label, hasInteracted, isInitialized, focusManager, inputId]);
 
@@ -208,8 +207,6 @@ const TextInputField = ({
     const EyeIcon = showPassword ? IconAsset.eyeOn : IconAsset.eyeOff;
 
     React.useEffect(() => {
-        console.log(`[${uniqueId}] label: ${label}`);
-        console.log(`[${uniqueId}] useEffect: ${inputRef.current?.isFocused()}`);
     }, [inputRef.current]);
 
     return (

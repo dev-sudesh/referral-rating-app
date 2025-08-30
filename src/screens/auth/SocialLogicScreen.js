@@ -23,7 +23,6 @@ const SocialLogicScreen = ({ navigation }) => {
         // Listen for authentication state changes
         const unsubscribe = FirebaseAuthService.onAuthStateChanged((user) => {
             if (user) {
-                console.log('User signed in:', user.uid);
                 // Navigate to main screen when user is authenticated
                 navigation.replace(Constants.Screen.Stack.Main);
             }
@@ -67,8 +66,7 @@ const SocialLogicScreen = ({ navigation }) => {
             }
 
             if (result.success) {
-                // Success will be handled by the auth state listener
-                console.log(`Successfully signed in with ${provider}:`, result.user.uid);
+                // Success will be handled by the auth state listener 
                 navigation.replace(Constants.Screen.Stack.Main);
             } else {
                 Alert.alert('Sign-In Failed', result.error);

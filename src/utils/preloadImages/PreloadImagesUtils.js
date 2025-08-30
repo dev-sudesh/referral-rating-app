@@ -51,7 +51,6 @@ export const preloadLocalImages = async (
                 results.successful++;
                 results.completed.push(key);
 
-                console.log(`✅ Preloaded local image: ${key}`);
             } catch (error) {
                 results.failed++;
                 results.errors.push({ key, error: error.message });
@@ -106,7 +105,6 @@ export const preloadRemoteImages = async (
                 results.successful++;
                 results.completed.push(url);
 
-                console.log(`✅ Preloaded remote image: ${url}`);
             } catch (error) {
                 results.failed++;
                 results.errors.push({ url, error: error.message });
@@ -167,7 +165,6 @@ export const preloadAllImages = async (
 export const clearImageCache = async (onComplete = null) => {
     try {
         imageCache.clear();
-        console.log('🗑️ Image cache cleared');
         onComplete?.();
     } catch (error) {
         console.error('Error clearing image cache:', error);

@@ -15,11 +15,16 @@ import ScreenContainer from '../../../components/common/ScreenContainer';
 import { responsiveSize } from '../../../utils/responsive/ResponsiveUi';
 import SearchBar from '../../../components/ui/SearchBar';
 import SearchFilter from '../../../components/ui/SearchFilter';
+import FirebaseStoreService from '../../../services/firebase/FirebaseStoreService';
+import MapsController from '../../../controllers/maps/MapsController';
 
 const SearchScreen = ({ navigation }) => {
     const [searchText, setSearchText] = useState('');
     const [isFilterVisible, setIsFilterVisible] = useState(false);
     const [activeFilters, setActiveFilters] = useState({});
+    const [searchResults, setSearchResults] = useState([]);
+    const [isSearching, setIsSearching] = useState(false);
+    const { userLocation } = MapsController();
 
     const [recentSearches] = useState([
         { id: 1, text: 'Meat', time: 'Today' },
@@ -33,14 +38,24 @@ const SearchScreen = ({ navigation }) => {
         { id: 3, text: 'Local' },
     ]);
 
-    const handleSearch = (searchTerm) => {
-        // setSearchText(searchTerm);
-        // TODO: Implement search functionality
-        console.log('Searching for:', searchTerm);
+    const handleSearch = async (searchTerm) => {
+        if (!searchTerm.trim() || !userLocation) return;
+
+        setIsSearching(true);
+        try {
+            const results = await FirebaseStoreService.getSearchPlaces(userLocation, searchTerm);
+            setSearchResults(results);
+        } catch (error) {
+            console.error('Search error:', error);
+            setSearchResults([]);
+        } finally {
+            setIsSearching(false);
+        }
     };
 
     const handleClearSearch = () => {
-        // setSearchText('');
+        setSearchText('');
+        setSearchResults([]);
     };
 
     const handleBackPress = () => {
@@ -48,7 +63,8 @@ const SearchScreen = ({ navigation }) => {
     };
 
     const handleSearchItemPress = (item) => {
-        // handleSearch(item.text);
+        setSearchText(item.text);
+        handleSearch(item.text);
     };
 
     const handleFilterPress = () => {
@@ -61,7 +77,6 @@ const SearchScreen = ({ navigation }) => {
 
     const handleApplyFilters = (filters) => {
         setActiveFilters(filters);
-        console.log('Applied filters:', filters);
         // TODO: Implement filter logic
     };
 
@@ -69,6 +84,29 @@ const SearchScreen = ({ navigation }) => {
     const getActiveFilterCount = () => {
         return Object.values(activeFilters).flat().length;
     };
+
+    // create debounce function
+    const debounce = (func, delay) => {
+        let timeout;
+        return function (...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), delay);
+        };
+    };
+
+    const debouncedSearch = debounce(handleSearch, 500);
+
+    const searchKeyword = (text) => {
+        setSearchText(text);
+        if (text.trim()) {
+            debouncedSearch(text);
+        } else {
+            setSearchResults([]);
+        }
+    };
+
+
+    // Remove the old useEffect as we're now using debounced search
 
 
 
@@ -93,6 +131,61 @@ const SearchScreen = ({ navigation }) => {
         </View>
     );
 
+    const SearchResultsSection = ({ results, isLoading }) => {
+        if (isLoading) {
+            return (
+                <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>Searching...</Text>
+                    <View style={styles.loadingContainer}>
+                        <Text style={styles.loadingText}>Finding places...</Text>
+                    </View>
+                </View>
+            );
+        }
+
+        if (results.length === 0 && searchText.trim()) {
+            return (
+                <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>No results found</Text>
+                    <View style={styles.noResultsContainer}>
+                        <Text style={styles.noResultsText}>Try searching with different keywords</Text>
+                    </View>
+                </View>
+            );
+        }
+
+        if (results.length > 0) {
+            return (
+                <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>Search Results</Text>
+                    {results.map((place, index) => (
+                        <TouchableOpacity
+                            key={place.id}
+                            style={styles.searchItem}
+                            onPress={() => {
+                                // Navigate to place details or handle place selection
+                                console.log('Selected place:', place);
+                            }}
+                            activeOpacity={0.7}
+                        >
+                            <View style={styles.placeInfo}>
+                                <Text style={styles.placeName}>{place.name}</Text>
+                                <Text style={styles.placeAddress}>{place.address}</Text>
+                                <Text style={styles.placeCategory}>{place.category}</Text>
+                            </View>
+                            <View style={styles.placeMeta}>
+                                <Text style={styles.placeRating}>⭐ {place.rating}</Text>
+                                <Text style={styles.placeDistance}>{place.distance?.toFixed(1)}km</Text>
+                            </View>
+                        </TouchableOpacity>
+                    ))}
+                </View>
+            );
+        }
+
+        return null;
+    };
+
     return (
         <ScreenContainer {...ScreenContainer.presets.full}
             paddingCustom={{
@@ -108,7 +201,7 @@ const SearchScreen = ({ navigation }) => {
 
             <SearchBar
                 handleBackPress={handleBackPress}
-                setSearchText={setSearchText}
+                setSearchText={searchKeyword}
                 onFilterPress={handleFilterPress}
                 activeFilterCount={getActiveFilterCount()}
             />
@@ -118,17 +211,27 @@ const SearchScreen = ({ navigation }) => {
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.contentContainer}
             >
-                <SearchSection
-                    title="Recent search"
-                    items={recentSearches}
-                    showTime={true}
+                {!searchText.trim() && (
+                    <>
+                        <SearchSection
+                            title="Recent search"
+                            items={recentSearches}
+                            showTime={true}
+                        />
+
+                        <SearchSection
+                            title="Popular"
+                            items={popularSearches}
+                            showTime={false}
+                        />
+                    </>
+                )}
+                <SearchResultsSection
+                    results={searchResults}
+                    isLoading={isSearching}
                 />
 
-                <SearchSection
-                    title="Popular"
-                    items={popularSearches}
-                    showTime={false}
-                />
+
             </ScrollView>
         </ScreenContainer>
     );
@@ -211,6 +314,55 @@ const styles = StyleSheet.create({
         ...theme.typography.captionMedium,
         color: theme.colors.text.secondary,
         marginLeft: theme.spacing.sm,
+    },
+    loadingContainer: {
+        paddingVertical: theme.spacing.lg,
+        paddingHorizontal: theme.spacing.screenPadding,
+        alignItems: 'center',
+    },
+    loadingText: {
+        ...theme.typography.bodyMedium,
+        color: theme.colors.text.secondary,
+    },
+    noResultsContainer: {
+        paddingVertical: theme.spacing.lg,
+        paddingHorizontal: theme.spacing.screenPadding,
+        alignItems: 'center',
+    },
+    noResultsText: {
+        ...theme.typography.bodyMedium,
+        color: theme.colors.text.secondary,
+    },
+    placeInfo: {
+        flex: 1,
+    },
+    placeName: {
+        ...theme.typography.bodyMedium,
+        fontWeight: theme.fontWeight.semiBold,
+        color: theme.colors.text.primary,
+        marginBottom: theme.spacing.xs,
+    },
+    placeAddress: {
+        ...theme.typography.captionMedium,
+        color: theme.colors.text.secondary,
+        marginBottom: theme.spacing.xs,
+    },
+    placeCategory: {
+        ...theme.typography.captionSmall,
+        color: theme.colors.text.tertiary,
+        textTransform: 'capitalize',
+    },
+    placeMeta: {
+        alignItems: 'flex-end',
+    },
+    placeRating: {
+        ...theme.typography.captionMedium,
+        color: theme.colors.text.primary,
+        marginBottom: theme.spacing.xs,
+    },
+    placeDistance: {
+        ...theme.typography.captionSmall,
+        color: theme.colors.text.secondary,
     },
 });
 

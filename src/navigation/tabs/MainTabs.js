@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { StatusBar, Text } from 'react-native';
 import MapScreen from '../../screens/main/map/MapScreen';
@@ -8,13 +8,27 @@ import ProfileScreen from '../../screens/main/profile/ProfileScreen';
 import { theme } from '../../constants/theme';
 import IconAsset from '../../assets/icons/IconAsset';
 import ScreenContainer from '../../components/common/ScreenContainer';
+import PlaceFullCard from '../../components/ui/PlaceFullCard';
+import MapsController from '../../controllers/maps/MapsController';
+import ReferralAlert from '../../components/ui/ReferralAlert';
+import ReferralController from '../../controllers/referrals/ReferralController';
 
 const Tab = createBottomTabNavigator();
 
 const MainTabs = () => {
+    const { showPlaceFullCard } = MapsController();
+    const { showReferralAlert } = ReferralController();
+    const [edges, setEdges] = useState(['bottom']);
+    React.useEffect(() => {
+        if (showPlaceFullCard) {
+            setEdges([]);
+        } else {
+            setEdges(['bottom']);
+        }
+    }, [showPlaceFullCard]);
     return (
         <ScreenContainer {...ScreenContainer.presets.full}
-            edges={['bottom']}
+            edges={edges}
             backgroundColor={theme.colors.background.primary}
             paddingCustom={{
 
@@ -44,8 +58,9 @@ const MainTabs = () => {
                         borderTopColor: theme.colors.border.light,
                         paddingBottom: 5,
                         paddingTop: 5,
-                        height: 60,
                         elevation: 0,
+                        height: showPlaceFullCard ? 0 : 60,
+                        overflow: 'hidden',
                     },
                     tabBarLabelStyle: {
                         fontSize: 12,
@@ -82,6 +97,8 @@ const MainTabs = () => {
                     }}
                 />
             </Tab.Navigator>
+            {showPlaceFullCard && <PlaceFullCard />}
+            {showReferralAlert && <ReferralAlert />}
         </ScreenContainer>
     );
 };

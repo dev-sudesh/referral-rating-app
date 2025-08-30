@@ -32,7 +32,6 @@ const ImagePreloaderExample = () => {
         const result = await preloadLocal(
             ['logo-full', 'logo-icon'],
             (result) => {
-                console.log('Local preloading complete:', result);
                 setResults(result);
             },
             (error) => {
@@ -52,7 +51,6 @@ const ImagePreloaderExample = () => {
         const result = await preloadRemote(
             remoteImages,
             (result) => {
-                console.log('Remote preloading complete:', result);
                 setResults(result);
             },
             (error) => {
@@ -73,7 +71,6 @@ const ImagePreloaderExample = () => {
             localImages,
             remoteImages,
             (result) => {
-                console.log('All preloading complete:', result);
                 setResults(result);
             },
             (error) => {
@@ -86,7 +83,6 @@ const ImagePreloaderExample = () => {
     const handleClearCache = async () => {
         try {
             await clearCache(() => {
-                console.log('Cache cleared successfully');
                 setResults(null);
             });
         } catch (error) {
@@ -100,10 +96,8 @@ const ImagePreloaderExample = () => {
             const result = await preloadLocalImages(
                 ['logo-full'],
                 (progress, completed, total, key) => {
-                    console.log(`Direct preload: ${key} - ${progress}%`);
                 },
                 (result) => {
-                    console.log('Direct preload complete:', result);
                     setResults(result);
                 }
             );

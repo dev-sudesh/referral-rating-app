@@ -164,6 +164,7 @@ class FirebaseAuthService {
             const authInstance = getAuth();
             const userCredential = await signInAnonymously(authInstance);
 
+
             return {
                 success: true,
                 user: userCredential.user,

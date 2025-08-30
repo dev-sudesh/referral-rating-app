@@ -1,30 +1,42 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
+import { useNavigation } from '@react-navigation/native';
 import { View, StyleSheet } from 'react-native';
 import { theme } from '../constants/theme';
 import AppImage from '../components/common/AppImage';
-import Images from '../locale/Images';
 import LoadingIndicator from '../components/animated/LoadingIndicator';
 import ScreenContainer from '../components/common/ScreenContainer';
 import BuildVersion from '../components/ui/BuildVersion';
-import NativeModuleUtils from '../utils/nativeModules/NativeModuleUtils';
 import ImageAsset from '../assets/images/ImageAsset';
 import Constants from '../constants/data';
 import AsyncStoreUtils from '../utils/AsyncStoreUtils';
+import Toast from 'react-native-toast-message';
 
-const SplashScreen = ({ navigation }) => {
-    React.useEffect(() => {
-        const timer = setTimeout(() => {
-            try {
-                console.log('Attempting to hide splash screen...');
-                NativeModuleUtils.SplashScreen.hide();
-                console.log('Splash screen hide called successfully');
-            } catch (error) {
-                console.error('Error hiding splash screen:', error);
-            }
-        }, 500);
+import { useAppInitialization } from '../hooks/useAppInitialization';
+import { useDataRecovery } from '../hooks/useDataRecovery';
+import NativeModuleUtils from '../utils/nativeModules/NativeModuleUtils';
 
-        return () => clearTimeout(timer);
-    }, []);
+const SplashScreen = () => {
+    const navigation = useNavigation();
+    const splashTimeout = useRef();
+
+    // Initialize app services
+    const { firebaseReady, error, isInitializing } = useAppInitialization();
+
+    // Initialize data recovery
+    const { wasRecovered } = useDataRecovery();
+
+    // Show recovery notification
+    useEffect(() => {
+        if (wasRecovered) {
+            Toast.show({
+                type: 'success',
+                text1: 'Welcome Back!',
+                text2: 'Your previous data has been recovered.',
+                position: 'top',
+                visibilityTime: 4000,
+            });
+        }
+    }, [wasRecovered]);
 
     const checkLoginStatus = async () => {
         try {
@@ -41,16 +53,35 @@ const SplashScreen = ({ navigation }) => {
             }
         } catch (error) {
             console.error('Error checking login status:', error);
+            // Fallback to auth screen on error
+            navigation.replace(Constants.Screen.Stack.Auth);
         }
     }
 
-    React.useEffect(() => {
-        const timer = setTimeout(() => {
-            checkLoginStatus();
-        }, 2000);
+    useEffect(() => {
+        // Hide splash screen after a minimum delay
+        splashTimeout.current = setTimeout(() => {
+            NativeModuleUtils.SplashScreen.hide();
+        }, 1000); // Increased from 500ms to 1000ms for better UX
 
-        return () => clearTimeout(timer);
-    }, [navigation]);
+        return () => {
+            if (splashTimeout.current) {
+                clearTimeout(splashTimeout.current);
+            }
+        };
+    }, []);
+
+    // Navigate when initialization is complete
+    useEffect(() => {
+        if (!isInitializing && firebaseReady) {
+            // Add a small delay to ensure smooth transition
+            const navigationTimeout = setTimeout(() => {
+                checkLoginStatus();
+            }, 500);
+
+            return () => clearTimeout(navigationTimeout);
+        }
+    }, [isInitializing, firebaseReady]);
 
     return (
         <ScreenContainer {...ScreenContainer.presets.full} safeArea={false}>
@@ -78,6 +109,8 @@ const SplashScreen = ({ navigation }) => {
     );
 };
 
+export default SplashScreen;
+
 const styles = StyleSheet.create({
     container: {
         flex: 1,
@@ -103,43 +136,13 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginBottom: theme.spacing.lg,
     },
-    logoText: {
-        ...theme.typography.h3,
-        color: theme.colors.primary[500],
-    },
-    appName: {
-        ...theme.typography.h1,
-        color: theme.colors.background.primary,
-        marginBottom: theme.spacing.sm,
-    },
-    tagline: {
-        ...theme.typography.bodyMedium,
-        color: theme.colors.primary[100],
-        textAlign: 'center',
-    },
     loadingContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         marginBottom: theme.spacing.xxl,
-    },
-    loadingDot: {
-        width: theme.responsive.size(12),
-        height: theme.responsive.size(12),
-        borderRadius: theme.borderRadius.round,
-        backgroundColor: theme.colors.primary[500],
-        marginHorizontal: theme.spacing.xs,
-        opacity: 0.6,
-    },
-    loadingDotDelayed: {
-        opacity: 0.8,
-    },
-    loadingDotMoreDelayed: {
-        opacity: 1,
     },
     logoImage: {
         width: 250,
         height: 250,
     },
 });
-
-export default SplashScreen; 
