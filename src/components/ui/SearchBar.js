@@ -85,7 +85,7 @@ const styles = StyleSheet.create({
         flex: 1,
         ...theme.typography.bodyMedium,
         color: theme.colors.text.primary,
-        paddingVertical: theme.spacing.sm,
+        lineHeight: null
     },
     filterButton: {
         padding: theme.spacing.sm,

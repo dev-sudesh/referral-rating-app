@@ -174,7 +174,7 @@ const SearchScreen = ({ navigation }) => {
                                 <Text style={styles.placeCategory}>{place.category}</Text>
                             </View>
                             <View style={styles.placeMeta}>
-                                <Text style={styles.placeRating}>⭐ {place.rating}</Text>
+                                {/* <Text style={styles.placeRating}>⭐ {place.rating}</Text> */}
                                 <Text style={styles.placeDistance}>{place.distance?.toFixed(1)}km</Text>
                             </View>
                         </TouchableOpacity>

@@ -139,7 +139,7 @@ const ScreenHeader = ({
                 styles.container,
                 {
                     backgroundColor: getBackgroundColor(),
-                    paddingTop: safeArea ? (Platform.OS === 'ios' ? 44 : 0) : 0,
+                    paddingTop: safeArea ? (Platform.OS === 'ios' ? 0 : 0) : 0,
                     ...(shouldShowShadow && Platform.OS === 'ios' ? shadows.ios.medium : {}),
                     ...(shouldShowShadow && Platform.OS === 'android' ? shadows.android.medium : {}),
                 },
