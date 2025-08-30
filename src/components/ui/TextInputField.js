@@ -242,7 +242,7 @@ const TextInputField = ({
                     <TouchableOpacity
                         style={styles.eyeButton}
                         onPress={togglePasswordVisibility}
-                        activeOpacity={0.7}
+                        activeOpacity={1}
                     >
                         <EyeIcon
                             width={20}

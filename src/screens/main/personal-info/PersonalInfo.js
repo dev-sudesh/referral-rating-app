@@ -18,19 +18,19 @@ import AppImage from '../../../components/common/AppImage';
 import ImageAsset from '../../../assets/images/ImageAsset';
 import IconAsset from '../../../assets/icons/IconAsset';
 import KeyboardAvoidingView from '../../../components/common/KeyboardAvoidingView';
+import FirebaseStoreService from '../../../services/firebase/FirebaseStoreService';
+import ToastUtils from '../../../utils/ToastUtils';
+import ImagePickerController from '../../../controllers/imagePicker/ImagePickerController';
 
 const PersonalInfo = ({ navigation }) => {
     const [formData, setFormData] = useState({
         firstName: 'Thomas',
         lastName: 'Monoghan',
         email: 't.monoghan@gmail.com',
-        password: 'password',
     });
     const [isLoading, setIsLoading] = useState(false);
-    const [showPassword, setShowPassword] = useState(false);
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [acceptTerms, setAcceptTerms] = useState(false);
-
+    const { setShowImagePicker } = ImagePickerController();
     const handleInputChange = (field, value) => {
         setFormData(prev => ({
             ...prev,
@@ -97,19 +97,44 @@ const PersonalInfo = ({ navigation }) => {
         }
     };
 
-    const handleSave = () => {
+    const handleSave = async () => {
+        const result = await FirebaseStoreService.updateUserPersonalInfo(formData);
+        if (result) {
+            ToastUtils.success('Personal information updated successfully');
+        } else {
+            ToastUtils.error('Failed to update personal information. Please try again.');
+        }
+    };
+
+    const handleAvatarImageEdit = () => {
+        setShowImagePicker(true);
     };
 
     const renderProfileHeader = () => (
         <View style={styles.profileHeader}>
             <View style={styles.avatarImageContainer}>
                 <AppImage source={ImageAsset.profileImage} style={styles.avatarImage} resizeMode="contain" />
-                <TouchableOpacity style={styles.avatarImageEditButton}>
+                <TouchableOpacity activeOpacity={1} onPress={handleAvatarImageEdit} style={styles.avatarImageEditButton}>
                     <IconAsset.editIcon width={theme.responsive.size(26)} height={theme.responsive.size(26)} />
                 </TouchableOpacity>
             </View>
         </View>
     );
+
+    const getUserPersonalInfo = async () => {
+        const personalInfo = await FirebaseStoreService.getUserPersonalInfo();
+        if (personalInfo) {
+            setFormData({
+                firstName: personalInfo.firstName,
+                lastName: personalInfo.lastName,
+                email: personalInfo.email,
+            });
+        }
+    };
+
+    React.useEffect(() => {
+        getUserPersonalInfo();
+    }, []);
 
     return (
         <ScreenContainer
@@ -119,18 +144,13 @@ const PersonalInfo = ({ navigation }) => {
                 paddingRight: 0,
             }}
         >
-            <StatusBar
-                barStyle="dark-content"
-                translucent={true}
-                backgroundColor={'transparent'}
-            />
             <ScreenHeader
                 style={styles.header}
                 title="Personal Informations"
                 showBackButton
                 onBackPress={() => navigation.goBack()}
                 rightComponent={
-                    <TouchableOpacity onPress={handleSave} style={styles.saveButton}>
+                    <TouchableOpacity activeOpacity={1} onPress={handleSave} style={styles.saveButton}>
                         <Text style={styles.saveButtonText}>Save</Text>
                     </TouchableOpacity>
                 }

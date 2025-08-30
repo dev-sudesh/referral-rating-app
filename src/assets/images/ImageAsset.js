@@ -19,6 +19,8 @@ const ImageAsset = {
     },
     profileImage: require('../../assets/images/others/profile-image.png'),
     markerIcon: require('../../assets/icons/markers/marker-icon.svg'),
+    cameraIcon: require('../../assets/images/others/camera.png'),
+    galleryIcon: require('../../assets/images/others/gallery.png'),
 }
 
 

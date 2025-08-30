@@ -219,6 +219,10 @@ export const typography = {
         lineHeight: ResponsiveUI.fontSize(lineHeight.caption.small),
         fontWeight: fontWeight.regular,
     },
+    custom: ({ fontSize = fontSize.body.small, fontWeight = 500 }) => ({
+        fontSize: ResponsiveUI.fontSize(fontSize),
+        fontWeight: fontWeight,
+    }),
 };
 
 export const theme = {

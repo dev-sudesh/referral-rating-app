@@ -18,6 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import ImageAsset from '../../../assets/images/ImageAsset';
 import AppImage from '../../../components/common/AppImage';
 import IconAsset from '../../../assets/icons/IconAsset';
+import MapsController from '../../../controllers/maps/MapsController';
 
 const { width, height } = Dimensions.get('window');
 
@@ -163,6 +164,8 @@ const ReferralsScreen = ({ navigation }) => {
     const [filteredReferrals, setFilteredReferrals] = useState([]);
     const [filters, setFilters] = useState(filterData);
 
+    const { places } = MapsController();
+
     // Show status bar when screen is focused
     useFocusEffect(
         React.useCallback(() => {
@@ -192,7 +195,7 @@ const ReferralsScreen = ({ navigation }) => {
                     chip.selected && styles.filterOptionSelected
                 ]}
                 onPress={() => handleFilterPress(chip.id)}
-                activeOpacity={0.7}
+                activeOpacity={1}
             >
                 <View style={[
                     styles.filterOptionIcon,
@@ -227,7 +230,7 @@ const ReferralsScreen = ({ navigation }) => {
                 <TouchableOpacity
                     key={referral.id}
                     style={[styles.referralCard, { filter: referral.status == 'past' ? 'grayscale(100%) brightness(120%) contrast(70%)' : 'none' }]}
-                    activeOpacity={0.8}
+                    activeOpacity={1}
                     onPress={() => { }}
 
                 >
@@ -251,8 +254,8 @@ const ReferralsScreen = ({ navigation }) => {
                                     </View>
                                 ))}
                             </View>
-                            <Text style={styles.referralCardTitle}>{referral.title}</Text>
-                            <Text style={styles.referralCardValidText}>{`Valid until ${validUntilDateString}`}</Text>
+                            <Text numberOfLines={1} ellipsizeMode="tail" style={styles.referralCardTitle}>{referral.name}</Text>
+                            <Text numberOfLines={1} ellipsizeMode="tail" style={styles.referralCardValidText}>{referral.address}</Text>
                         </View>
                     </View>
                 </TouchableOpacity>
@@ -261,8 +264,8 @@ const ReferralsScreen = ({ navigation }) => {
     };
 
     React.useEffect(() => {
-        setFilteredReferrals(referrals.filter(item => item.status == selectedFilter))
-    }, [selectedFilter])
+        setFilteredReferrals(places)
+    }, [places])
 
     return (
         <SafeAreaView style={styles.container}>
@@ -480,12 +483,14 @@ const styles = StyleSheet.create({
         gap: theme.spacing.sm,
     },
     referralCardTitle: {
-        ...theme.typography.h4,
+        ...theme.typography.bodySmall,
         fontWeight: theme.fontWeight.bold,
         color: theme.colors.text.primary,
     },
     referralCardValidText: {
-        ...theme.typography.bodyMedium,
+        ...theme.typography.custom({
+            fontSize: theme.fontSize.caption.medium,
+        }),
         color: theme.colors.text.secondary,
     },
     referralCardBadge: {
@@ -650,8 +655,8 @@ const styles = StyleSheet.create({
     referralCardTagText: {
         fontSize: theme.responsive.size(12),
         color: theme.colors.text.white,
-        fontWeight: theme.fontWeight.bold,
-
+        fontWeight: theme.fontWeight.semiBold,
+        textTransform: 'capitalize',
     },
     tagStyle1: {
         backgroundColor: theme.colors.background.tagStyle1,
@@ -660,6 +665,10 @@ const styles = StyleSheet.create({
     tagStyle2: {
         backgroundColor: theme.colors.background.tagStyle2,
         color: theme.colors.text.tagStyle2,
+    },
+    tagStyle3: {
+        backgroundColor: theme.colors.background.tagStyle3,
+        color: theme.colors.text.tagStyle3,
     },
     filterContainer: {
         marginBottom: theme.spacing.lg,

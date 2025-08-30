@@ -217,7 +217,7 @@ const FirebaseStoreExample = () => {
                 <Text style={styles.sectionText}>
                     Current filters: {JSON.stringify(filters, null, 2)}
                 </Text>
-                <TouchableOpacity style={styles.button} onPress={handleSaveFilters}>
+                <TouchableOpacity activeOpacity={1} style={styles.button} onPress={handleSaveFilters}>
                     <Text style={styles.buttonText}>Save Sample Filters</Text>
                 </TouchableOpacity>
             </View>
@@ -232,7 +232,7 @@ const FirebaseStoreExample = () => {
                         value={searchKeyword}
                         onChangeText={setSearchKeyword}
                     />
-                    <TouchableOpacity style={styles.button} onPress={handleSearch}>
+                    <TouchableOpacity activeOpacity={1} style={styles.button} onPress={handleSearch}>
                         <Text style={styles.buttonText}>Save Search</Text>
                     </TouchableOpacity>
                 </View>
@@ -255,7 +255,7 @@ const FirebaseStoreExample = () => {
                         value={locationInput}
                         onChangeText={setLocationInput}
                     />
-                    <TouchableOpacity style={styles.button} onPress={handleSaveLocation}>
+                    <TouchableOpacity activeOpacity={1} style={styles.button} onPress={handleSaveLocation}>
                         <Text style={styles.buttonText}>Save Location</Text>
                     </TouchableOpacity>
                 </View>
@@ -302,7 +302,7 @@ const FirebaseStoreExample = () => {
                     value={placeData.category}
                     onChangeText={(text) => setPlaceData({ ...placeData, category: text })}
                 />
-                <TouchableOpacity style={styles.button} onPress={handleAddPlace}>
+                <TouchableOpacity activeOpacity={1} style={styles.button} onPress={handleAddPlace}>
                     <Text style={styles.buttonText}>Add Place</Text>
                 </TouchableOpacity>
             </View>
@@ -321,6 +321,7 @@ const FirebaseStoreExample = () => {
                         <View style={styles.placeActions}>
                             {!place.isVisited && (
                                 <TouchableOpacity
+                                    activeOpacity={1}
                                     style={[styles.button, styles.smallButton]}
                                     onPress={() => handleMarkVisited(place.placeId)}
                                 >
@@ -328,6 +329,7 @@ const FirebaseStoreExample = () => {
                                 </TouchableOpacity>
                             )}
                             <TouchableOpacity
+                                activeOpacity={1}
                                 style={[styles.button, styles.smallButton, styles.deleteButton]}
                                 onPress={() => handleDeletePlace(place.placeId)}
                             >
@@ -341,7 +343,7 @@ const FirebaseStoreExample = () => {
             {/* Clear Data Section */}
             <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Data Management</Text>
-                <TouchableOpacity style={[styles.button, styles.dangerButton]} onPress={handleClearData}>
+                <TouchableOpacity activeOpacity={1} style={[styles.button, styles.dangerButton]} onPress={handleClearData}>
                     <Text style={styles.buttonText}>Clear All Data</Text>
                 </TouchableOpacity>
             </View>

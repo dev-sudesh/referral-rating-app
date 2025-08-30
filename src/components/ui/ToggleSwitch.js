@@ -71,7 +71,7 @@ const ToggleSwitch = ({
         <TouchableOpacity
             style={[styles.container, style]}
             onPress={handlePress}
-            activeOpacity={0.8}
+            activeOpacity={1}
             disabled={disabled}
         >
             <Animated.View

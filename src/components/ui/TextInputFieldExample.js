@@ -114,7 +114,7 @@ const TextInputFieldExample = () => {
             <TouchableOpacity
                 style={styles.submitButton}
                 onPress={handleSubmit}
-                activeOpacity={0.8}
+                activeOpacity={1}
             >
                 <Text style={styles.submitButtonText}>Test Form</Text>
             </TouchableOpacity>

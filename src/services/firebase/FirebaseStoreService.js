@@ -674,13 +674,37 @@ const createRandomPlaces = async (location) => {
             "Mon - Sun: 12:00 - 23:00",
         ]);
 
-        // get random category from Constants.filters
         const category = faker.helpers.arrayElement(Constants.filters.map(filter => filter.options.map(option => option.id)).flat());
+        let tags1 = faker.helpers.arrayElement([
+            'No.1',
+            'No.2',
+            'No.3',
+            'No.4'
+        ]);
+        const tags2 = faker.helpers.arrayElement(Constants.filters.map(filter => filter.options.map(option => option.id)).flat());
 
-
+        if (faker.number.int({ min: 0, max: 1 }) === 1) {
+            tags1 = undefined;
+        }
+        const tags = [];
+        if (tags1) {
+            tags.push({
+                id: faker.string.uuid(),
+                title: tags1,
+                style: 'tagStyle1',
+            });
+        }
+        if (tags2) {
+            tags.push({
+                id: faker.string.uuid(),
+                title: tags2,
+                style: 'tagStyle2',
+            });
+        }
         randomPlaces.push({
             id: faker.string.uuid(),
             name: faker.company.name(),
+            tags: tags,
             address: faker.location.streetAddress(),
             description: faker.lorem.sentence(),
             category: category,
@@ -820,6 +844,34 @@ const getSearchPlaces = async (location, searchText) => {
     }
 };
 
+const updateUserPersonalInfo = async (personalInfo) => {
+    try {
+        await ensureFirebaseReady();
+        const userId = await getAnonymousUserId();
+        const docRef = db.collection(COLLECTIONS.USERS).doc(userId);
+        await docRef.update(personalInfo);
+        return true;
+    }
+    catch (error) {
+        handleFirestoreError(error, 'updateUserPersonalInfo');
+        return false;
+    }
+};
+
+const getUserPersonalInfo = async () => {
+    try {
+        await ensureFirebaseReady();
+        const userId = await getAnonymousUserId();
+        const docRef = db.collection(COLLECTIONS.USERS).doc(userId);
+        const doc = await docRef.get();
+        return doc.data();
+    }
+    catch (error) {
+        handleFirestoreError(error, 'getUserPersonalInfo');
+        return null;
+    }
+};
+
 const FirebaseStoreService = {
     // User management
     getAnonymousUserId,
@@ -866,6 +918,9 @@ const FirebaseStoreService = {
     getFilteredPlaces,
     getSearchPlaces,
 
+    // Personal info
+    updateUserPersonalInfo,
+    getUserPersonalInfo,
     // Collections
     COLLECTIONS,
 };

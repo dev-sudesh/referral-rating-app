@@ -96,7 +96,7 @@ const OnboardingScreen = ({ navigation }) => {
                     style={styles.skipButton}
                     onPress={handleSkip}
                     disabled={isLoading}
-                    activeOpacity={0.7}
+                    activeOpacity={1}
                 >
                     <Text style={[styles.skipText, isLoading && styles.disabledText]}>
                         Skip
@@ -138,7 +138,7 @@ const OnboardingScreen = ({ navigation }) => {
                         <TouchableOpacity
                             style={[styles.nextButton]}
                             onPress={handleNext}
-                            activeOpacity={0.8}
+                            activeOpacity={1}
                             disabled={isLoading}
                         >
                             {isLoading ? (

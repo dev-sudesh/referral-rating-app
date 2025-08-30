@@ -33,6 +33,7 @@ const LoadingIndicatorDemo = () => {
                 <View style={styles.typeContainer}>
                     {types.map((type) => (
                         <TouchableOpacity
+                            activeOpacity={1}
                             key={type.key}
                             style={[
                                 styles.typeButton,

@@ -66,6 +66,7 @@ const SimpleFirestoreTest = () => {
             <Text style={styles.title}>Simple Firestore Connection Test</Text>
 
             <TouchableOpacity
+                activeOpacity={1}
                 style={[styles.button, isTesting && styles.buttonDisabled]}
                 onPress={testFirestoreConnection}
                 disabled={isTesting}

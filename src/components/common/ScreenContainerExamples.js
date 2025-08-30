@@ -83,6 +83,7 @@ export const ListScreenExample = () => (
     <ScreenContainer {...ScreenContainer.presets.list}>
         {Array.from({ length: 10 }, (_, i) => (
             <TouchableOpacity
+                activeOpacity={1}
                 key={i}
                 style={{
                     padding: theme.spacing.md,

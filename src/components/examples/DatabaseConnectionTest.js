@@ -93,6 +93,7 @@ const DatabaseConnectionTest = () => {
             <Text style={styles.title}>Database Connection Test</Text>
 
             <TouchableOpacity
+                activeOpacity={1}
                 style={[styles.button, isTesting && styles.buttonDisabled]}
                 onPress={runConnectionTest}
                 disabled={isTesting}
@@ -103,6 +104,7 @@ const DatabaseConnectionTest = () => {
             </TouchableOpacity>
 
             <TouchableOpacity
+                activeOpacity={1}
                 style={[styles.button, styles.clearButton]}
                 onPress={clearTestData}
             >

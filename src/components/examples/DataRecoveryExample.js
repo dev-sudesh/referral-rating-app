@@ -175,6 +175,7 @@ const DataRecoveryExample = () => {
                 )}
 
                 <TouchableOpacity
+                    activeOpacity={1}
                     style={styles.button}
                     onPress={() => setShowRecoveryInfo(!showRecoveryInfo)}
                 >
@@ -205,6 +206,7 @@ const DataRecoveryExample = () => {
                 <Text style={styles.sectionTitle}>Recovery Actions</Text>
 
                 <TouchableOpacity
+                    activeOpacity={1}
                     style={[styles.button, styles.primaryButton]}
                     onPress={checkRecovery}
                     disabled={isRecovering}
@@ -215,6 +217,7 @@ const DataRecoveryExample = () => {
                 </TouchableOpacity>
 
                 <TouchableOpacity
+                    activeOpacity={1}
                     style={[styles.button, styles.warningButton]}
                     onPress={handleForceRecovery}
                     disabled={isRecovering}
@@ -225,6 +228,7 @@ const DataRecoveryExample = () => {
                 </TouchableOpacity>
 
                 <TouchableOpacity
+                    activeOpacity={1}
                     style={[styles.button, styles.infoButton]}
                     onPress={simulateCacheClear}
                 >
@@ -232,6 +236,7 @@ const DataRecoveryExample = () => {
                 </TouchableOpacity>
 
                 <TouchableOpacity
+                    activeOpacity={1}
                     style={[styles.button, styles.dangerButton]}
                     onPress={handleClearData}
                 >

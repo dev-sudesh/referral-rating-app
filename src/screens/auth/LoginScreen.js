@@ -175,7 +175,7 @@ const LoginScreen = ({ navigation }) => {
                     </View>
 
                     {/* Forgot Password */}
-                    <TouchableOpacity style={styles.forgotPasswordButton} onPress={handleForgotPassword}>
+                    <TouchableOpacity activeOpacity={1} style={styles.forgotPasswordButton} onPress={handleForgotPassword}>
                         <Text style={styles.forgotPasswordText}>Forgot your password</Text>
                     </TouchableOpacity>
                 </KeyboardAvoidingView>

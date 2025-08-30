@@ -19,17 +19,33 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import AppImage from '../../../components/common/AppImage';
 import ImageAsset from '../../../assets/images/ImageAsset';
 import Constants from '../../../constants/data';
+import FirebaseStoreService from '../../../services/firebase/FirebaseStoreService';
 
 const ProfileScreen = ({ navigation }) => {
     const [notificationsEnabled, setNotificationsEnabled] = useState(true);
     const [locationEnabled, setLocationEnabled] = useState(true);
     const [darkModeEnabled, setDarkModeEnabled] = useState(false);
 
+    const [userPersonalInfo, setUserPersonalInfo] = useState({
+        firstName: 'Thomas',
+        lastName: 'Monoghan',
+        email: 't.monoghan@gmail.com',
+    });
+
+    const getUserPersonalInfo = async () => {
+        const personalInfo = await FirebaseStoreService.getUserPersonalInfo();
+        if (personalInfo) {
+            setUserPersonalInfo(personalInfo);
+        }
+    };
+
     // Show status bar when screen is focused
     useFocusEffect(
         React.useCallback(() => {
             StatusBar.setHidden(false);
             StatusBar.setBarStyle('dark-content');
+
+            getUserPersonalInfo();
         }, [])
     );
 
@@ -107,8 +123,8 @@ const ProfileScreen = ({ navigation }) => {
             </View>
 
             <View style={styles.profileInfo}>
-                <Text style={styles.profileName}>{userProfile.name}</Text>
-                <Text style={styles.profileEmail}>{userProfile.email}</Text>
+                <Text style={styles.profileName}>{userPersonalInfo.firstName} {userPersonalInfo.lastName}</Text>
+                <Text style={styles.profileEmail}>{userPersonalInfo.email}</Text>
             </View>
         </View>
     );
@@ -122,7 +138,7 @@ const ProfileScreen = ({ navigation }) => {
                         navigation.navigate(item.navigateTo);
                     }
                 }}
-                activeOpacity={0.8}
+                activeOpacity={1}
             >
                 <View style={styles.menuItemLeft}>
                     <Text style={styles.menuItemTitle}>{item.title}</Text>
@@ -163,7 +179,7 @@ const ProfileScreen = ({ navigation }) => {
                 <View style={styles.headerTitleContainer}>
                     <Text style={styles.headerTitle}>My profile</Text>
                 </View>
-                <TouchableOpacity style={styles.newProfileButton}>
+                <TouchableOpacity activeOpacity={1} style={styles.newProfileButton}>
                     <IconAsset.newProfileIcon width={24} height={24} />
                 </TouchableOpacity>
             </View>

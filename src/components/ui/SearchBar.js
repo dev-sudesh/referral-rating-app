@@ -31,7 +31,7 @@ const SearchBar = ({ handleBackPress, setSearchText, onFilterPress, activeFilter
                 <TouchableOpacity
                     style={styles.backButton}
                     onPress={handleBackPress}
-                    activeOpacity={0.7}
+                    activeOpacity={1}
                 >
                     <IconAsset.arrowBack width={responsiveSize(14)} height={responsiveSize(14)} fill={theme.colors.text.secondary} />
                 </TouchableOpacity>
@@ -49,7 +49,7 @@ const SearchBar = ({ handleBackPress, setSearchText, onFilterPress, activeFilter
                     <TouchableOpacity
                         style={styles.clearButton}
                         onPress={handleClearSearch}
-                        activeOpacity={0.7}
+                        activeOpacity={1}
                     >
                         <Text style={styles.clearButtonText}>✕</Text>
                     </TouchableOpacity>
@@ -85,7 +85,7 @@ const styles = StyleSheet.create({
         flex: 1,
         ...theme.typography.bodyMedium,
         color: theme.colors.text.primary,
-        paddingVertical: theme.spacing.sm,
+        lineHeight: null,
     },
     filterButton: {
         padding: theme.spacing.sm,

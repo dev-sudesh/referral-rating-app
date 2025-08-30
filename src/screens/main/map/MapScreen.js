@@ -226,7 +226,7 @@ const MapScreen = ({ navigation }) => {
                 selectedFilter === filter.id && styles.filterButtonActive,
             ]}
             onPress={() => setSelectedFilter(filter.id)}
-            activeOpacity={0.8}
+            activeOpacity={1}
         >
             <Text
                 style={[
@@ -387,7 +387,7 @@ const MapScreen = ({ navigation }) => {
                 <TouchableOpacity
                     key={place.id}
                     style={[styles.placeCard,]}
-                    activeOpacity={0.95}
+                    activeOpacity={1}
                     onPress={() => showPlaceCard({ place, scroll: false })}
                 >
                     <View style={[styles.placeCardInner]}>
@@ -609,7 +609,7 @@ const MapScreen = ({ navigation }) => {
                 {/* Header */}
                 <View style={styles.header}>
                     {/* Search input */}
-                    <TouchableOpacity style={styles.searchContainer} onPress={() => navigation.navigate('Search')}  >
+                    <TouchableOpacity activeOpacity={1} style={styles.searchContainer} onPress={() => navigation.navigate('Search')}  >
                         {/* Search icon */}
                         <IconAsset.searchIcon
                             width={24}
@@ -620,7 +620,7 @@ const MapScreen = ({ navigation }) => {
                             <Text style={styles.searchInputText}>Search now...</Text>
                         </View>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.filterButton} onPress={() => setIsSearchFilterVisible(true)}>
+                    <TouchableOpacity activeOpacity={1} style={styles.filterButton} onPress={() => setIsSearchFilterVisible(true)}>
                         <IconAsset.filterIcon
                             width={30}
                             height={30}

@@ -25,7 +25,7 @@ const ScreenHeaderExamples = () => {
         <TouchableOpacity
             style={[styles.iconButton, style]}
             onPress={onPress}
-            activeOpacity={0.7}
+            activeOpacity={1}
         >
             <Text style={styles.iconText}>{name}</Text>
         </TouchableOpacity>

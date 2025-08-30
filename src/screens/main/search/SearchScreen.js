@@ -120,7 +120,7 @@ const SearchScreen = ({ navigation }) => {
                         styles.searchItem,
                     ]}
                     onPress={() => handleSearchItemPress(item)}
-                    activeOpacity={0.7}
+                    activeOpacity={1}
                 >
                     <Text style={styles.searchItemText}>{item.text}</Text>
                     {showTime && (
@@ -166,7 +166,7 @@ const SearchScreen = ({ navigation }) => {
                                 // Navigate to place details or handle place selection
                                 console.log('Selected place:', place);
                             }}
-                            activeOpacity={0.7}
+                            activeOpacity={1}
                         >
                             <View style={styles.placeInfo}>
                                 <Text style={styles.placeName}>{place.name}</Text>
@@ -174,7 +174,7 @@ const SearchScreen = ({ navigation }) => {
                                 <Text style={styles.placeCategory}>{place.category}</Text>
                             </View>
                             <View style={styles.placeMeta}>
-                                <Text style={styles.placeRating}>⭐ {place.rating}</Text>
+                                {/* <Text style={styles.placeRating}>⭐ {place.rating}</Text> */}
                                 <Text style={styles.placeDistance}>{place.distance?.toFixed(1)}km</Text>
                             </View>
                         </TouchableOpacity>

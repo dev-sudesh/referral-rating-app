@@ -161,7 +161,7 @@ const TestFirebaseIntegration = () => {
             {/* Test Controls */}
             <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Test Controls</Text>
-                <TouchableOpacity style={styles.button} onPress={runAllTests}>
+                <TouchableOpacity activeOpacity={1} style={styles.button} onPress={runAllTests}>
                     <Text style={styles.buttonText}>Run All Tests</Text>
                 </TouchableOpacity>
             </View>
@@ -226,6 +226,7 @@ const TestFirebaseIntegration = () => {
                 <Text style={styles.sectionTitle}>Manual Actions</Text>
 
                 <TouchableOpacity
+                    activeOpacity={1}
                     style={styles.actionButton}
                     onPress={() => loadSuggestions()}
                 >
@@ -233,6 +234,7 @@ const TestFirebaseIntegration = () => {
                 </TouchableOpacity>
 
                 <TouchableOpacity
+                    activeOpacity={1}
                     style={styles.actionButton}
                     onPress={() => forceRecovery()}
                 >

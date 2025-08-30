@@ -89,6 +89,7 @@ const SearchScreenIntegration = () => {
     // Render suggestion item
     const renderSuggestion = ({ item }) => (
         <TouchableOpacity
+            activeOpacity={1}
             style={styles.suggestionItem}
             onPress={() => handleSuggestionSelect(item)}
         >
@@ -117,6 +118,7 @@ const SearchScreenIntegration = () => {
                     returnKeyType="search"
                 />
                 <TouchableOpacity
+                    activeOpacity={1}
                     style={styles.searchButton}
                     onPress={handleSearch}
                     disabled={searchLoading}
@@ -151,6 +153,7 @@ const SearchScreenIntegration = () => {
                     <View style={styles.filterOptions}>
                         {['restaurant', 'cafe', 'shop', 'service'].map((category) => (
                             <TouchableOpacity
+                                activeOpacity={1}
                                 key={category}
                                 style={[
                                     styles.filterOption,
@@ -183,6 +186,7 @@ const SearchScreenIntegration = () => {
                     <View style={styles.filterOptions}>
                         {[3, 3.5, 4, 4.5].map((rating) => (
                             <TouchableOpacity
+                                activeOpacity={1}
                                 key={rating}
                                 style={[
                                     styles.filterOption,
@@ -209,6 +213,7 @@ const SearchScreenIntegration = () => {
                     <View style={styles.filterOptions}>
                         {[1, 3, 5, 10].map((distance) => (
                             <TouchableOpacity
+                                activeOpacity={1}
                                 key={distance}
                                 style={[
                                     styles.filterOption,
@@ -233,6 +238,7 @@ const SearchScreenIntegration = () => {
                 <View style={styles.filterRow}>
                     <Text style={styles.filterLabel}>Open Now:</Text>
                     <TouchableOpacity
+                        activeOpacity={1}
                         style={[
                             styles.filterOption,
                             filters.openNow && styles.filterOptionSelected,

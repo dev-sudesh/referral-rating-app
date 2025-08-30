@@ -147,7 +147,7 @@ const ResetPasswordScreen = ({ navigation }) => {
                 <TouchableOpacity
                     style={styles.backToLoginButton}
                     onPress={handleBackToLogin}
-                    activeOpacity={0.8}
+                    activeOpacity={1}
                 >
                     <Text style={styles.backToLoginText}>Go to login page</Text>
                 </TouchableOpacity>

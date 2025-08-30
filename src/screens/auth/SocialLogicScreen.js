@@ -124,7 +124,7 @@ const SocialLogicScreen = ({ navigation }) => {
                             ]}
                             onPress={() => handleSocialLogin(option.id)}
                             disabled={isLoading}
-                            activeOpacity={0.8}
+                            activeOpacity={1}
                         >
                             <View style={styles.socialButtonContent}>
                                 <View style={styles.socialTextContainer}>
@@ -144,7 +144,7 @@ const SocialLogicScreen = ({ navigation }) => {
                 <TouchableOpacity
                     style={styles.emailButton}
                     onPress={handleEmailLogin}
-                    activeOpacity={0.8}
+                    activeOpacity={1}
                 >
                     <Text style={styles.emailButtonText}>Login with e-mail</Text>
                 </TouchableOpacity>
@@ -153,7 +153,7 @@ const SocialLogicScreen = ({ navigation }) => {
                 <TouchableOpacity
                     style={styles.signUpButton}
                     onPress={handleSignUp}
-                    activeOpacity={0.6}
+                    activeOpacity={1}
                 >
                     <Text style={styles.signUpText}>Don't have an account yet? <Text style={styles.signUpTextLink}>Sign up</Text></Text>
                 </TouchableOpacity>

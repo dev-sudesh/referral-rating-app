@@ -157,6 +157,7 @@ const ImagePreloaderExample = () => {
             {/* Action Buttons */}
             <View style={styles.buttonContainer}>
                 <TouchableOpacity
+                    activeOpacity={1}
                     style={[styles.button, styles.primaryButton]}
                     onPress={handlePreloadLocal}
                     disabled={isLoading}
@@ -165,6 +166,7 @@ const ImagePreloaderExample = () => {
                 </TouchableOpacity>
 
                 <TouchableOpacity
+                    activeOpacity={1}
                     style={[styles.button, styles.secondaryButton]}
                     onPress={handlePreloadRemote}
                     disabled={isLoading}
@@ -173,6 +175,7 @@ const ImagePreloaderExample = () => {
                 </TouchableOpacity>
 
                 <TouchableOpacity
+                    activeOpacity={1}
                     style={[styles.button, styles.successButton]}
                     onPress={handlePreloadAll}
                     disabled={isLoading}
@@ -181,6 +184,7 @@ const ImagePreloaderExample = () => {
                 </TouchableOpacity>
 
                 <TouchableOpacity
+                    activeOpacity={1}
                     style={[styles.button, styles.warningButton]}
                     onPress={handleDirectPreload}
                     disabled={isLoading}
@@ -189,6 +193,7 @@ const ImagePreloaderExample = () => {
                 </TouchableOpacity>
 
                 <TouchableOpacity
+                    activeOpacity={1}
                     style={[styles.button, styles.dangerButton]}
                     onPress={handleClearCache}
                 >
@@ -196,6 +201,7 @@ const ImagePreloaderExample = () => {
                 </TouchableOpacity>
 
                 <TouchableOpacity
+                    activeOpacity={1}
                     style={[styles.button, styles.infoButton]}
                     onPress={resetState}
                 >

@@ -118,7 +118,7 @@ const RewardsScreen = ({ navigation }) => {
                 <TouchableOpacity
                     key={reward.id}
                     style={[styles.rewardCard, { filter: reward.status == 'past' ? 'grayscale(100%) brightness(120%) contrast(70%)' : 'none' }]}
-                    activeOpacity={0.8}
+                    activeOpacity={1}
                     onPress={() => { }}
 
                 >
@@ -167,6 +167,7 @@ const RewardsScreen = ({ navigation }) => {
                 {/* Tab Navigation */}
                 <View style={styles.tabContainer}>
                     <TouchableOpacity
+                        activeOpacity={1}
                         style={[
                             styles.tabButton,
                             selectedTab === 'active' && styles.activeTabButton,
@@ -182,6 +183,7 @@ const RewardsScreen = ({ navigation }) => {
                     </TouchableOpacity>
 
                     <TouchableOpacity
+                        activeOpacity={1}
                         style={[
                             styles.tabButton,
                             selectedTab === 'past' && styles.activeTabButton,

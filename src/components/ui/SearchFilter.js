@@ -104,7 +104,7 @@ const SearchFilter = ({
                     isSelected && styles.filterOptionSelected
                 ]}
                 onPress={() => toggleFilter(item.id)}
-                activeOpacity={0.7}
+                activeOpacity={1}
             >
                 <View style={[
                     styles.filterOptionIcon,
@@ -198,7 +198,7 @@ const SearchFilter = ({
                     <TouchableOpacity
                         style={styles.closeButton}
                         onPress={handleClose}
-                        activeOpacity={0.7}
+                        activeOpacity={1}
                     >
                         <Text style={styles.closeButtonText}>✕</Text>
                     </TouchableOpacity>
@@ -210,7 +210,7 @@ const SearchFilter = ({
                     <TouchableOpacity
                         style={styles.clearAllButton}
                         onPress={clearAllFilters}
-                        activeOpacity={0.7}
+                        activeOpacity={1}
                     >
                         <Text style={styles.clearAllText}>CLEAR ALL</Text>
                     </TouchableOpacity>
@@ -247,7 +247,7 @@ const SearchFilter = ({
                     <TouchableOpacity
                         style={styles.applyButton}
                         onPress={handleApplyFilters}
-                        activeOpacity={0.8}
+                        activeOpacity={1}
                     >
                         <Text style={styles.applyButtonText}>Show results</Text>
                     </TouchableOpacity>

@@ -12,12 +12,14 @@ import PlaceFullCard from '../../components/ui/PlaceFullCard';
 import MapsController from '../../controllers/maps/MapsController';
 import ReferralAlert from '../../components/ui/ReferralAlert';
 import ReferralController from '../../controllers/referrals/ReferralController';
+import ImagePickerController from '../../controllers/imagePicker/ImagePickerController';
 
 const Tab = createBottomTabNavigator();
 
 const MainTabs = () => {
     const { showPlaceFullCard } = MapsController();
     const { showReferralAlert } = ReferralController();
+    const { showImagePicker } = ImagePickerController();
     const [edges, setEdges] = useState(['bottom']);
     React.useEffect(() => {
         if (showPlaceFullCard) {

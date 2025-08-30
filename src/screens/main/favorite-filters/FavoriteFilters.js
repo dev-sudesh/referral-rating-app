@@ -67,7 +67,7 @@ const FavoriteFilters = ({ navigation }) => {
                     isSelected && styles.filterOptionSelected
                 ]}
                 onPress={() => toggleFilter(item)}
-                activeOpacity={0.7}
+                activeOpacity={1}
             >
                 <View style={[
                     styles.filterOptionIcon,
@@ -131,7 +131,7 @@ const FavoriteFilters = ({ navigation }) => {
                 showBackButton
                 onBackPress={() => navigation.goBack()}
                 rightComponent={
-                    <TouchableOpacity style={styles.saveButton} onPress={saveFilters}>
+                    <TouchableOpacity activeOpacity={1} style={styles.saveButton} onPress={saveFilters}>
                         <Text style={styles.saveButtonText}>Save</Text>
                     </TouchableOpacity>
                 }

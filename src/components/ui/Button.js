@@ -56,10 +56,11 @@ const Button = ({
 
     return (
         <TouchableOpacity
+
             style={getButtonStyle()}
             onPress={onPress}
             disabled={disabled || loading}
-            activeOpacity={0.8}
+            activeOpacity={1}
             {...props}
         >
             {loading ? (
