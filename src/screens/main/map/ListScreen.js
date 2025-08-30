@@ -30,6 +30,8 @@ import Animated from 'react-native-reanimated';
 import MapUtils from '../../../utils/MapUtils';
 import MapsController from '../../../controllers/maps/MapsController';
 import Constants from '../../../constants/data';
+import FirebaseStoreService from '../../../services/firebase/FirebaseStoreService';
+import ReferralController from '../../../controllers/referrals/ReferralController';
 
 const ListScreen = () => {
     const [selectedFilter, setSelectedFilter] = useState('all');
@@ -53,6 +55,8 @@ const ListScreen = () => {
     const [isMapReady, setIsMapReady] = useState(false);
     const [showPlaceBigCard, setShowPlaceBigCard] = useState(false);
     const [isScreenFocused, setIsScreenFocused] = useState(false);
+
+    const { setShowReferralAlert, placeReferredStatus } = ReferralController();
     const isFocused = useIsFocused();
 
     const timeoutRef = useRef(null);
@@ -242,7 +246,14 @@ const ListScreen = () => {
         }
     }, [centerLocation, isMapReady, isScreenFocused]);
 
-    const referPlace = (place) => {
+    const referPlace = async (place) => {
+        if (!place?.isReferred) {
+            setShowReferralAlert(true);
+        }
+    };
+
+    const referPlaceSubmit = async (place) => {
+        await FirebaseStoreService.storeReferredPlace(place);
         if (place.isReferred) {
             // unrefer place
             setFilteredPlaces(filteredPlaces.map(p => p.id === place.id ? { ...p, isReferred: false } : p));
@@ -254,6 +265,13 @@ const ListScreen = () => {
         setPlaces(places.map(p => p.id === place.id ? { ...p, isReferred: true } : p));
         setSelectedPlace(prev => prev.id === place.id ? { ...prev, isReferred: true } : prev);
     };
+
+
+    React.useEffect(() => {
+        if (placeReferredStatus) {
+            referPlaceSubmit(selectedPlace);
+        }
+    }, [placeReferredStatus]);
 
     React.useEffect(() => {
         if (timeoutRef.current) {
@@ -871,7 +889,7 @@ const styles = StyleSheet.create({
         elevation: 15,
     },
     placeCard: {
-        flexDirection: 'row',
+        flexDirection: 'row-reverse',
         width: theme.responsive.screen().width,
         paddingHorizontal: theme.spacing.lg,
         justifyContent: 'space-between',
@@ -880,17 +898,19 @@ const styles = StyleSheet.create({
     },
     placeCardIndexText: {
         ...theme.typography.bodySmall,
-        color: theme.colors.text.white,
+        color: theme.colors.text.primary,
         fontWeight: '700',
     },
     placeCardIndex: {
         width: theme.responsive.size(40),
         height: theme.responsive.size(40),
         borderRadius: theme.borderRadius.round,
-        backgroundColor: theme.colors.primary[500],
+        backgroundColor: theme.colors.background.primary,
         justifyContent: 'center',
         alignItems: 'center',
-        marginLeft: theme.spacing.sm,
+        margin: theme.spacing.sm,
+        position: 'absolute',
+        ...theme.shadows.medium,
     },
     placeCardInner: {
         flex: 1,
@@ -1078,8 +1098,8 @@ const styles = StyleSheet.create({
     placeCardReferred: {
         position: 'absolute',
         top: 0,
-        left: 0,
-        right: 1,
+        left: theme.spacing.lg,
+        right: theme.spacing.lg,
         paddingVertical: theme.spacing.sm,
         paddingHorizontal: theme.spacing.md,
         height: theme.responsive.size(100),
