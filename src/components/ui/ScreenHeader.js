@@ -153,14 +153,16 @@ const ScreenHeader = ({
                 </View>
 
                 {/* Center Section */}
-                <View style={styles.centerSection}>
+                <View style={styles.centerSection} pointerEvents="none">
                     {renderCenterContent()}
                 </View>
 
                 {/* Right Section */}
-                <View style={styles.rightSection}>
-                    {rightComponent}
-                </View>
+                {
+                    <View style={styles.rightSection}>
+                        {rightComponent}
+                    </View>
+                }
             </View>
         </View>
     );
@@ -183,7 +185,11 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     centerSection: {
-        flex: 2,
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        top: 0,
+        bottom: 0,
         alignItems: 'center',
         justifyContent: 'center',
     },

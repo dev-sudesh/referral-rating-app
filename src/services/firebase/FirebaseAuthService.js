@@ -1,4 +1,4 @@
-import auth, {
+import {
     getAuth,
     signInWithCredential,
     signInAnonymously,

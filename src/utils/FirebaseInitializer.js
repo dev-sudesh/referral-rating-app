@@ -1,6 +1,6 @@
 import { Platform } from 'react-native';
 import { getApps, getApp } from '@react-native-firebase/app';
-import firestore from '@react-native-firebase/firestore';
+import { getFirestore, collection, limit, getDocs, query } from '@react-native-firebase/firestore';
 
 /**
  * Firebase Initializer - Ensures Firebase is properly set up before use
@@ -34,9 +34,9 @@ class FirebaseInitializer {
 
             // Test Firestore connectivity
             try {
-                const db = firestore();
+                const db = getFirestore();
                 // Try a simple operation to test connectivity
-                await db.collection('_test_connection').limit(1).get();
+                await getDocs(query(collection(db, '_test_connection'), limit(1)));
             } catch (firestoreError) {
                 console.warn('Firestore connectivity test failed, but continuing:', firestoreError.message);
                 // Don't throw error, just warn - Firestore might be temporarily unavailable
@@ -57,8 +57,8 @@ class FirebaseInitializer {
 
                 // Additional check for Firestore availability
                 try {
-                    const db = firestore();
-                    await db.collection('_test_connection').limit(1).get();
+                    const db = getFirestore();
+                    await getDocs(query(collection(db, '_test_connection'), limit(1)));
                     return true;
                 } catch (firestoreError) {
                     if (i === maxRetries - 1) {
@@ -81,8 +81,8 @@ class FirebaseInitializer {
     static async waitForFirestore(maxRetries = 15, retryDelay = 200) {
         for (let i = 0; i < maxRetries; i++) {
             try {
-                const db = firestore();
-                await db.collection('_test_connection').limit(1).get();
+                const db = getFirestore();
+                await getDocs(query(collection(db, '_test_connection'), limit(1)));
                 return true;
             } catch (error) {
                 if (i === maxRetries - 1) {

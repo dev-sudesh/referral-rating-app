@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native'
+import { Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import React, { useState } from 'react'
 import MapsController from '../../controllers/maps/MapsController'
 import AppImage from '../common/AppImage';
@@ -10,35 +10,38 @@ import CurvedCard from './CurvedCard';
 import MethodUtils from '../../utils/MethodUtils';
 import FirebaseStoreService from '../../services/firebase/FirebaseStoreService';
 import ReferralController from '../../controllers/referrals/ReferralController';
+import { useSharing } from '../../hooks/useSharing';
 
 const PlaceFullCard = () => {
     const { selectedPlace, setSelectedPlace, setShowPlaceFullCard, setShowPlaceBigCard, showPlaceFullCard, places, setPlaces } = MapsController();
     const [fullSelectedPlace, setFullSelectedPlace] = useState(selectedPlace);
     const { setShowReferralAlert, placeReferredStatus } = ReferralController();
+    const { shareReferral } = useSharing();
     const referPlace = async (place) => {
-        if (!place?.isReferred) {
-            setShowReferralAlert(true);
-        }
-    };
+        //     if (!place?.isReferred) {
+        //         setShowReferralAlert(true);
+        //     }
+        // };
 
-    React.useEffect(() => {
-        if (placeReferredStatus) {
-            referPlaceSubmit(fullSelectedPlace);
-        }
-    }, [placeReferredStatus]);
+        // React.useEffect(() => {
+        //     if (placeReferredStatus) {
+        //         referPlaceSubmit(fullSelectedPlace);
+        //     }
+        // }, [placeReferredStatus]);
 
-    const referPlaceSubmit = async (place) => {
+        // const referPlaceSubmit = async (place) => { 
+
         await FirebaseStoreService.storeReferredPlace(place);
         if (place.isReferred) {
-            // unrefer place 
+            // unrefer place
+            // setFilteredPlaces(filteredPlaces.map(p => p.id === place.id ? { ...p, isReferred: false } : p));
             setPlaces(places.map(p => p.id === place.id ? { ...p, isReferred: false } : p));
             setSelectedPlace(prev => prev.id === place.id ? { ...prev, isReferred: false } : prev);
-            setFullSelectedPlace(prev => prev.id === place.id ? { ...prev, isReferred: false } : prev);
             return;
         }
+        // setFilteredPlaces(filteredPlaces.map(p => p.id === place.id ? { ...p, isReferred: true } : p));
         setPlaces(places.map(p => p.id === place.id ? { ...p, isReferred: true } : p));
         setSelectedPlace(prev => prev.id === place.id ? { ...prev, isReferred: true } : prev);
-        setFullSelectedPlace(prev => prev.id === place.id ? { ...prev, isReferred: true } : prev);
     };
 
     React.useEffect(() => {
@@ -47,6 +50,31 @@ const PlaceFullCard = () => {
 
     React.useEffect(() => {
     }, [fullSelectedPlace?.isReferred]);
+
+    const sharePlace = async () => {
+        try {
+            const result = await shareReferral({
+                title: fullSelectedPlace?.name,
+                description: fullSelectedPlace?.description,
+                address: fullSelectedPlace?.address,
+                imageUrl: fullSelectedPlace?.imageFull
+            });
+            if (!result.success) {
+                Alert.alert(
+                    'Share Error',
+                    'Unable to share referral. Please try again.',
+                    [{ text: 'OK' }]
+                );
+            }
+        } catch (error) {
+            console.error('Error sharing referral:', error);
+            Alert.alert(
+                'Share Error',
+                'Unable to share referral. Please try again.',
+                [{ text: 'OK' }]
+            );
+        }
+    }
 
     return (
         <View style={[styles.selectedPlaceFullCard, {
@@ -76,12 +104,12 @@ const PlaceFullCard = () => {
                             height={24}
                         />
                     </Pressable>
-                    <View style={styles.selectedPlaceFullCardButtonItem}>
+                    <TouchableOpacity onPress={sharePlace} style={styles.selectedPlaceFullCardButtonItem}>
                         <IconAsset.shareIcon
                             width={24}
                             height={24}
                         />
-                    </View>
+                    </TouchableOpacity>
                 </View>
             </SafeAreaView>
 

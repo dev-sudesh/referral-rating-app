@@ -109,6 +109,7 @@ export const colors = {
         tagStyle2: '#EBF4FF',
         tagStyle3: '#FFF0C2',
         referralAlert: 'rgba(0, 0, 0, 0.25)',
+        red: '#FF0000',
     },
 
     // Text Colors
@@ -134,6 +135,8 @@ export const colors = {
         light: '#E0E0E0',
         medium: '#BDBDBD',
         dark: '#9E9E9E',
+        white: '#FFFFFF',
+        transparent: 'transparent',
     },
 
     // Overlay Colors

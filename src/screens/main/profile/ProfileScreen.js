@@ -4,12 +4,8 @@ import {
     Text,
     StyleSheet,
     TouchableOpacity,
-    StatusBar,
     ScrollView,
     Alert,
-    Switch,
-    Platform,
-    FlatList,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { theme } from '../../../constants/theme';
@@ -20,11 +16,15 @@ import AppImage from '../../../components/common/AppImage';
 import ImageAsset from '../../../assets/images/ImageAsset';
 import Constants from '../../../constants/data';
 import FirebaseStoreService from '../../../services/firebase/FirebaseStoreService';
+import WebViewController from '../../../controllers/webview/WebViewController';
+import ScreenHeader from '../../../components/ui/ScreenHeader';
+import ShareModal from '../../../components/common/ShareModal';
+import { useSharing } from '../../../hooks/useSharing';
 
 const ProfileScreen = ({ navigation }) => {
-    const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-    const [locationEnabled, setLocationEnabled] = useState(true);
-    const [darkModeEnabled, setDarkModeEnabled] = useState(false);
+    const [shareModalVisible, setShareModalVisible] = useState(false);
+
+    const { shareApp } = useSharing();
 
     const [userPersonalInfo, setUserPersonalInfo] = useState({
         firstName: 'Thomas',
@@ -42,9 +42,6 @@ const ProfileScreen = ({ navigation }) => {
     // Show status bar when screen is focused
     useFocusEffect(
         React.useCallback(() => {
-            StatusBar.setHidden(false);
-            StatusBar.setBarStyle('dark-content');
-
             getUserPersonalInfo();
         }, [])
     );
@@ -55,12 +52,12 @@ const ProfileScreen = ({ navigation }) => {
     };
 
     const menuItems = [
-        {
-            id: 'personal-info',
-            title: 'Personal Information',
-            action: 'navigate',
-            navigateTo: Constants.Screen.PersonalInfo,
-        },
+        // {
+        //     id: 'personal-info',
+        //     title: 'Personal Information',
+        //     action: 'navigate',
+        //     navigateTo: Constants.Screen.PersonalInfo,
+        // },
         {
             id: 'favorites-filters',
             title: 'Favorites Filters',
@@ -71,60 +68,59 @@ const ProfileScreen = ({ navigation }) => {
         //     id: 'sign-in-options',
         //     title: 'Sign in options',
         // },
-        {
-            id: 'notifications-settings',
-            title: 'Notifications Settings',
-            action: 'navigate',
-            navigateTo: Constants.Screen.NotificationSettings,
-        },
+        // {
+        //     id: 'notifications-settings',
+        //     title: 'Notifications Settings',
+        //     action: 'navigate',
+        //     navigateTo: Constants.Screen.NotificationSettings,
+        // },
     ];
 
     const aboutItems = [
         {
             id: 'faq-contact-us',
             title: 'FAQ / Contact Us',
-
+            action: 'navigate',
+            type: 'webview',
+            options: {
+                pageTitle: 'FAQ / Contact Us',
+                webViewUrl: 'https://www.google.com',
+            },
+            navigateTo: Constants.Screen.WebView,
         },
         {
             id: 'terms-of-service',
             title: 'Terms of Service',
+            action: 'navigate',
+            type: 'webview',
+            options: {
+                pageTitle: 'Terms of Service',
+                webViewUrl: 'https://www.google.com',
+            },
+            navigateTo: Constants.Screen.WebView,
         },
         {
             id: 'privacy-policy',
             title: 'Privacy Policy',
+            action: 'navigate',
+            type: 'webview',
+            options: {
+                pageTitle: 'Privacy Policy',
+                webViewUrl: 'https://www.google.com',
+            },
+            navigateTo: Constants.Screen.WebView,
         },
     ];
-
-    const handleLogout = () => {
-        Alert.alert(
-            'Logout',
-            'Are you sure you want to logout?',
-            [
-                {
-                    text: 'Cancel',
-                    style: 'cancel',
-                },
-                {
-                    text: 'Logout',
-                    style: 'destructive',
-                    onPress: () => {
-                        // Handle logout logic
-                        navigation.replace('Splash');
-                    },
-                },
-            ]
-        );
-    };
 
     const renderProfileHeader = () => (
         <View style={styles.profileHeader}>
             <View style={styles.avatarImageContainer}>
-                <AppImage source={ImageAsset.profileImage} style={styles.avatarImage} />
+                <AppImage source={ImageAsset.logos.logoFull} style={styles.avatarImage} />
             </View>
 
             <View style={styles.profileInfo}>
-                <Text style={styles.profileName}>{userPersonalInfo.firstName} {userPersonalInfo.lastName}</Text>
-                <Text style={styles.profileEmail}>{userPersonalInfo.email}</Text>
+                {/* <Text style={styles.profileName}>{userPersonalInfo.firstName} {userPersonalInfo.lastName}</Text>
+                <Text style={styles.profileEmail}>{userPersonalInfo.email}</Text> */}
             </View>
         </View>
     );
@@ -135,7 +131,12 @@ const ProfileScreen = ({ navigation }) => {
                 style={styles.menuItem}
                 onPress={() => {
                     if (item.action === 'navigate') {
+                        if (item.type === 'webview') {
+                            WebViewController.getState().setPageTitle(item.options.pageTitle);
+                            WebViewController.getState().setWebViewUrl(item.options.webViewUrl);
+                        }
                         navigation.navigate(item.navigateTo);
+
                     }
                 }}
                 activeOpacity={1}
@@ -170,19 +171,45 @@ const ProfileScreen = ({ navigation }) => {
         </View>
     );
 
+    const shareWithFriends = async () => {
+        // setShareModalVisible(true); 
+        try {
+            const result = await shareApp({
+                title: 'Invite Friends',
+                message: 'I found this amazing app that helps you discover and rate incredible places. You should try it!',
+            });
+            if (!result.success) {
+                Alert.alert(
+                    'Share Error',
+                    'Unable to share the app. Please try again.',
+                    [{ text: 'OK' }]
+                );
+            }
+        } catch (error) {
+            console.error('Error sharing app:', error);
+            Alert.alert(
+                'Share Error',
+                'Unable to share the app. Please try again.',
+                [{ text: 'OK' }]
+            );
+        }
+    }
+
     return (
         <SafeAreaView style={styles.container}>
-
-
-            {/* Header */}
-            <View style={styles.header}>
-                <View style={styles.headerTitleContainer}>
-                    <Text style={styles.headerTitle}>My profile</Text>
-                </View>
-                <TouchableOpacity activeOpacity={1} style={styles.newProfileButton}>
-                    <IconAsset.newProfileIcon width={24} height={24} />
-                </TouchableOpacity>
-            </View>
+            <ScreenHeader
+                style={{
+                    paddingHorizontal: theme.spacing.lg,
+                }}
+                titleStyle={{
+                    fontWeight: theme.fontWeight.bold,
+                }}
+                title="My profile"
+                showBackButton={false}
+                rightComponent={<TouchableOpacity onPress={shareWithFriends} activeOpacity={1} style={styles.shareButton}>
+                    <IconAsset.shareIcon width={24} height={24} />
+                </TouchableOpacity>}
+            />
 
             <ScrollView
                 showsVerticalScrollIndicator={false}
@@ -209,6 +236,13 @@ const ProfileScreen = ({ navigation }) => {
                     })}
                 </View>
             </ScrollView>
+
+            <ShareModal
+                visible={shareModalVisible}
+                onClose={() => setShareModalVisible(false)}
+                userProfile={userProfile}
+                userPersonalInfo={userPersonalInfo}
+            />
         </SafeAreaView>
     );
 };
@@ -239,7 +273,7 @@ const styles = StyleSheet.create({
         fontWeight: theme.fontWeight.bold,
         textAlign: 'center',
     },
-    newProfileButton: {
+    shareButton: {
         width: theme.responsive.size(50),
         height: theme.responsive.size(50),
         borderRadius: theme.borderRadius.lg,
@@ -262,20 +296,15 @@ const styles = StyleSheet.create({
         position: 'relative',
     },
     avatarImageContainer: {
-        width: theme.responsive.size(110),
-        height: theme.responsive.size(110),
-        borderRadius: theme.borderRadius.full,
-        borderWidth: 2,
-        borderColor: theme.colors.primary[500],
-        ...theme.shadows.small,
+        width: theme.responsive.size(140),
+        height: theme.responsive.size(140),
+        borderWidth: 0,
         justifyContent: 'center',
         alignItems: 'center',
     },
     avatarImage: {
-        width: theme.responsive.size(110) - theme.responsive.size(8),
-        height: theme.responsive.size(110) - theme.responsive.size(8),
-        borderRadius: theme.borderRadius.round,
-        backgroundColor: theme.colors.primary[100],
+        width: theme.responsive.size(140) - theme.responsive.size(8),
+        height: theme.responsive.size(140) - theme.responsive.size(8),
     },
     profileInfo: {
         flex: 1,

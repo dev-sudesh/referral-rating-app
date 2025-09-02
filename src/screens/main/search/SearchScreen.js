@@ -24,7 +24,7 @@ const SearchScreen = ({ navigation }) => {
     const [activeFilters, setActiveFilters] = useState({});
     const [searchResults, setSearchResults] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
-    const { userLocation } = MapsController();
+    const { userLocation, setSelectedPlace, setShowPlaceFullCard } = MapsController();
 
     const [recentSearches] = useState([
         { id: 1, text: 'Meat', time: 'Today' },
@@ -163,8 +163,8 @@ const SearchScreen = ({ navigation }) => {
                             key={place.id}
                             style={styles.searchItem}
                             onPress={() => {
-                                // Navigate to place details or handle place selection
-                                console.log('Selected place:', place);
+                                setSelectedPlace(place);
+                                setShowPlaceFullCard(true);
                             }}
                             activeOpacity={1}
                         >
@@ -175,7 +175,7 @@ const SearchScreen = ({ navigation }) => {
                             </View>
                             <View style={styles.placeMeta}>
                                 {/* <Text style={styles.placeRating}>⭐ {place.rating}</Text> */}
-                                <Text style={styles.placeDistance}>{place.distance?.toFixed(1)}km</Text>
+                                {/* <Text style={styles.placeDistance}>{place.distance?.toFixed(1)}km</Text> */}
                             </View>
                         </TouchableOpacity>
                     ))}
@@ -192,13 +192,6 @@ const SearchScreen = ({ navigation }) => {
                 paddingHorizontal: 0,
             }}
         >
-
-            <StatusBar
-                barStyle="dark-content"
-                translucent={true}
-                backgroundColor={'transparent'}
-            />
-
             <SearchBar
                 handleBackPress={handleBackPress}
                 setSearchText={searchKeyword}

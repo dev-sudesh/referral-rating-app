@@ -1,12 +1,13 @@
-import firestore from '@react-native-firebase/firestore';
+import { getFirestore, collection, doc, setDoc, getDoc, updateDoc, deleteDoc, query, where, limit, getDocs, orderBy, serverTimestamp, increment, writeBatch, deleteField } from '@react-native-firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DeviceInfo from 'react-native-device-info';
 import FirebaseInitializer from '../../utils/FirebaseInitializer';
 import { faker } from '@faker-js/faker';
 import Constants from '../../constants/data';
+import { cacheImageUrl } from '../../utils/preloadImages/PreloadImagesUtils';
 
 // Get Firestore instance using new modular API
-const db = firestore();
+const db = getFirestore();
 
 // Collection names
 const COLLECTIONS = {
@@ -79,11 +80,11 @@ const generateDeviceFingerprint = async () => {
 const storeDeviceMapping = async (userId, deviceFingerprint) => {
     try {
         await ensureFirebaseReady();
-        const docRef = db.collection(COLLECTIONS.DEVICE_MAPPINGS).doc(deviceFingerprint);
-        await docRef.set({
+        const docRef = doc(db, COLLECTIONS.DEVICE_MAPPINGS, deviceFingerprint);
+        await setDoc(docRef, {
             userId,
-            createdAt: firestore.FieldValue.serverTimestamp(),
-            updatedAt: firestore.FieldValue.serverTimestamp(),
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
         });
     } catch (error) {
         handleFirestoreError(error, 'storeDeviceMapping');
@@ -94,10 +95,13 @@ const storeDeviceMapping = async (userId, deviceFingerprint) => {
 const findUserByDeviceFingerprint = async (deviceFingerprint) => {
     try {
         await ensureFirebaseReady();
-        const docRef = db.collection(COLLECTIONS.DEVICE_MAPPINGS).doc(deviceFingerprint);
-        const doc = await docRef.get();
-        if (doc.exists) {
-            return doc.data().userId;
+        const docRef = doc(db, COLLECTIONS.DEVICE_MAPPINGS, deviceFingerprint);
+        const docSnapshot = await getDoc(docRef);
+        if (docSnapshot.exists) {
+            const data = docSnapshot.data();
+            if (data && data.userId) {
+                return data.userId;
+            }
         }
         return null;
     } catch (error) {
@@ -157,13 +161,13 @@ const storeAnonymousUser = async (userInfo = {}) => {
             deviceInfo: deviceInfo?.deviceInfo || {},
             appVersion: userInfo.appVersion || '1.0.0',
             platform: userInfo.platform || 'react-native',
-            createdAt: firestore.FieldValue.serverTimestamp(),
-            updatedAt: firestore.FieldValue.serverTimestamp(),
-            lastLoginAt: firestore.FieldValue.serverTimestamp(),
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+            lastLoginAt: serverTimestamp(),
         };
 
-        const docRef = db.collection(COLLECTIONS.USERS).doc(userId);
-        await docRef.set(userDoc, { merge: true });
+        const docRef = doc(db, COLLECTIONS.USERS, userId);
+        await setDoc(docRef, userDoc, { merge: true });
         return userId;
     } catch (error) {
         handleFirestoreError(error, 'storeAnonymousUser');
@@ -177,10 +181,10 @@ const updateLastLogin = async () => {
         await ensureFirebaseReady();
         const userId = await getAnonymousUserId();
 
-        const docRef = db.collection(COLLECTIONS.USERS).doc(userId);
-        await docRef.update({
-            lastLoginAt: firestore.FieldValue.serverTimestamp(),
-            updatedAt: firestore.FieldValue.serverTimestamp(),
+        const docRef = doc(db, COLLECTIONS.USERS, userId);
+        await updateDoc(docRef, {
+            lastLoginAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
         });
 
         return true;
@@ -198,11 +202,11 @@ const storeUserFilters = async (filters) => {
         const filterDoc = {
             userId,
             filters,
-            updatedAt: firestore.FieldValue.serverTimestamp(),
+            updatedAt: serverTimestamp(),
         };
 
-        const docRef = db.collection(COLLECTIONS.USER_FILTERS).doc(userId);
-        await docRef.set(filterDoc, { merge: true });
+        const docRef = doc(db, COLLECTIONS.USER_FILTERS, userId);
+        await setDoc(docRef, filterDoc, { merge: true });
         return true;
     } catch (error) {
         handleFirestoreError(error, 'storeUserFilters');
@@ -215,11 +219,11 @@ const getUserFilters = async () => {
     try {
         await ensureFirebaseReady();
         const userId = await getAnonymousUserId();
-        const docRef = db.collection(COLLECTIONS.USER_FILTERS).doc(userId);
-        const doc = await docRef.get();
+        const docRef = doc(db, COLLECTIONS.USER_FILTERS, userId);
+        const docSnapshot = await getDoc(docRef);
 
-        if (doc.exists) {
-            const data = doc.data();
+        if (docSnapshot.exists) {
+            const data = docSnapshot.data();
             return data && data.filters ? data.filters : [];
         }
         return [];
@@ -235,14 +239,14 @@ const storeSearchKeyword = async (keyword) => {
         await ensureFirebaseReady();
         const searchDoc = {
             keyword: keyword.toLowerCase().trim(),
-            searchCount: firestore.FieldValue.increment(1),
-            lastSearched: firestore.FieldValue.serverTimestamp(),
-            createdAt: firestore.FieldValue.serverTimestamp(),
+            searchCount: increment(1),
+            lastSearched: serverTimestamp(),
+            createdAt: serverTimestamp(),
         };
 
         // Use the keyword as document ID for easy updates
-        const docRef = db.collection(COLLECTIONS.SEARCH_HISTORY);
-        await docRef.set(searchDoc, { merge: true });
+        const docRef = collection(db, COLLECTIONS.SEARCH_HISTORY);
+        await setDoc(docRef, searchDoc, { merge: true });
 
         return true;
     } catch (error) {
@@ -255,10 +259,10 @@ const storeSearchKeyword = async (keyword) => {
 const getSearchSuggestions = async (limit = 10) => {
     try {
         await ensureFirebaseReady();
-        const collectionRef = db.collection(COLLECTIONS.SEARCH_HISTORY);
+        const collectionRef = collection(db, COLLECTIONS.SEARCH_HISTORY);
 
         // Get all documents and filter client-side to avoid index requirements
-        const snapshot = await collectionRef.get();
+        const snapshot = await getDocs(collectionRef);
 
         const suggestions = [];
         snapshot.forEach((doc) => {
@@ -301,11 +305,11 @@ const storeLastLocation = async (location) => {
             longitude: location.longitude,
             accuracy: location.accuracy || 0,
             address: location.address || '',
-            updatedAt: firestore.FieldValue.serverTimestamp(),
+            updatedAt: serverTimestamp(),
         };
 
-        const docRef = db.collection(COLLECTIONS.USER_LOCATIONS).doc(userId);
-        await docRef.set(locationDoc, { merge: true });
+        const docRef = doc(db, COLLECTIONS.USER_LOCATIONS, userId);
+        await setDoc(docRef, locationDoc, { merge: true });
         return true;
     } catch (error) {
         handleFirestoreError(error, 'storeLastLocation');
@@ -318,11 +322,11 @@ const getLastLocation = async () => {
     try {
         await ensureFirebaseReady();
         const userId = await getAnonymousUserId();
-        const docRef = db.collection(COLLECTIONS.USER_LOCATIONS).doc(userId);
-        const doc = await docRef.get();
+        const docRef = doc(db, COLLECTIONS.USER_LOCATIONS, userId);
+        const docSnapshot = await getDoc(docRef);
 
-        if (doc.exists) {
-            const data = doc.data();
+        if (docSnapshot.exists) {
+            const data = docSnapshot.data();
             return {
                 latitude: data.latitude,
                 longitude: data.longitude,
@@ -343,18 +347,24 @@ const storeReferredPlace = async (place) => {
     try {
         await ensureFirebaseReady();
         const userId = await getAnonymousUserId();
-        // add place to user referred places
+
+        const referredPlacesDocRef = doc(db, COLLECTIONS.REFERRED_PLACES, userId);
+        const snapshot = await getDoc(referredPlacesDocRef);
+        let referredPlacesData = snapshot.data() || {};
+        console.log(referredPlacesData);
         if (!place.isReferred) {
-            const referredPlacesDocRef = db.collection(COLLECTIONS.REFERRED_PLACES).doc(userId);
-            await referredPlacesDocRef.set({
-                [place.id]: place,
-            }, { merge: true });
+            referredPlacesData = { ...referredPlacesData, [place.id]: place };
+
+            await setDoc(referredPlacesDocRef, { ...referredPlacesData }, { merge: true });
         } else {
-            const referredPlacesDocRef = db.collection(COLLECTIONS.REFERRED_PLACES).doc(userId);
-            await referredPlacesDocRef.delete({
-                [place.id]: place,
-            });
+            // Use updateDoc with deleteField to properly remove the field
+            const updateData = {};
+            updateData[place.id] = deleteField();
+
+            await updateDoc(referredPlacesDocRef, updateData);
         }
+        console.log(referredPlacesData);
+
 
         return true;
     } catch (error) {
@@ -367,8 +377,8 @@ const isReferredPlace = async (placeId) => {
     try {
         await ensureFirebaseReady();
         const userId = await getAnonymousUserId();
-        const collectionRef = db.collection(COLLECTIONS.REFERRED_PLACES).doc(userId);
-        const snapshot = await collectionRef.get();
+        const collectionRef = doc(db, COLLECTIONS.REFERRED_PLACES, userId);
+        const snapshot = await getDoc(collectionRef);
         const referredPlaces = snapshot.data() || {};
         return referredPlaces[placeId] ? true : false;
     } catch (error) {
@@ -382,30 +392,15 @@ const getReferredPlaces = async () => {
     try {
         await ensureFirebaseReady();
         const userId = await getAnonymousUserId();
-        const collectionRef = db.collection(COLLECTIONS.REFERRED_PLACES).doc(userId);
+        const collectionRef = doc(db, COLLECTIONS.REFERRED_PLACES, userId);
 
         // Get all documents and filter client-side to avoid index requirements
-        const snapshot = await collectionRef.get();
+        const snapshot = await getDocs(collectionRef);
         const referredPlaces = snapshot.data() || {};
 
         const places = [];
-        snapshot.forEach((doc) => {
-            const data = doc.data();
-            // Only include documents that belong to this user (check document ID)
-            if (referredPlaces[doc.id]) {
-                places.push({
-                    id: doc.id,
-                    placeId: referredPlaces[doc.id].placeId,
-                    name: referredPlaces[doc.id].name,
-                    address: referredPlaces[doc.id].address,
-                    latitude: data.latitude,
-                    longitude: data.longitude,
-                    category: data.category,
-                    rating: data.rating,
-                    isVisited: data.isVisited,
-                    referredAt: data.referredAt?.toDate(),
-                });
-            }
+        Object.keys(referredPlaces).forEach(key => {
+            places.push(referredPlaces[key]);
         });
 
         // Sort client-side by referredAt (most recent first)
@@ -428,11 +423,11 @@ const markPlaceAsVisited = async (placeId, isVisited = true) => {
     try {
         await ensureFirebaseReady();
         const userId = await getAnonymousUserId();
-        const docRef = db.collection(COLLECTIONS.REFERRED_PLACES).doc(`${userId}_${placeId}`);
+        const docRef = doc(db, COLLECTIONS.REFERRED_PLACES, `${userId}_${placeId}`);
 
-        await docRef.update({
+        await updateDoc(docRef, {
             isVisited,
-            updatedAt: firestore.FieldValue.serverTimestamp(),
+            updatedAt: serverTimestamp(),
         });
 
         return true;
@@ -447,8 +442,8 @@ const deleteReferredPlace = async (placeId) => {
     try {
         await ensureFirebaseReady();
         const userId = await getAnonymousUserId();
-        const docRef = db.collection(COLLECTIONS.REFERRED_PLACES).doc(`${userId}_${placeId}`);
-        await docRef.delete();
+        const docRef = doc(db, COLLECTIONS.REFERRED_PLACES, `${userId}_${placeId}`);
+        await deleteDoc(docRef);
         return true;
     } catch (error) {
         handleFirestoreError(error, 'deleteReferredPlace');
@@ -463,28 +458,31 @@ const getUserStats = async () => {
         const userId = await getAnonymousUserId();
 
         // Get filters
-        const filtersDocRef = db.collection(COLLECTIONS.USER_FILTERS).doc(userId);
-        const filtersDoc = await filtersDocRef.get();
+        const filtersDocRef = doc(db, COLLECTIONS.USER_FILTERS, userId);
+        const filtersDoc = await getDoc(filtersDocRef);
         const hasFilters = filtersDoc.exists && Object.keys(filtersDoc.data()?.filters || {}).length > 0;
 
         // Get search count
-        const searchCollectionRef = db.collection(COLLECTIONS.SEARCH_HISTORY);
-        const searchSnapshot = await searchCollectionRef.get();
-        const searchCount = Array.from(searchSnapshot.docs).filter(doc => doc.id.startsWith(`${userId}_`)).length;
+        const searchCollectionRef = collection(db, COLLECTIONS.SEARCH_HISTORY);
+        const searchSnapshot = await getDocs(searchCollectionRef);
+        const searchCount = searchSnapshot.docs.filter(doc => doc.id.startsWith(`${userId}_`)).length;
 
         // Get location
-        const locationDocRef = db.collection(COLLECTIONS.USER_LOCATIONS).doc(userId);
-        const locationDoc = await locationDocRef.get();
+        const locationDocRef = doc(db, COLLECTIONS.USER_LOCATIONS, userId);
+        const locationDoc = await getDoc(locationDocRef);
         const hasLocation = locationDoc.exists;
 
         // Get referred places count
-        const placesCollectionRef = db.collection(COLLECTIONS.REFERRED_PLACES);
-        const placesSnapshot = await placesCollectionRef.get();
-        const userPlaces = Array.from(placesSnapshot.docs).filter(doc => doc.id.startsWith(`${userId}_`));
+        const placesCollectionRef = collection(db, COLLECTIONS.REFERRED_PLACES);
+        const placesSnapshot = await getDocs(placesCollectionRef);
+        const userPlaces = placesSnapshot.docs.filter(doc => doc.id.startsWith(`${userId}_`));
         const referredPlacesCount = userPlaces.length;
 
         // Get visited places count
-        const visitedPlacesCount = userPlaces.filter(doc => doc.data().isVisited === true).length;
+        const visitedPlacesCount = userPlaces.filter(doc => {
+            const data = doc.data();
+            return data && data.isVisited === true;
+        }).length;
 
         return {
             hasFilters,
@@ -510,19 +508,19 @@ const clearUserData = async () => {
     try {
         await ensureFirebaseReady();
         const userId = await getAnonymousUserId();
-        const batch = db.batch();
+        const batch = writeBatch(db);
 
         // Delete user document
-        const userDocRef = db.collection(COLLECTIONS.USERS).doc(userId);
+        const userDocRef = doc(db, COLLECTIONS.USERS, userId);
         batch.delete(userDocRef);
 
         // Delete user filters
-        const filtersDocRef = db.collection(COLLECTIONS.USER_FILTERS).doc(userId);
+        const filtersDocRef = doc(db, COLLECTIONS.USER_FILTERS, userId);
         batch.delete(filtersDocRef);
 
         // Delete search history
-        const searchCollectionRef = db.collection(COLLECTIONS.SEARCH_HISTORY);
-        const searchSnapshot = await searchCollectionRef.get();
+        const searchCollectionRef = collection(db, COLLECTIONS.SEARCH_HISTORY);
+        const searchSnapshot = await getDocs(searchCollectionRef);
         searchSnapshot.forEach((doc) => {
             if (doc.id.startsWith(`${userId}_`)) {
                 batch.delete(doc.ref);
@@ -530,12 +528,12 @@ const clearUserData = async () => {
         });
 
         // Delete user location
-        const locationDocRef = db.collection(COLLECTIONS.USER_LOCATIONS).doc(userId);
+        const locationDocRef = doc(db, COLLECTIONS.USER_LOCATIONS, userId);
         batch.delete(locationDocRef);
 
         // Delete referred places
-        const placesCollectionRef = db.collection(COLLECTIONS.REFERRED_PLACES);
-        const placesSnapshot = await placesCollectionRef.get();
+        const placesCollectionRef = collection(db, COLLECTIONS.REFERRED_PLACES);
+        const placesSnapshot = await getDocs(placesCollectionRef);
         placesSnapshot.forEach((doc) => {
             if (doc.id.startsWith(`${userId}_`)) {
                 batch.delete(doc.ref);
@@ -545,7 +543,7 @@ const clearUserData = async () => {
         // Delete device mappings
         const deviceFingerprint = await generateDeviceFingerprint();
         if (deviceFingerprint) {
-            const mappingDocRef = db.collection(COLLECTIONS.DEVICE_MAPPINGS).doc(deviceFingerprint.fingerprint);
+            const mappingDocRef = doc(db, COLLECTIONS.DEVICE_MAPPINGS, deviceFingerprint.fingerprint);
             batch.delete(mappingDocRef);
         }
 
@@ -570,8 +568,8 @@ const checkDataRecovery = async () => {
         }
 
         // Check if this is a recovered user by looking for device mapping
-        const mappingDocRef = db.collection(COLLECTIONS.DEVICE_MAPPINGS).doc(deviceFingerprint.fingerprint);
-        const mappingDoc = await mappingDocRef.get();
+        const mappingDocRef = doc(db, COLLECTIONS.DEVICE_MAPPINGS, deviceFingerprint.fingerprint);
+        const mappingDoc = await getDoc(mappingDocRef);
 
         if (mappingDoc.exists) {
             const mappingData = mappingDoc.data();
@@ -623,11 +621,11 @@ const getPlacesOfCurrentLocation = async (location, limit = 10) => {
 
         // Use a single range query on latitude first, then filter longitude in memory
         // This approach reduces the need for complex composite indexes
-        const docRef = db.collection(COLLECTIONS.PLACES)
-            .where('latitude', '>=', latitude - latRange)
-            .where('latitude', '<=', latitude + latRange);
+        const docRef = query(collection(db, COLLECTIONS.PLACES),
+            where('latitude', '>=', latitude - latRange),
+            where('latitude', '<=', latitude + latRange));
 
-        const snapshot = await docRef.get();
+        const snapshot = await getDocs(docRef);
 
         if (!snapshot.empty) {
             // Filter longitude in memory to avoid composite index requirement
@@ -663,7 +661,9 @@ const createRandomPlaces = async (location) => {
         let randomLongitude = longitude + (Math.random() * 0.03 - 0.015);
         const distance = Math.sqrt(Math.pow(latitude - (latitude + randomLatitude), 2) + Math.pow(longitude - (longitude + randomLongitude), 2));
 
-        const image = faker.image.urlPicsumPhotos({ width: 500, height: 500, blur: 0 });
+        const image = faker.image.urlPicsumPhotos({ width: 50, height: 50, blur: 2 });
+        const imageFull = image.replace('/50/50?blur=2', '/300/300');
+        // cache the image 
         const openTime = faker.helpers.arrayElement([
             "Mon - Sat: 08:00 - 23:00",
             "Mon - Fri: 08:00 - 23:00",
@@ -716,7 +716,7 @@ const createRandomPlaces = async (location) => {
             longitude: randomLongitude,
             rank: i + 1,
             image: image,
-            imageFull: image,
+            imageFull: imageFull,
             isReferred: false,
         });
     }
@@ -725,9 +725,9 @@ const createRandomPlaces = async (location) => {
 const storeRandomPlacesOfCurrentLocation = async (location) => {
     try {
         const randomPlaces = await createRandomPlaces(location);
-        const batch = db.batch();
+        const batch = writeBatch(db);
         randomPlaces.forEach(place => {
-            const placeDocRef = db.collection(COLLECTIONS.PLACES).doc();
+            const placeDocRef = doc(collection(db, COLLECTIONS.PLACES));
             batch.set(placeDocRef, place);
         });
         await batch.commit();
@@ -751,11 +751,11 @@ const getFilteredPlaces = async (location, filters) => {
 
         // Use a single range query on latitude first, then filter longitude in memory
         // This approach reduces the need for complex composite indexes
-        const docRef = db.collection(COLLECTIONS.PLACES)
-            .where('latitude', '>=', latitude - latRange)
-            .where('latitude', '<=', latitude + latRange);
+        const docRef = query(collection(db, COLLECTIONS.PLACES),
+            where('latitude', '>=', latitude - latRange),
+            where('latitude', '<=', latitude + latRange));
 
-        const snapshot = await docRef.get();
+        const snapshot = await getDocs(docRef);
 
         if (!snapshot.empty) {
             const places = snapshot.docs
@@ -795,11 +795,11 @@ const getSearchPlaces = async (location, searchText) => {
 
         // Use a single range query on latitude first, then filter in memory
         // This approach avoids the need for complex composite indexes
-        const docRef = db.collection(COLLECTIONS.PLACES)
-            .where('latitude', '>=', latitude - latRange)
-            .where('latitude', '<=', latitude + latRange);
+        const docRef = query(collection(db, COLLECTIONS.PLACES),
+            where('latitude', '>=', latitude - latRange),
+            where('latitude', '<=', latitude + latRange));
 
-        const snapshot = await docRef.get();
+        const snapshot = await getDocs(docRef);
 
         if (!snapshot.empty) {
             // Filter longitude and search text in memory to avoid composite index requirement
@@ -848,8 +848,8 @@ const updateUserPersonalInfo = async (personalInfo) => {
     try {
         await ensureFirebaseReady();
         const userId = await getAnonymousUserId();
-        const docRef = db.collection(COLLECTIONS.USERS).doc(userId);
-        await docRef.update(personalInfo);
+        const docRef = doc(db, COLLECTIONS.USERS, userId);
+        await updateDoc(docRef, personalInfo);
         return true;
     }
     catch (error) {
@@ -862,9 +862,9 @@ const getUserPersonalInfo = async () => {
     try {
         await ensureFirebaseReady();
         const userId = await getAnonymousUserId();
-        const docRef = db.collection(COLLECTIONS.USERS).doc(userId);
-        const doc = await docRef.get();
-        return doc.data();
+        const docRef = doc(db, COLLECTIONS.USERS, userId);
+        const docSnapshot = await getDoc(docRef);
+        return docSnapshot.data();
     }
     catch (error) {
         handleFirestoreError(error, 'getUserPersonalInfo');

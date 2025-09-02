@@ -83,7 +83,7 @@ const LoginScreen = ({ navigation }) => {
             await new Promise(resolve => setTimeout(resolve, 2000));
 
             // For demo purposes, show success and navigate
-            ToastUtils.success('Successfully logged in!', 'Welcome!');
+            // ToastUtils.success('Successfully logged in!', 'Welcome!');
 
             // Navigate after showing toast
             setTimeout(() => {

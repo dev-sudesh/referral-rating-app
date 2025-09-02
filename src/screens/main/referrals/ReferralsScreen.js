@@ -19,30 +19,33 @@ import ImageAsset from '../../../assets/images/ImageAsset';
 import AppImage from '../../../components/common/AppImage';
 import IconAsset from '../../../assets/icons/IconAsset';
 import MapsController from '../../../controllers/maps/MapsController';
+import FirebaseStoreService from '../../../services/firebase/FirebaseStoreService';
+import ScreenHeader from '../../../components/ui/ScreenHeader';
+import SearchFilterController from '../../../controllers/filters/SearchFilterController';
+import NoDataAnimation from '../../../components/common/NoDataAnimation';
 
 const { width, height } = Dimensions.get('window');
 
 // Filter data for the staggered horizontal list
 const filterData = [
-    { id: '1', label: 'All (12)', selected: false },
-    { id: '2', label: 'Food (2)', selected: true },
-    { id: '3', label: 'Parking lots (5)', selected: false },
-    { id: '4', label: 'Cinemas (5)', selected: true },
-    { id: '5', label: 'Shopping (8)', selected: false },
-    { id: '6', label: 'Museums (3)', selected: false },
-    { id: '7', label: 'Restaurants (3)', selected: false },
-    { id: '8', label: 'Bars (3)', selected: false },
-    { id: '9', label: 'Clubs (3)', selected: false },
-    { id: '10', label: 'Hotels (3)', selected: false },
-    { id: '11', label: 'Shops (3)', selected: false },
-    { id: '12', label: 'Other (3)', selected: false },
-    { id: '13', label: 'Other (3)', selected: false },
-    { id: '14', label: 'Other (3)', selected: false },
-    { id: '15', label: 'Other (3)', selected: false },
-    { id: '16', label: 'Other (3)', selected: false },
-    { id: '17', label: 'Other (3)', selected: false },
-    { id: '18', label: 'Other (3)', selected: false },
-    { id: '19', label: 'Other (3)', selected: false },
+    { id: '2', label: 'Food', selected: true },
+    { id: '3', label: 'Parking lots', selected: false },
+    { id: '4', label: 'Cinemas', selected: true },
+    { id: '5', label: 'Shopping', selected: false },
+    { id: '6', label: 'Museums', selected: false },
+    { id: '7', label: 'Restaurants', selected: false },
+    { id: '8', label: 'Bars', selected: false },
+    { id: '9', label: 'Clubs', selected: false },
+    { id: '10', label: 'Hotels', selected: false },
+    { id: '11', label: 'Shops', selected: false },
+    { id: '12', label: 'Other', selected: false },
+    { id: '13', label: 'Other', selected: false },
+    { id: '14', label: 'Other', selected: false },
+    { id: '15', label: 'Other', selected: false },
+    { id: '16', label: 'Other', selected: false },
+    { id: '17', label: 'Other', selected: false },
+    { id: '18', label: 'Other', selected: false },
+    { id: '19', label: 'Other', selected: false },
 ];
 
 // Helper: split array into chunks of given size
@@ -162,58 +165,97 @@ const ReferralsScreen = ({ navigation }) => {
     const [totalEarnings, setTotalEarnings] = useState(240);
     const [selectedFilter, setSelectedFilter] = useState('active');
     const [filteredReferrals, setFilteredReferrals] = useState([]);
-    const [filters, setFilters] = useState(filterData);
+    const [filters, setFilters] = useState([{ id: 'all', label: 'All', selected: false }, ...filterData, { id: 'more', label: 'More Filters', selected: false }]);
 
-    const { places } = MapsController();
+    const { places, setSelectedPlace, setShowPlaceFullCard } = MapsController();
+    const { isSearchFilterVisible, setIsSearchFilterVisible } = SearchFilterController();
 
     // Show status bar when screen is focused
     useFocusEffect(
         React.useCallback(() => {
-            StatusBar.setHidden(false);
-            StatusBar.setBarStyle('dark-content');
+            setSelectedPlace(null);
+            setShowPlaceFullCard(false);
+            getReferredPlaces()
             return () => { };
         }, [])
     );
 
     // Function to handle filter selection
     const handleFilterPress = (filterId) => {
-        setFilters(prevFilters =>
-            prevFilters.map(filter =>
-                filter.id === filterId
-                    ? { ...filter, selected: !filter.selected }
-                    : filter
-            )
-        );
+        if (filterId == 'more') {
+            setIsSearchFilterVisible({ isSearchFilterVisible: true, filterHeight: Dimensions.get('window').height * 0.6, showSearchBar: false });
+            return;
+        }
+        if (filterId == 'all') {
+            // if all is already selected unselect all keys
+            if (filters.find(filter => filter.id === filterId).selected) {
+                let newFilters = filters.map(filter => {
+                    if (filter.id != 'more') {
+                        return { ...filter, selected: false }
+                    }
+                    return filter;
+                })
+                setFilters(newFilters);
+            } else {
+                let newFilters = filters.map(filter => {
+                    if (filter.id != 'more') {
+                        return { ...filter, selected: true }
+                    }
+                    return filter;
+                })
+                setFilters(newFilters);
+            }
+        }
+        else {
+            setFilters(prevFilters =>
+                prevFilters.map(filter =>
+                    filter.id == filterId
+                        ? { ...filter, selected: !filter.selected }
+                        : filter
+                )
+            );
+        }
     };
 
     // Render individual filter chip
     const renderFilterChip = (chip) => {
         return (
-            <TouchableOpacity
-                style={[
-                    styles.filterOption,
-                    chip.selected && styles.filterOptionSelected
-                ]}
-                onPress={() => handleFilterPress(chip.id)}
-                activeOpacity={1}
-            >
-                <View style={[
-                    styles.filterOptionIcon,
-                    chip.selected && styles.filterOptionSelectedIcon
-                ]}>
-                    {chip.selected ? (
-                        <IconAsset.checkIcon width={18} height={18} fill={theme.colors.background.white} />
-                    ) : (
-                        <IconAsset.plusIcon width={18} height={18} fill={theme.colors.text.primary} />
-                    )}
-                </View>
-                <Text style={[
-                    styles.filterOptionText,
-                    chip.selected && styles.filterOptionTextSelected
-                ]}>
-                    {chip.label}
-                </Text>
-            </TouchableOpacity>
+            <View style={styles.filterChipContainer} >
+                <TouchableOpacity
+                    style={[
+                        styles.filterOption,
+                        chip.selected && styles.filterOptionSelected
+                    ]}
+                    onPress={() => handleFilterPress(chip.id)}
+                    activeOpacity={1}
+                >
+                    {
+                        chip.id != 'all' && (
+                            <View style={[
+                                styles.filterOptionIcon,
+                                chip.selected && styles.filterOptionSelectedIcon
+                            ]}>
+                                {
+                                    chip.id === 'more' ? (
+                                        <IconAsset.moreIcon width={18} height={18} fill={theme.colors.text.primary} />
+                                    ) : (
+                                        chip.selected ? (
+                                            <IconAsset.checkIcon width={18} height={18} fill={theme.colors.background.white} />
+                                        ) : (
+                                            <IconAsset.plusIcon width={18} height={18} fill={theme.colors.text.primary} />
+                                        ))
+                                }
+                            </View>
+                        )}
+                    <Text style={[
+                        styles.filterOptionText,
+                        chip.selected && styles.filterOptionTextSelected
+                    ]}>
+                        {chip.label}
+                    </Text>
+                </TouchableOpacity>
+            </View>
+
         );
     };
 
@@ -231,14 +273,17 @@ const ReferralsScreen = ({ navigation }) => {
                     key={referral.id}
                     style={[styles.referralCard, { filter: referral.status == 'past' ? 'grayscale(100%) brightness(120%) contrast(70%)' : 'none' }]}
                     activeOpacity={1}
-                    onPress={() => { }}
+                    onPress={() => {
+                        setSelectedPlace(referral);
+                        setShowPlaceFullCard(true);
+                    }}
 
                 >
                     <View style={styles.referralCardHeader}>
                         <View style={styles.referralCardImage}>
                             <AppImage
-                                source={referral.image}
-
+                                source={referral.imageFull}
+                                placeholderSource={referral.image}
                                 style={{
                                     width: '100%',
                                     height: '100%',
@@ -263,19 +308,29 @@ const ReferralsScreen = ({ navigation }) => {
         )
     };
 
+    const getReferredPlaces = async () => {
+        const referredPlaces = await FirebaseStoreService.getReferredPlaces()
+        setFilteredReferrals(referredPlaces)
+
+    }
+
     React.useEffect(() => {
-        setFilteredReferrals(places)
+        getReferredPlaces()
     }, [places])
 
     return (
         <SafeAreaView style={styles.container}>
 
-            {/* Header */}
-            <View style={styles.header}>
-                <View style={styles.headerTitleContainer}>
-                    <Text style={styles.headerTitle}>Referrals</Text>
-                </View>
-            </View>
+            <ScreenHeader
+                style={{
+                    paddingHorizontal: theme.spacing.lg,
+                }}
+                titleStyle={{
+                    fontWeight: theme.fontWeight.bold,
+                }}
+                title="Referrals"
+                showBackButton={false}
+            />
 
             <View style={styles.innerContainer}>
 
@@ -289,6 +344,7 @@ const ReferralsScreen = ({ navigation }) => {
                     >
                         <View style={{ flexDirection: 'column', gap: theme.spacing.sm }}>
                             <View style={{ flexDirection: 'row', gap: theme.spacing.sm }}>
+
                                 {filters.slice(0, Math.ceil(filters.length / 2)).map((item, index) => (
                                     <View key={item.id} style={[
                                         styles.filterColumn,
@@ -304,21 +360,30 @@ const ReferralsScreen = ({ navigation }) => {
                                     ]}>
                                         {renderFilterChip(item)}
                                     </View>
-                                ))}</View>
+                                ))}
+                            </View>
                         </View>
                     </ScrollView>
                 </View>
 
                 {/* Content */}
                 <View style={styles.referralsContainer}>
-                    <FlatList
-                        showsVerticalScrollIndicator={false}
-                        data={filteredReferrals}
-                        renderItem={({ item }) => renderReferralCard(item)}
-                        keyExtractor={(item) => item.id}
-                        decelerationRate="fast"
-
-                    />
+                    {filteredReferrals.length === 0 ? (
+                        <NoDataAnimation
+                            message="No referrals available"
+                            subtitle="Try adjusting your filters or check back later"
+                            icon={IconAsset.emptyStateIcon}
+                            size="large"
+                        />
+                    ) : (
+                        <FlatList
+                            showsVerticalScrollIndicator={false}
+                            data={filteredReferrals}
+                            renderItem={({ item }) => renderReferralCard(item)}
+                            keyExtractor={(item) => item.id}
+                            decelerationRate="fast"
+                        />
+                    )}
                 </View>
             </View>
         </SafeAreaView>
@@ -449,6 +514,7 @@ const styles = StyleSheet.create({
     referralsContainer: {
         marginBottom: theme.spacing.xl,
     },
+
     referralCard: {
         backgroundColor: theme.colors.background.primary,
         borderRadius: theme.borderRadius.md,
@@ -706,18 +772,31 @@ const styles = StyleSheet.create({
         color: theme.colors.background.primary,
         fontWeight: theme.fontWeight.bold,
     },
-
+    filterChipContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        ...theme.shadows.custom({
+            color: theme.colors.neutral[500],
+            offset: { width: 0, height: 1 },
+            opacity: 0.05,
+            radius: 0.5,
+        }),
+        borderRadius: theme.borderRadius.full,
+        backgroundColor: theme.colors.background.white,
+        borderWidth: 0.5,
+        borderColor: theme.colors.border.white,
+        margin: theme.spacing.xxs,
+    },
 
     filterOption: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: theme.colors.background.primary,
-        borderWidth: 1,
-        borderColor: theme.colors.border.light,
+        borderWidth: 0.5,
+        borderColor: theme.colors.border.white,
         borderRadius: theme.borderRadius.full,
         paddingVertical: 6,
         paddingHorizontal: 4,
-        gap: theme.spacing.xs,
     },
     filterOptionSelected: {
         backgroundColor: theme.colors.background.searchFilter,
@@ -726,7 +805,7 @@ const styles = StyleSheet.create({
     filterOptionText: {
         ...theme.typography.bodyMedium,
         color: theme.colors.text.primary,
-        paddingHorizontal: 4,
+        paddingHorizontal: 8,
     },
     filterOptionTextSelected: {
         color: theme.colors.text.primary,
@@ -744,7 +823,7 @@ const styles = StyleSheet.create({
         width: 24,
         height: 24,
         borderRadius: theme.borderRadius.full,
-        backgroundColor: theme.colors.background.white,
+        backgroundColor: theme.colors.background.primary,
         alignItems: 'center',
         justifyContent: 'center',
     },

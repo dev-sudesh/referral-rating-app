@@ -72,6 +72,7 @@ const Constants = {
         List: 'List',
         NotificationSettings: 'NotificationSettings',
         SignInOptions: 'SignInOptions',
+        WebView: 'WebView',
     },
     nearbyPlaces: [
         {

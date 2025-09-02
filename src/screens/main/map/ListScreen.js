@@ -76,7 +76,6 @@ const ListScreen = () => {
             StatusBar.setHidden(true);
             setIsScreenFocused(true);
             return () => {
-                StatusBar.setHidden(false);
                 setIsScreenFocused(false);
             };
         }, [])
@@ -308,6 +307,7 @@ const ListScreen = () => {
                         <View style={styles.placeCardImageFull}>
                             <AppImage
                                 source={selectedPlace?.imageFull}
+                                placeholderSource={selectedPlace?.image}
                                 style={{
                                     width: '100%',
                                     height: '100%',
@@ -357,7 +357,8 @@ const ListScreen = () => {
                     <View style={styles.placeCardInner}>
                         <View style={styles.placeCardImage}>
                             <AppImage
-                                source={place.image}
+                                source={place.imageFull}
+                                placeholderSource={place.image}
                                 style={{
                                     width: '100%',
                                     height: '100%',

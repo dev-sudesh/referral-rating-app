@@ -10,26 +10,29 @@ import {
     Dimensions,
     Platform,
     StatusBar,
+    Keyboard,
 } from 'react-native';
 import RBSheet from 'react-native-raw-bottom-sheet';
 import { theme } from '../../constants/theme';
 import IconAsset from '../../assets/icons/IconAsset';
 import SearchFilterController from '../../controllers/filters/SearchFilterController';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Constants from '../../constants/data';
 import FirebaseStoreService from '../../services/firebase/FirebaseStoreService';
 import MapsController from '../../controllers/maps/MapsController';
+import KeyboardAvoidingView from '../common/KeyboardAvoidingView';
 
 const SearchFilter = ({
     initialFilters = {},
     loading = false
 }) => {
+
     const [filterCategories, setFilterCategories] = useState(Constants.filters);
     const [filters, setFilters] = useState([]);
     const [searchFilterText, setSearchFilterText] = useState('');
     const bottomSheetRef = useRef(null);
     const initialFiltersRef = useRef(JSON.stringify(initialFilters));
-    const { isSearchFilterVisible, setIsSearchFilterVisible } = SearchFilterController();
+    const { isSearchFilterVisible, setIsSearchFilterVisible, filterHeight, showSearchBar } = SearchFilterController();
     const { places, setPlaces, userLocation } = MapsController();
     const insets = useSafeAreaInsets();
 
@@ -66,7 +69,7 @@ const SearchFilter = ({
         setFilters([]);
     };
     const onClose = () => {
-        setIsSearchFilterVisible(false);
+        setIsSearchFilterVisible({ isSearchFilterVisible: false });
     };
 
     // Apply filters and close
@@ -172,27 +175,23 @@ const SearchFilter = ({
             closeOnPressMask={true}
             statusBarTranslucent={true}
             statusBarBackgroundColor="transparent"
-            statusBarStyle="dark-content"
             customStyles={{
                 wrapper: styles.bottomSheetWrapper,
                 container: styles.bottomSheetContainer,
                 draggableIcon: styles.draggableIcon,
             }}
+            customModalProps={{
+                statusBarTranslucent: true,
+                statusBarBackgroundColor: 'transparent',
+            }}
             onClose={handleClose}
-            height={Dimensions.get('window').height * 0.9}
+            height={filterHeight}
             animationType="slide"
             closeOnPressBack={true}
-            keyboardAvoidingViewEnabled={true}
-            keyboardAvoidingViewProps={{
-                behavior: Platform.OS === 'ios' ? 'padding' : 'height',
-            }}
         >
-            <StatusBar
-                barStyle="dark-content"
-                translucent={true}
-                backgroundColor="transparent"
-            />
-            <View style={styles.container}>
+
+
+            <View style={[styles.container,]}>
                 {/* Header */}
                 <View style={[styles.header, { paddingTop: theme.spacing.md }]}>
                     <TouchableOpacity
@@ -217,42 +216,52 @@ const SearchFilter = ({
                 </View>
 
                 {/* Search Filter Input */}
-                <View style={styles.searchContainer}>
-                    <View style={styles.searchInputContainer}>
-                        <IconAsset.searchIcon width={20} height={20} fill={theme.colors.text.secondary} />
-                        <TextInput
-                            style={styles.searchInput}
-                            placeholder="Search filters"
-                            placeholderTextColor={theme.colors.text.secondary}
-                            value={searchFilterText}
-                            onChangeText={setSearchFilterText}
-                        />
-                    </View>
-                </View>
-
-                {/* Filter Categories */}
-                <ScrollView
-                    style={styles.filterContent}
-                    showsVerticalScrollIndicator={false}
-                >
-                    {Object.keys(filterCategories).map((categoryKey) => (
-                        <View key={categoryKey}>
-                            {renderFilterCategory({ item: categoryKey })}
+                {
+                    showSearchBar && <View style={styles.searchContainer}>
+                        <View style={styles.searchInputContainer}>
+                            <IconAsset.searchIcon width={20} height={20} fill={theme.colors.text.secondary} />
+                            <TextInput
+                                style={styles.searchInput}
+                                placeholder="Search filters"
+                                placeholderTextColor={theme.colors.text.secondary}
+                                value={searchFilterText}
+                                onChangeText={setSearchFilterText}
+                            />
                         </View>
-                    ))}
-                </ScrollView>
+                    </View>
+                }
 
-                {/* Apply Button */}
-                <View style={styles.applyButtonContainer}>
-                    <TouchableOpacity
-                        style={styles.applyButton}
-                        onPress={handleApplyFilters}
-                        activeOpacity={1}
+
+                <KeyboardAvoidingView style={{ flex: 1 }}>
+
+                    {/* Filter Categories */}
+                    <ScrollView
+                        style={styles.filterContent}
+                        showsVerticalScrollIndicator={false}
+                        contentContainerStyle={styles.filterContentContainer}
                     >
-                        <Text style={styles.applyButtonText}>Show results</Text>
-                    </TouchableOpacity>
-                </View>
+                        {Object.keys(filterCategories).map((categoryKey) => (
+                            <View key={categoryKey}>
+                                {renderFilterCategory({ item: categoryKey })}
+                            </View>
+                        ))}
+                    </ScrollView>
+
+                    {/* Apply Button */}
+                    <View style={styles.applyButtonContainer}>
+                        <TouchableOpacity
+                            style={styles.applyButton}
+                            onPress={handleApplyFilters}
+                            activeOpacity={1}
+                        >
+                            <Text style={styles.applyButtonText}>Show results</Text>
+                        </TouchableOpacity>
+                    </View>
+
+                </KeyboardAvoidingView>
+
             </View>
+
         </RBSheet>
     );
 };
@@ -272,7 +281,8 @@ const styles = StyleSheet.create({
         borderTopLeftRadius: theme.borderRadius.lg,
         borderTopRightRadius: theme.borderRadius.lg,
         backgroundColor: theme.colors.background.white,
-        paddingTop: 0,
+        paddingTop: 0
+
     },
     draggableIcon: {
         backgroundColor: theme.colors.neutral[300],
@@ -340,12 +350,15 @@ const styles = StyleSheet.create({
         flex: 1,
         paddingHorizontal: theme.spacing.screenPadding,
     },
+    filterContentContainer: {
+        paddingTop: theme.spacing.xl,
+    },
     filterCategory: {
         marginBottom: theme.spacing.lg,
     },
     filterCategoryTitle: {
         ...theme.typography.bodyLarge,
-        fontWeight: theme.fontWeight.semiBold,
+        fontWeight: theme.fontWeight.bold,
         color: theme.colors.text.primary,
         marginBottom: theme.spacing.md,
     },
@@ -379,12 +392,10 @@ const styles = StyleSheet.create({
     applyButtonContainer: {
         paddingHorizontal: theme.spacing.screenPadding,
         paddingVertical: theme.spacing.md,
-        borderTopWidth: 1,
-        borderTopColor: theme.colors.border.light,
     },
     applyButton: {
         backgroundColor: theme.colors.primary[500],
-        borderRadius: theme.borderRadius.md,
+        borderRadius: theme.borderRadius.lg,
         paddingVertical: theme.spacing.md,
         alignItems: 'center',
         justifyContent: 'center',
@@ -392,7 +403,7 @@ const styles = StyleSheet.create({
     applyButtonText: {
         ...theme.typography.bodyLarge,
         color: theme.colors.background.white,
-        fontWeight: theme.fontWeight.semiBold,
+        fontWeight: theme.fontWeight.bold,
     },
     iconText: {
         fontSize: 16,

@@ -1,4 +1,5 @@
-import { Image } from 'react-native';
+import { Image, Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Local image mappings - add your local images here
 export const LOCAL_IMAGES = {
@@ -7,16 +8,218 @@ export const LOCAL_IMAGES = {
     'logo-small': require('../../assets/images/logos/logo-small.png'),
 };
 
-// Cache for preloaded images
+// Cache for preloaded images with TTL support
 const imageCache = new Map();
+const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+const CACHE_KEY = 'image_cache_data';
+
+// Cache state management
+let isCacheInitialized = false;
+let cacheInitPromise = null;
+const DEBUG = false; // Set to false in production for better performance
+
+// iOS-specific optimizations
+const isIOS = Platform.OS === 'ios';
+const STORAGE_DEBOUNCE = isIOS ? 500 : 100; // Longer debounce on iOS
+const BATCH_STORAGE_SIZE = isIOS ? 10 : 5; // Batch storage operations on iOS
+
+// Storage queue for iOS optimization
+let storageQueue = [];
+let storageTimeout = null;
 
 /**
- * Preload local images
- * @param {string[]} imageKeys - Array of image keys from LOCAL_IMAGES
- * @param {function} onProgress - Progress callback (progress, completed, total, currentKey)
- * @param {function} onComplete - Completion callback with results
- * @param {function} onError - Error callback
- * @returns {Promise<Object>} Results object
+ * Cache entry structure
+ */
+class CacheEntry {
+    constructor(data, timestamp = Date.now()) {
+        this.data = data;
+        this.timestamp = timestamp;
+    }
+
+    isExpired() {
+        return Date.now() - this.timestamp > CACHE_TTL;
+    }
+}
+
+/**
+ * Initialize cache from AsyncStorage with iOS optimization
+ */
+export const initializeCache = async () => {
+    if (isCacheInitialized) {
+        if (DEBUG) console.log('[ImageCache] Cache already initialized');
+        return;
+    }
+
+    if (cacheInitPromise) {
+        if (DEBUG) console.log('[ImageCache] Cache initialization already in progress');
+        return cacheInitPromise;
+    }
+
+    if (DEBUG) console.log('[ImageCache] Starting cache initialization...');
+
+    cacheInitPromise = new Promise(async (resolve) => {
+        try {
+            const startTime = Date.now();
+
+            const cachedData = await AsyncStorage.getItem(CACHE_KEY);
+            if (cachedData) {
+                const parsed = JSON.parse(cachedData);
+                // Only restore non-expired entries
+                const now = Date.now();
+                let restoredCount = 0;
+
+                // Batch process for better iOS performance
+                const validEntries = parsed.filter(([key, entry]) => {
+                    return now - entry.timestamp < CACHE_TTL;
+                });
+
+                // Restore in batches to avoid blocking the main thread
+                const batchSize = isIOS ? 20 : 50;
+                for (let i = 0; i < validEntries.length; i += batchSize) {
+                    const batch = validEntries.slice(i, i + batchSize);
+                    batch.forEach(([key, entry]) => {
+                        imageCache.set(key, new CacheEntry(entry.data, entry.timestamp));
+                        restoredCount++;
+                    });
+
+                    // Yield control on iOS to prevent blocking
+                    if (isIOS && i % (batchSize * 2) === 0) {
+                        await new Promise(resolve => setTimeout(resolve, 0));
+                    }
+                }
+
+                if (DEBUG) console.log(`[ImageCache] Restored ${restoredCount} cached images in ${Date.now() - startTime}ms`);
+            } else {
+                if (DEBUG) console.log('[ImageCache] No cached data found');
+            }
+
+            isCacheInitialized = true;
+            if (DEBUG) console.log('[ImageCache] Cache initialization complete');
+            resolve();
+        } catch (error) {
+            console.warn('Failed to initialize image cache:', error);
+            isCacheInitialized = true; // Mark as initialized even on error
+            if (DEBUG) console.log('[ImageCache] Cache initialization failed, but marked as ready');
+            resolve();
+        }
+    });
+
+    return cacheInitPromise;
+};
+
+/**
+ * Wait for cache to be initialized
+ */
+export const waitForCacheInit = async () => {
+    if (!isCacheInitialized) {
+        if (DEBUG) console.log('[ImageCache] Waiting for cache initialization...');
+        await initializeCache();
+        if (DEBUG) console.log('[ImageCache] Cache initialization wait complete');
+    }
+};
+
+/**
+ * Optimized storage save with batching for iOS
+ */
+const saveCacheToStorage = async () => {
+    if (!isCacheInitialized) return;
+
+    try {
+        const cacheData = Array.from(imageCache.entries()).map(([key, entry]) => [
+            key,
+            { data: entry.data, timestamp: entry.timestamp }
+        ]);
+
+        // On iOS, use a more efficient storage approach
+        if (isIOS) {
+            // Store in smaller chunks to avoid blocking
+            const chunkSize = 50;
+            for (let i = 0; i < cacheData.length; i += chunkSize) {
+                const chunk = cacheData.slice(i, i + chunkSize);
+                const chunkKey = `${CACHE_KEY}_chunk_${Math.floor(i / chunkSize)}`;
+                await AsyncStorage.setItem(chunkKey, JSON.stringify(chunk));
+            }
+            // Store metadata
+            await AsyncStorage.setItem(CACHE_KEY, JSON.stringify({
+                totalChunks: Math.ceil(cacheData.length / chunkSize),
+                timestamp: Date.now()
+            }));
+        } else {
+            await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
+        }
+    } catch (error) {
+        console.warn('Failed to save image cache:', error);
+    }
+};
+
+/**
+ * Add image to cache with optimized storage
+ */
+const addToCache = (key, data) => {
+    if (!isCacheInitialized) return;
+
+    imageCache.set(key, new CacheEntry(data));
+
+    // Optimized storage for iOS
+    if (isIOS) {
+        // Queue storage operations and batch them
+        storageQueue.push({ key, data });
+
+        if (storageQueue.length >= BATCH_STORAGE_SIZE) {
+            if (storageTimeout) {
+                clearTimeout(storageTimeout);
+            }
+            storageTimeout = setTimeout(() => {
+                const currentQueue = [...storageQueue];
+                storageQueue = [];
+                saveCacheToStorage();
+            }, STORAGE_DEBOUNCE);
+        }
+    } else {
+        // Standard debounced storage for Android
+        setTimeout(() => saveCacheToStorage(), 100);
+    }
+};
+
+/**
+ * Clean expired cache entries with iOS optimization
+ */
+const cleanExpiredCache = () => {
+    if (!isCacheInitialized) return;
+
+    const now = Date.now();
+    const expiredKeys = [];
+
+    // Collect expired keys first
+    for (const [key, entry] of imageCache.entries()) {
+        if (entry.isExpired()) {
+            expiredKeys.push(key);
+        }
+    }
+
+    // Remove expired entries in batches
+    if (expiredKeys.length > 0) {
+        expiredKeys.forEach(key => imageCache.delete(key));
+
+        // Trigger storage update
+        if (isIOS) {
+            if (storageTimeout) {
+                clearTimeout(storageTimeout);
+            }
+            storageTimeout = setTimeout(() => {
+                saveCacheToStorage();
+            }, STORAGE_DEBOUNCE);
+        } else {
+            setTimeout(() => saveCacheToStorage(), 100);
+        }
+    }
+};
+
+// Clean expired cache every hour
+setInterval(cleanExpiredCache, 60 * 60 * 1000);
+
+/**
+ * Preload local images with iOS optimization
  */
 export const preloadLocalImages = async (
     imageKeys = Object.keys(LOCAL_IMAGES),
@@ -24,6 +227,8 @@ export const preloadLocalImages = async (
     onComplete = null,
     onError = null
 ) => {
+    await waitForCacheInit();
+
     const results = {
         total: imageKeys.length,
         successful: 0,
@@ -46,7 +251,7 @@ export const preloadLocalImages = async (
                 await Image.prefetch(LOCAL_IMAGES[key]);
 
                 // Add to cache
-                imageCache.set(key, LOCAL_IMAGES[key]);
+                addToCache(key, LOCAL_IMAGES[key]);
 
                 results.successful++;
                 results.completed.push(key);
@@ -58,6 +263,11 @@ export const preloadLocalImages = async (
 
             // Call progress callback
             onProgress?.(progress, i + 1, imageKeys.length, key);
+
+            // Yield control on iOS to prevent blocking
+            if (isIOS && i % 5 === 0) {
+                await new Promise(resolve => setTimeout(resolve, 0));
+            }
         }
 
         onComplete?.(results);
@@ -69,12 +279,7 @@ export const preloadLocalImages = async (
 };
 
 /**
- * Preload remote images
- * @param {string[]} imageUrls - Array of remote image URLs
- * @param {function} onProgress - Progress callback (progress, completed, total, currentUrl)
- * @param {function} onComplete - Completion callback with results
- * @param {function} onError - Error callback
- * @returns {Promise<Object>} Results object
+ * Preload remote images with iOS performance optimization
  */
 export const preloadRemoteImages = async (
     imageUrls = [],
@@ -82,6 +287,8 @@ export const preloadRemoteImages = async (
     onComplete = null,
     onError = null
 ) => {
+    await waitForCacheInit();
+
     const results = {
         total: imageUrls.length,
         successful: 0,
@@ -91,27 +298,48 @@ export const preloadRemoteImages = async (
     };
 
     try {
-        for (let i = 0; i < imageUrls.length; i++) {
-            const url = imageUrls[i];
-            const progress = ((i + 1) / imageUrls.length) * 100;
+        // Process URLs in parallel batches for better iOS performance
+        const batchSize = isIOS ? 3 : 5; // Smaller batches on iOS
 
-            try {
-                // Preload the remote image
-                await Image.prefetch(url);
+        for (let i = 0; i < imageUrls.length; i += batchSize) {
+            const batch = imageUrls.slice(i, i + batchSize);
+            const batchPromises = batch.map(async (url, batchIndex) => {
+                const globalIndex = i + batchIndex;
+                const progress = ((globalIndex + 1) / imageUrls.length) * 100;
 
-                // Add to cache
-                imageCache.set(url, url);
+                try {
+                    // Check if already cached and not expired
+                    if (isImageCached(url)) {
+                        results.successful++;
+                        results.completed.push(url);
+                        onProgress?.(progress, globalIndex + 1, imageUrls.length, url);
+                        return;
+                    }
 
-                results.successful++;
-                results.completed.push(url);
+                    // Preload the remote image
+                    await Image.prefetch(url);
 
-            } catch (error) {
-                results.failed++;
-                results.errors.push({ url, error: error.message });
+                    // Add to cache with URL as key
+                    addToCache(url, { uri: url });
+
+                    results.successful++;
+                    results.completed.push(url);
+
+                } catch (error) {
+                    results.failed++;
+                    results.errors.push({ url, error: error.message });
+                }
+
+                onProgress?.(progress, globalIndex + 1, imageUrls.length, url);
+            });
+
+            // Wait for batch to complete
+            await Promise.all(batchPromises);
+
+            // Yield control on iOS to prevent blocking
+            if (isIOS) {
+                await new Promise(resolve => setTimeout(resolve, 0));
             }
-
-            // Call progress callback
-            onProgress?.(progress, i + 1, imageUrls.length, url);
         }
 
         onComplete?.(results);
@@ -173,32 +401,144 @@ export const clearImageCache = async (onComplete = null) => {
 };
 
 /**
- * Get cached image
+ * Get cached image with expiration check
  * @param {string} key - Image key or URL
  * @returns {any} Cached image or null
  */
 export const getCachedImage = (key) => {
-    return imageCache.get(key) || null;
+    const entry = imageCache.get(key);
+    if (!entry) return null;
+
+    if (entry.isExpired()) {
+        imageCache.delete(key);
+        return null;
+    }
+
+    return entry.data;
 };
 
 /**
- * Check if image is cached
+ * Check if image is cached and not expired
  * @param {string} key - Image key or URL
- * @returns {boolean} True if cached
+ * @returns {boolean} True if cached and not expired
  */
 export const isImageCached = (key) => {
-    return imageCache.has(key);
+    const entry = imageCache.get(key);
+    if (!entry) return false;
+
+    if (entry.isExpired()) {
+        imageCache.delete(key);
+        return false;
+    }
+
+    return true;
 };
 
 /**
- * Get cache statistics
+ * Cache a single image URL
+ * @param {string} url - Image URL to cache
+ * @param {Object} options - Caching options
+ * @returns {Promise<boolean>} Success status
+ */
+export const cacheImageUrl = async (url, options = {}) => {
+    try {
+        if (!url || typeof url !== 'string') {
+            throw new Error('Invalid URL provided');
+        }
+
+        // Check if already cached
+        if (isImageCached(url)) {
+            return true;
+        }
+
+        // Preload and cache the image
+        await Image.prefetch(url);
+        addToCache(url, { uri: url });
+
+        return true;
+    } catch (error) {
+        console.warn(`Failed to cache image URL: ${url}`, error);
+        return false;
+    }
+};
+
+/**
+ * Cache multiple image URLs
+ * @param {string[]} urls - Array of image URLs to cache
+ * @param {function} onProgress - Progress callback
+ * @returns {Promise<Object>} Results object
+ */
+export const cacheImageUrls = async (urls, onProgress = null) => {
+    const results = {
+        total: urls.length,
+        successful: 0,
+        failed: 0,
+        errors: [],
+        completed: [],
+    };
+
+    for (let i = 0; i < urls.length; i++) {
+        const url = urls[i];
+        const progress = ((i + 1) / urls.length) * 100;
+
+        try {
+            const success = await cacheImageUrl(url);
+            if (success) {
+                results.successful++;
+                results.completed.push(url);
+            } else {
+                results.failed++;
+                results.errors.push({ url, error: 'Failed to cache' });
+            }
+        } catch (error) {
+            results.failed++;
+            results.errors.push({ url, error: error.message });
+        }
+
+        onProgress?.(progress, i + 1, urls.length, url);
+    }
+
+    return results;
+};
+
+/**
+ * Get cache statistics with expiration info
  * @returns {Object} Cache statistics
  */
 export const getCacheStats = () => {
+    const now = Date.now();
+    const expired = [];
+    const valid = [];
+
+    for (const [key, entry] of imageCache.entries()) {
+        if (entry.isExpired()) {
+            expired.push(key);
+        } else {
+            valid.push(key);
+        }
+    }
+
     return {
-        size: imageCache.size,
-        keys: Array.from(imageCache.keys()),
+        total: imageCache.size,
+        valid: valid.length,
+        expired: expired.length,
+        validKeys: valid,
+        expiredKeys: expired,
     };
+};
+
+/**
+ * Clear expired cache entries
+ * @param {function} onComplete - Completion callback
+ */
+export const clearExpiredCache = async (onComplete = null) => {
+    try {
+        cleanExpiredCache();
+        onComplete?.();
+    } catch (error) {
+        console.error('Error clearing expired cache:', error);
+        throw error;
+    }
 };
 
 /**
@@ -233,3 +573,7 @@ export const preloadImagesWithTimeout = async (
         });
     });
 };
+
+// Initialize cache when module loads
+initializeCache();
+

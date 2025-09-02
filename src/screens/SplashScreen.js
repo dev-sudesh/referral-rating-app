@@ -28,13 +28,13 @@ const SplashScreen = () => {
     // Show recovery notification
     useEffect(() => {
         if (wasRecovered) {
-            Toast.show({
-                type: 'success',
-                text1: 'Welcome Back!',
-                text2: 'Your previous data has been recovered.',
-                position: 'top',
-                visibilityTime: 4000,
-            });
+            // Toast.show({
+            //     type: 'success',
+            //     text1: 'Welcome Back!',
+            //     text2: 'Your previous data has been recovered.',
+            //     position: 'top',
+            //     visibilityTime: 4000,
+            // });
         }
     }, [wasRecovered]);
 

@@ -75,11 +75,6 @@ const NotificationSettings = ({ navigation }) => {
                 paddingHorizontal: 0,
             }}
         >
-            <StatusBar
-                barStyle="dark-content"
-                translucent={true}
-                backgroundColor={'transparent'}
-            />
 
             <ScreenHeader
                 title="Notifications settings"

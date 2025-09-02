@@ -75,10 +75,8 @@ const MapScreen = ({ navigation }) => {
     // Hide status bar when screen is focused
     useFocusEffect(
         React.useCallback(() => {
-            StatusBar.setHidden(true);
             setIsScreenFocused(true);
             return () => {
-                StatusBar.setHidden(false);
                 setIsScreenFocused(false);
             };
         }, [])
@@ -285,12 +283,12 @@ const MapScreen = ({ navigation }) => {
     }, [centerLocation, isMapReady, isScreenFocused]);
 
     const referPlace = async (place) => {
-        if (!place?.isReferred) {
-            setShowReferralAlert(true);
-        }
-    };
+        //     if (!place?.isReferred) {
+        //         setShowReferralAlert(true);
+        //     }
+        // };
 
-    const referPlaceSubmit = async (place) => {
+        // const referPlaceSubmit = async (place) => {
         await FirebaseStoreService.storeReferredPlace(place);
         if (place.isReferred) {
             // unrefer place
@@ -339,6 +337,7 @@ const MapScreen = ({ navigation }) => {
                         <View style={styles.placeCardImageFull}>
                             <AppImage
                                 source={selectedPlace?.imageFull}
+                                placeholderSource={selectedPlace?.image}
                                 style={{
                                     width: '100%',
                                     height: '100%',
@@ -393,7 +392,8 @@ const MapScreen = ({ navigation }) => {
                     <View style={[styles.placeCardInner]}>
                         <View style={styles.placeCardImage}>
                             <AppImage
-                                source={place.image}
+                                source={place.imageFull}
+                                placeholderSource={place.image}
                                 style={{
                                     width: '100%',
                                     height: '100%',
@@ -620,7 +620,7 @@ const MapScreen = ({ navigation }) => {
                             <Text style={styles.searchInputText}>Search now...</Text>
                         </View>
                     </TouchableOpacity>
-                    <TouchableOpacity activeOpacity={1} style={styles.filterButton} onPress={() => setIsSearchFilterVisible(true)}>
+                    <TouchableOpacity activeOpacity={1} style={styles.filterButton} onPress={() => setIsSearchFilterVisible({ isSearchFilterVisible: true })}>
                         <IconAsset.filterIcon
                             width={30}
                             height={30}

@@ -36,7 +36,7 @@ const ScreenContainer = ({
     backgroundColor = theme.colors.background.primary,
     statusBarStyle = 'dark-content',
     statusBarColor,
-    statusBarHidden = false,
+    statusBarHidden = true,
     translucent = false,
     containerStyle,
     contentStyle,

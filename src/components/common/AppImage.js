@@ -1,29 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import { Image, View, StyleSheet, ActivityIndicator } from 'react-native';
-import { getCachedImage, isImageCached } from '../../utils/preloadImages/PreloadImagesUtils';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { View, StyleSheet, ActivityIndicator, Platform, ImageBackground } from 'react-native';
+import {
+    getCachedImage,
+    isImageCached,
+    cacheImageUrl,
+    cacheImageUrls,
+    waitForCacheInit
+} from '../../utils/preloadImages/PreloadImagesUtils';
+
+import FastImage from 'react-native-fast-image'
 
 /**
- * Enhanced AppImage component that supports preloaded images
- * @param {Object} props - Component props
- * @param {string|number} props.source - Image source (local require or remote URL)
- * @param {string} props.localKey - Key for local preloaded image
- * @param {Object} props.style - Image styles
- * @param {Object} props.imageStyle - Additional image styles
- * @param {boolean} props.showLoader - Whether to show loading indicator
- * @param {Object} props.loaderStyle - Loading indicator styles
- * @param {string} props.loaderColor - Loading indicator color
- * @param {number} props.loaderSize - Loading indicator size
- * @param {function} props.onLoad - Image load callback
- * @param {function} props.onError - Image error callback
- * @param {Object} props.fallbackSource - Fallback image source
- * @param {boolean} props.usePreloaded - Whether to use preloaded images
- * @param {Object} props.containerStyle - Container styles
- * @param {boolean} props.resizeMode - Image resize mode
- * @param {boolean} props.fadeDuration - Image fade duration
- * @param {Object} props.rest - Additional props passed to Image component
+ * Enhanced AppImage component that supports preloaded images and automatic URL caching
+ * Optimized for iOS performance
  */
 const AppImage = ({
     source,
+    placeholderSource,
     localKey,
     style,
     imageStyle,
@@ -38,41 +31,134 @@ const AppImage = ({
     containerStyle,
     resizeMode = 'cover',
     fadeDuration = 300,
+    autoCache = true,
+    preloadOnMount = true,
     ...rest
 }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [hasError, setHasError] = useState(false);
     const [imageSource, setImageSource] = useState(null);
+    const [isCaching, setIsCaching] = useState(false);
+    const [isCacheReady, setIsCacheReady] = useState(false);
 
-    useEffect(() => {
-        let finalSource = source;
+    // iOS-specific optimizations
+    const isIOS = Platform.OS === 'ios';
+    const fadeDurationOptimized = isIOS ? 150 : fadeDuration; // Faster fade on iOS
 
-        if (finalSource && typeof finalSource === 'string' && finalSource.includes('http')) {
-            finalSource = { uri: finalSource };
+    // Memoize source processing to avoid unnecessary recalculations
+    const processedSource = useMemo(() => {
+        if (!source) return null;
+
+        if (typeof source === 'string' && source.includes('http')) {
+            return { uri: source };
         }
+
+        return source;
+    }, [source]);
+
+    // Memoize final image source
+    const finalImageSource = useMemo(() => {
+        if (!processedSource) return null;
 
         // Try to use preloaded image if available
         if (usePreloaded && localKey) {
             const cachedImage = getCachedImage(localKey);
             if (cachedImage) {
-                finalSource = cachedImage;
-            } else {
-                // Use debug level logging instead of warning for missing preloaded images 
+                return cachedImage;
             }
         }
 
-        setImageSource(finalSource);
+        return processedSource;
+    }, [processedSource, localKey, usePreloaded]);
+
+    // Optimized cache initialization
+    useEffect(() => {
+        let isMounted = true;
+
+        const initializeCacheAndCheck = async () => {
+            try {
+                await waitForCacheInit();
+
+                if (!isMounted) return;
+
+                setIsCacheReady(true);
+
+                // If it's a remote URL, check if it's already cached
+                if (source && typeof source === 'string' && source.includes('http')) {
+                    if (isImageCached(source)) {
+                        // Image is cached, don't show loader
+                        setIsLoading(false);
+                    }
+                }
+            } catch (error) {
+                console.warn('Failed to initialize cache:', error);
+                if (isMounted) {
+                    setIsCacheReady(true);
+                }
+            }
+        };
+
+        initializeCacheAndCheck();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [source]);
+
+    // Optimized auto-cache with debouncing
+    const handleAutoCache = useCallback(async (url) => {
+        if (!url || isImageCached(url)) return;
+
+        try {
+            setIsCaching(true);
+            await cacheImageUrl(url);
+        } catch (error) {
+            console.warn('Failed to auto-cache image:', error);
+        } finally {
+            setIsCaching(false);
+        }
+    }, []);
+
+    // Auto-cache remote images on mount with optimization
+    useEffect(() => {
+        if (preloadOnMount && autoCache && source && typeof source === 'string' && source.includes('http') && isCacheReady) {
+            // Debounce auto-cache on iOS to prevent blocking
+            if (isIOS) {
+                const timer = setTimeout(() => {
+                    handleAutoCache(source);
+                }, 100);
+                return () => clearTimeout(timer);
+            } else {
+                handleAutoCache(source);
+            }
+        }
+    }, [source, preloadOnMount, autoCache, isCacheReady, handleAutoCache, isIOS]);
+
+    // Update image source when final source changes
+    useEffect(() => {
+        setImageSource(finalImageSource);
         setIsLoading(true);
         setHasError(false);
-    }, [source, localKey, usePreloaded]);
+    }, [finalImageSource]);
 
-    const handleLoad = () => {
+    const handleLoad = useCallback(() => {
         setIsLoading(false);
         setHasError(false);
-        onLoad?.();
-    };
 
-    const handleError = () => {
+        // Cache the image if it's a remote URL and auto-cache is enabled
+        if (autoCache && source && typeof source === 'string' && source.includes('http')) {
+            // Debounce caching on iOS
+            if (isIOS) {
+                setTimeout(() => handleAutoCache(source), 50);
+            } else {
+                handleAutoCache(source);
+            }
+        }
+
+        onLoad?.();
+    }, [autoCache, source, handleAutoCache, onLoad, isIOS]);
+
+    const handleError = useCallback(() => {
         setIsLoading(false);
         setHasError(true);
 
@@ -84,28 +170,42 @@ const AppImage = ({
         } else {
             onError?.();
         }
-    };
+    }, [fallbackSource, imageSource, onError]);
 
-    const renderImage = () => {
+    // Memoize loader visibility logic
+    const shouldShowLoader = useMemo(() => {
+        if (!showLoader) return false;
+        if (!isLoading && !isCaching) return false;
+
+        // Don't show loader if image is already cached and cache is ready
+        if (isCacheReady && source && typeof source === 'string' && source.includes('http') && isImageCached(source)) {
+            return false;
+        }
+
+        return true;
+    }, [showLoader, isLoading, isCaching, isCacheReady, source]);
+
+    const renderImage = useCallback(() => {
         if (!imageSource) {
             return null;
         }
 
         return (
-            <Image
+            <FastImage
                 source={imageSource}
                 style={[styles.image, imageStyle]}
                 resizeMode={resizeMode}
-                fadeDuration={fadeDuration}
+                fadeDuration={fadeDurationOptimized}
+                defaultSource={placeholderSource}
                 onLoad={handleLoad}
                 onError={handleError}
                 {...rest}
             />
         );
-    };
+    }, [imageSource, imageStyle, resizeMode, fadeDurationOptimized, handleLoad, handleError, rest]);
 
-    const renderLoader = () => {
-        if (!showLoader || !isLoading) {
+    const renderLoader = useCallback(() => {
+        if (!shouldShowLoader) {
             return null;
         }
 
@@ -117,30 +217,36 @@ const AppImage = ({
                 />
             </View>
         );
-    };
+    }, [shouldShowLoader, loaderStyle, loaderSize, loaderColor]);
 
-    const renderError = () => {
+    const renderError = useCallback(() => {
         if (!hasError || !fallbackSource) {
             return null;
         }
 
         return (
             <View style={styles.errorContainer}>
-                <Image
+                <FastImage
+                    source={fallbackSource}
+                    defaultSource={placeholderSource}
+                    style={[styles.image, imageStyle]}
+                    resizeMode={resizeMode}
+                    {...rest}
+                />
+                {/* <Image
                     source={fallbackSource}
                     style={[styles.image, imageStyle]}
                     resizeMode={resizeMode}
-                    fadeDuration={fadeDuration}
                     {...rest}
-                />
+                /> */}
             </View>
         );
-    };
+    }, [hasError, fallbackSource, imageStyle, resizeMode, fadeDurationOptimized, placeholderSource, rest]);
 
     return (
         <View style={[styles.container, containerStyle, style]}>
             {renderImage()}
-            {renderLoader()}
+            {/* {renderLoader()} */}
             {renderError()}
         </View>
     );

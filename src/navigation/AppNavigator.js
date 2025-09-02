@@ -11,6 +11,7 @@ import PersonalInfo from '../screens/main/personal-info/PersonalInfo';
 import NotificationSettings from '../screens/main/notificaiton-settings/NotificationSettings';
 import FavoriteFilters from '../screens/main/favorite-filters/FavoriteFilters';
 import ListScreen from '../screens/main/map/ListScreen';
+import WebViewScreen from '../screens/main/webview/WebViewScreen';
 
 const Stack = createStackNavigator();
 
@@ -32,6 +33,7 @@ const AppNavigator = () => {
                 <Stack.Screen name={Constants.Screen.NotificationSettings} component={NotificationSettings} />
                 <Stack.Screen name={Constants.Screen.FavoriteFilters} component={FavoriteFilters} />
                 <Stack.Screen name={Constants.Screen.List} component={ListScreen} />
+                <Stack.Screen name={Constants.Screen.WebView} component={WebViewScreen} />
             </Stack.Navigator>
         </NavigationContainer>
     );

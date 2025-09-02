@@ -12,6 +12,7 @@ import PlaceFullCard from '../../components/ui/PlaceFullCard';
 import MapsController from '../../controllers/maps/MapsController';
 import ReferralAlert from '../../components/ui/ReferralAlert';
 import ReferralController from '../../controllers/referrals/ReferralController';
+import ImagePickerModal from '../../components/ui/ImagePickerModal';
 import ImagePickerController from '../../controllers/imagePicker/ImagePickerController';
 
 const Tab = createBottomTabNavigator();
@@ -99,8 +100,8 @@ const MainTabs = () => {
                     }}
                 />
             </Tab.Navigator>
-            {showPlaceFullCard && <PlaceFullCard />}
             {showReferralAlert && <ReferralAlert />}
+            {/* {true && <ImagePickerModal />} */}
         </ScreenContainer>
     );
 };

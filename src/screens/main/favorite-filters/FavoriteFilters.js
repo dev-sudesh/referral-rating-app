@@ -120,14 +120,11 @@ const FavoriteFilters = ({ navigation }) => {
                 paddingHorizontal: theme.spacing.md,
             }}
         >
-
-            <StatusBar
-                barStyle="dark-content"
-                translucent={true}
-                backgroundColor={'transparent'}
-            />
             <ScreenHeader
                 title="Favorite Filters"
+                titleStyle={{
+                    fontWeight: theme.fontWeight.bold,
+                }}
                 showBackButton
                 onBackPress={() => navigation.goBack()}
                 rightComponent={

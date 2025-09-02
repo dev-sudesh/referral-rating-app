@@ -15,6 +15,8 @@ import ScreenContainer from '../../../components/common/ScreenContainer';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AppImage from '../../../components/common/AppImage';
 import ImageAsset from '../../../assets/images/ImageAsset';
+import ScreenHeader from '../../../components/ui/ScreenHeader';
+import MapsController from '../../../controllers/maps/MapsController';
 
 const { width } = Dimensions.get('window');
 
@@ -88,14 +90,7 @@ const RewardsScreen = ({ navigation }) => {
     const [selectedTab, setSelectedTab] = useState('active');
     const [filteredRewards, setFilteredRewards] = useState(rewards.filter(item => item.status == 'active'))
 
-    // Show status bar when screen is focused
-    useFocusEffect(
-        React.useCallback(() => {
-            StatusBar.setHidden(false);
-            StatusBar.setBarStyle('dark-content');
-            return () => { };
-        }, [])
-    );
+
 
     const userStats = {
         totalPoints: 1250,
@@ -153,14 +148,16 @@ const RewardsScreen = ({ navigation }) => {
 
     return (
         <SafeAreaView style={styles.container}>
-
-
-            {/* Header */}
-            <View style={styles.header}>
-                <View style={styles.headerTitleContainer}>
-                    <Text style={styles.headerTitle}>Rewards</Text>
-                </View>
-            </View>
+            <ScreenHeader
+                style={{
+                    paddingHorizontal: theme.spacing.lg,
+                }}
+                titleStyle={{
+                    fontWeight: theme.fontWeight.bold,
+                }}
+                title="Rewards"
+                showBackButton={false}
+            />
 
             <View style={styles.innerContainer}>
 
