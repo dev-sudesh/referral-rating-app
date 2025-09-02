@@ -17,7 +17,7 @@ import { useNavigation } from '@react-navigation/native';
 const WebViewScreen = () => {
     const navigation = useNavigation();
     const webViewRef = useRef(null);
-    const { pageTitle, isLoading, webViewUrl, isError, errorMessage, setIsLoading, setWebViewUrl, setIsError, setErrorMessage } = WebViewController();
+    const { pageTitle, isLoading, webViewUrl, isError, errorMessage, setIsLoading, setWebViewUrl, setIsError, setErrorMessage, webViewHtml } = WebViewController();
     return (
         <ScreenContainer {...ScreenContainer.presets.full}
             paddingCustom={{
@@ -38,15 +38,17 @@ const WebViewScreen = () => {
                 showBackButton
                 onBackPress={() => navigation.goBack()}
             />
-            <WebView
-                source={{ uri: "https://www.google.com" }}
-                ref={webViewRef}
-                contentStyle={{
-                    flex: 1,
-                }}
-            // onLoad={() => setIsLoading(false)}
-            // onError={() => setIsError(true)}
-            />
+            {(webViewHtml || webViewUrl) && (
+                <WebView
+                    source={{ ...(webViewHtml ? { html: webViewHtml } : { uri: webViewUrl }) }}
+                    ref={webViewRef}
+                    contentStyle={{
+                        flex: 1,
+                    }}
+                // onLoad={() => setIsLoading(false)}
+                // onError={() => setIsError(true)}
+                />
+            )}
         </ScreenContainer>
     );
 };

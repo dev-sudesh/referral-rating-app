@@ -20,6 +20,7 @@ import WebViewController from '../../../controllers/webview/WebViewController';
 import ScreenHeader from '../../../components/ui/ScreenHeader';
 import ShareModal from '../../../components/common/ShareModal';
 import { useSharing } from '../../../hooks/useSharing';
+import HtmlWrapper from '../../../constants/data/HtmlWrapper';
 
 const ProfileScreen = ({ navigation }) => {
     const [shareModalVisible, setShareModalVisible] = useState(false);
@@ -84,6 +85,7 @@ const ProfileScreen = ({ navigation }) => {
             type: 'webview',
             options: {
                 pageTitle: 'FAQ / Contact Us',
+                content: 'faqs',
                 webViewUrl: 'https://www.google.com',
             },
             navigateTo: Constants.Screen.WebView,
@@ -95,6 +97,7 @@ const ProfileScreen = ({ navigation }) => {
             type: 'webview',
             options: {
                 pageTitle: 'Terms of Service',
+                content: 'terms',
                 webViewUrl: 'https://www.google.com',
             },
             navigateTo: Constants.Screen.WebView,
@@ -106,6 +109,7 @@ const ProfileScreen = ({ navigation }) => {
             type: 'webview',
             options: {
                 pageTitle: 'Privacy Policy',
+                content: 'privacy',
                 webViewUrl: 'https://www.google.com',
             },
             navigateTo: Constants.Screen.WebView,
@@ -133,7 +137,8 @@ const ProfileScreen = ({ navigation }) => {
                     if (item.action === 'navigate') {
                         if (item.type === 'webview') {
                             WebViewController.getState().setPageTitle(item.options.pageTitle);
-                            WebViewController.getState().setWebViewUrl(item.options.webViewUrl);
+                            // WebViewController.getState().setWebViewUrl(item.options.webViewUrl);
+                            WebViewController.getState().setWebViewHtml(HtmlWrapper.getContent(item.options.content));
                         }
                         navigation.navigate(item.navigateTo);
 

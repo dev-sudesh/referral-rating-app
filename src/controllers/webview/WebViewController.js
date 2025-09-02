@@ -4,7 +4,8 @@ import { create } from 'zustand';
 const WebViewController = create((set) => ({
     pageTitle: null,
     isLoading: false,
-    webViewUrl: "https://www.google.com",
+    webViewUrl: null,
+    webViewHtml: null,
     isError: false,
     errorMessage: null,
     setWebViewUrl: (url) => set({ webViewUrl: url }),
@@ -12,6 +13,7 @@ const WebViewController = create((set) => ({
     setIsError: (isError) => set({ isError }),
     setErrorMessage: (errorMessage) => set({ errorMessage }),
     setPageTitle: (pageTitle) => set({ pageTitle }),
+    setWebViewHtml: (html) => set({ webViewHtml: html }),
 }));
 
 export default WebViewController;
