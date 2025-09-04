@@ -5,31 +5,21 @@ import {
     StyleSheet,
     TouchableOpacity,
     StatusBar,
-    Alert,
     FlatList,
-    ImageBackground,
     Pressable,
     Platform,
 } from 'react-native';
 import { useFocusEffect, useIsFocused } from '@react-navigation/native';
-import MapView, { Animated as AnimatedMap, AnimatedRegion, Marker, AnimatedMapView } from 'react-native-maps';
 import Geolocation from '@react-native-community/geolocation';
 import { request, PERMISSIONS, RESULTS, check } from 'react-native-permissions';
 import { theme } from '../../../constants/theme';
 import IconAsset from '../../../assets/icons/IconAsset';
 import AppImage from '../../../components/common/AppImage';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import ImageAsset from '../../../assets/images/ImageAsset';
-import SearchFilter from '../../../components/ui/SearchFilter';
-import RBSheet from 'react-native-raw-bottom-sheet';
 import SearchFilterController from '../../../controllers/filters/SearchFilterController';
 import CurvedCard from '../../../components/ui/CurvedCard';
-import CurrentLocationMarker from '../../../components/ui/CurrentLocationMarker';
 import ToastUtils from '../../../utils/ToastUtils';
-import Animated from 'react-native-reanimated';
-import MapUtils from '../../../utils/MapUtils';
 import MapsController from '../../../controllers/maps/MapsController';
-import Constants from '../../../constants/data';
 import FirebaseStoreService from '../../../services/firebase/FirebaseStoreService';
 import ReferralController from '../../../controllers/referrals/ReferralController';
 

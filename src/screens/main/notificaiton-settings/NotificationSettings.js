@@ -4,8 +4,6 @@ import {
     Text,
     View,
     ScrollView,
-    SafeAreaView,
-    StatusBar,
 } from 'react-native';
 import { theme } from '../../../constants/theme';
 import ScreenContainer from '../../../components/common/ScreenContainer';

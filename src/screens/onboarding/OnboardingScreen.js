@@ -162,10 +162,6 @@ const styles = StyleSheet.create({
         flexDirection: 'column',
         backgroundColor: theme.colors.background.primary,
     },
-    viewContainer: {
-        flex: 1,
-        flexDirection: 'column',
-    },
     skipButton: {
         position: 'absolute',
         top: theme.responsive.height(theme.responsive.screen().height * 0.05),
@@ -226,9 +222,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         minHeight: theme.responsive.buttonHeight('large'),
         ...theme.shadows.small,
-    },
-    disabledButton: {
-        backgroundColor: theme.colors.tertiary[300],
     },
     nextButtonText: {
         ...theme.typography.buttonLarge,

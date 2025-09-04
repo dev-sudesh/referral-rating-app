@@ -3,22 +3,15 @@ import {
     View,
     Text,
     StyleSheet,
-    TouchableOpacity,
-    StatusBar,
     ScrollView,
     Dimensions,
-    FlatList,
 } from 'react-native';
-import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { theme } from '../../../constants/theme';
 import ScreenContainer from '../../../components/common/ScreenContainer';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import AppImage from '../../../components/common/AppImage';
-import ImageAsset from '../../../assets/images/ImageAsset';
 import ScreenHeader from '../../../components/ui/ScreenHeader';
-import MapsController from '../../../controllers/maps/MapsController';
 import Button from '../../../components/ui/Button';
-import WebView from 'react-native-webview';
 import HtmlWrapper from '../../../constants/data/HtmlWrapper';
 import RNRenderHtml from 'react-native-render-html';
 import FirebaseStoreService from '../../../services/firebase/FirebaseStoreService';
@@ -147,127 +140,10 @@ const RewardDetailScreen = () => {
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: theme.colors.background.primary,
-    },
     innerContainer: {
         flex: 1,
         paddingBottom: theme.spacing.xl,
         paddingHorizontal: theme.spacing.lg,
-    },
-    header: {
-        alignItems: 'flex-end',
-        justifyContent: 'center',
-        paddingHorizontal: theme.spacing.lg,
-        height: theme.responsive.headerHeight(),
-    },
-    headerTitleContainer: {
-        position: 'absolute',
-        left: 0,
-        right: 0,
-        top: 0,
-        bottom: 0,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    headerTitle: {
-        ...theme.typography.h4,
-        color: theme.colors.text.primary,
-        fontWeight: theme.fontWeight.bold,
-        textAlign: 'center',
-    },
-    historyButton: {
-        paddingHorizontal: theme.spacing.md,
-        paddingVertical: theme.spacing.sm,
-        minHeight: theme.responsive.size(44),
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    historyButtonText: {
-        ...theme.typography.bodyMedium,
-        color: theme.colors.primary[500],
-    },
-    scrollContent: {
-        paddingHorizontal: theme.spacing.lg,
-        paddingBottom: theme.spacing.xl,
-    },
-    pointsCard: {
-        backgroundColor: theme.colors.primary[500],
-        borderRadius: theme.borderRadius.lg,
-        padding: theme.spacing.lg,
-        marginBottom: theme.spacing.lg,
-        ...theme.shadows.medium,
-    },
-    pointsHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: theme.spacing.md,
-    },
-    pointsTitle: {
-        ...theme.typography.h4,
-        color: theme.colors.background.primary,
-    },
-    pointsValue: {
-        ...theme.typography.h1,
-        color: theme.colors.background.primary,
-    },
-    levelContainer: {
-        marginTop: theme.spacing.md,
-    },
-    levelText: {
-        ...theme.typography.bodyMedium,
-        color: theme.colors.primary[100],
-        marginBottom: theme.spacing.sm,
-    },
-    progressContainer: {
-        marginTop: theme.spacing.sm,
-    },
-    progressBar: {
-        height: 8,
-        backgroundColor: theme.colors.primary[300],
-        borderRadius: theme.borderRadius.round,
-        marginBottom: theme.spacing.xs,
-    },
-    progressFill: {
-        height: '100%',
-        backgroundColor: theme.colors.background.primary,
-        borderRadius: theme.borderRadius.round,
-    },
-    progressText: {
-        ...theme.typography.captionMedium,
-        color: theme.colors.primary[100],
-    },
-    tabContainer: {
-        flexDirection: 'row',
-        backgroundColor: theme.colors.background.light,
-        borderRadius: theme.borderRadius.lg,
-        padding: theme.spacing.xs,
-        marginHorizontal: theme.spacing.lg,
-        marginTop: theme.spacing.sm,
-        marginBottom: theme.spacing.lg,
-    },
-    tabButton: {
-        flex: 1,
-        paddingVertical: theme.spacing.sm,
-        alignItems: 'center',
-        borderRadius: theme.borderRadius.lg,
-    },
-    activeTabButton: {
-        backgroundColor: theme.colors.background.primary,
-        paddingHorizontal: theme.spacing.md,
-        ...theme.shadows.medium,
-    },
-    tabButtonText: {
-        ...theme.typography.buttonSmall,
-        color: theme.colors.text.secondary,
-        fontSize: theme.responsive.size(14),
-        paddingVertical: theme.spacing.xs,
-    },
-    activeTabButtonText: {
-        color: theme.colors.text.accent,
-        fontWeight: theme.fontWeight.bold,
     },
     rewardsContainer: {
         flex: 1,
@@ -322,15 +198,6 @@ const styles = StyleSheet.create({
         paddingHorizontal: theme.spacing.sm,
         paddingVertical: theme.spacing.xs,
     },
-    rewardCardFooter: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-    },
-    rewardCardValidUntilText: {
-        ...theme.typography.captionMedium,
-        color: theme.colors.text.tertiary,
-    },
     rewardCardRedeemButton: {
         width: '98%',
         alignSelf: 'center',
@@ -354,118 +221,6 @@ const styles = StyleSheet.create({
         color: theme.colors.background.primary,
         fontWeight: theme.fontWeight.semiBold,
     },
-    rewardCardRedeemedCard: {
-        backgroundColor: theme.colors.background.primary,
-        borderRadius: theme.borderRadius.md,
-        padding: theme.spacing.lg,
-        marginBottom: theme.spacing.md,
-        borderWidth: 1,
-        borderColor: theme.colors.border.light,
-    },
-    rewardCardRedeemedCardExpired: {
-        opacity: 0.6,
-    },
-    rewardCardRedeemedCardHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: theme.spacing.sm,
-    },
-    rewardCardRedeemedCardTitle: {
-        ...theme.typography.h5,
-        color: theme.colors.text.primary,
-    },
-    rewardCardRedeemedCardStatusBadge: {
-        paddingHorizontal: theme.spacing.sm,
-        paddingVertical: theme.spacing.xs,
-        borderRadius: theme.borderRadius.round,
-    },
-    rewardCardRedeemedCardActiveBadge: {
-        backgroundColor: theme.colors.success[100],
-    },
-    rewardCardRedeemedCardExpiredBadge: {
-        backgroundColor: theme.colors.error[100],
-    },
-    rewardCardRedeemedCardStatusBadgeText: {
-        ...theme.typography.captionSmall,
-        fontWeight: theme.fontWeight.semiBold,
-    },
-    rewardCardRedeemedCardDetails: {
-        marginTop: theme.spacing.sm,
-    },
-    rewardCardRedeemedCardDate: {
-        ...theme.typography.bodySmall,
-        color: theme.colors.text.secondary,
-        marginBottom: theme.spacing.xs,
-    },
-    rewardCardRedeemedCardExpiryDate: {
-        ...theme.typography.bodySmall,
-        color: theme.colors.text.secondary,
-    },
-    achievementsSection: {
-        marginTop: theme.spacing.lg,
-    },
-    sectionTitle: {
-        ...theme.typography.h4,
-        color: theme.colors.text.primary,
-        marginBottom: theme.spacing.md,
-    },
-    achievementCard: {
-        backgroundColor: theme.colors.background.primary,
-        borderRadius: theme.borderRadius.md,
-        padding: theme.spacing.lg,
-        marginBottom: theme.spacing.md,
-        borderWidth: 1,
-        borderColor: theme.colors.border.light,
-    },
-    completedAchievement: {
-        borderColor: theme.colors.success[200],
-        backgroundColor: theme.colors.success[50],
-    },
-    achievementHeader: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    achievementIcon: {
-        fontSize: 24,
-        marginRight: theme.spacing.md,
-    },
-    achievementInfo: {
-        flex: 1,
-    },
-    achievementTitle: {
-        ...theme.typography.h5,
-        color: theme.colors.text.primary,
-        marginBottom: theme.spacing.xs,
-    },
-    achievementDescription: {
-        ...theme.typography.bodySmall,
-        color: theme.colors.text.secondary,
-    },
-    achievementPoints: {
-        backgroundColor: theme.colors.warning[100],
-        borderRadius: theme.borderRadius.round,
-        paddingHorizontal: theme.spacing.sm,
-        paddingVertical: theme.spacing.xs,
-    },
-    achievementPointsText: {
-        ...theme.typography.buttonSmall,
-        color: theme.colors.warning[700],
-        fontWeight: theme.fontWeight.semiBold,
-    },
-    completedBadge: {
-        backgroundColor: theme.colors.success[500],
-        borderRadius: theme.borderRadius.sm,
-        paddingHorizontal: theme.spacing.sm,
-        paddingVertical: theme.spacing.xs,
-        alignSelf: 'flex-start',
-        marginTop: theme.spacing.sm,
-    },
-    completedBadgeText: {
-        ...theme.typography.captionMedium,
-        color: theme.colors.background.primary,
-        fontWeight: theme.fontWeight.semiBold,
-    },
     howToUseContainer: {
         flex: 1,
         width: '100%',
@@ -476,10 +231,6 @@ const styles = StyleSheet.create({
         color: theme.colors.text.primary,
         marginBottom: theme.spacing.lg,
         fontWeight: theme.fontWeight.bold,
-    },
-    howToUseDescription: {
-        ...theme.typography.bodyMedium,
-        color: theme.colors.text.secondary,
     },
     rewardCardRedeemedText: {
         width: '98%',

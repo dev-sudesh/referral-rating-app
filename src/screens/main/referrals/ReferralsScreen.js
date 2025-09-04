@@ -4,18 +4,13 @@ import {
     Text,
     StyleSheet,
     TouchableOpacity,
-    StatusBar,
     ScrollView,
-    Alert,
-    Share,
     Dimensions,
     FlatList,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { theme } from '../../../constants/theme';
-import ScreenContainer from '../../../components/common/ScreenContainer';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import ImageAsset from '../../../assets/images/ImageAsset';
 import AppImage from '../../../components/common/AppImage';
 import IconAsset from '../../../assets/icons/IconAsset';
 import MapsController from '../../../controllers/maps/MapsController';
@@ -25,44 +20,14 @@ import SearchFilterController from '../../../controllers/filters/SearchFilterCon
 import NoDataAnimation from '../../../components/common/NoDataAnimation';
 import Constants from '../../../constants/data';
 
-const { width, height } = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
-// Filter data for the staggered horizontal list
-const filterData = [
-    { id: '2', label: 'Food', selected: false },
-    { id: '3', label: 'Parking lots', selected: false },
-    { id: '4', label: 'Cinemas', selected: false },
-    { id: '5', label: 'Shopping', selected: false },
-    { id: '6', label: 'Museums', selected: false },
-    { id: '7', label: 'Restaurants', selected: false },
-    { id: '8', label: 'Bars', selected: false },
-    { id: '9', label: 'Clubs', selected: false },
-    { id: '10', label: 'Hotels', selected: false },
-    { id: '11', label: 'Shops', selected: false },
-    { id: '12', label: 'Other', selected: false },
-    { id: '13', label: 'Other', selected: false },
-    { id: '14', label: 'Other', selected: false },
-    { id: '15', label: 'Other', selected: false },
-    { id: '16', label: 'Other', selected: false },
-    { id: '17', label: 'Other', selected: false },
-    { id: '18', label: 'Other', selected: false },
-    { id: '19', label: 'Other', selected: false },
-];
-
-// Helper: split array into chunks of given size
-function chunkData(array, chunkSize) {
-    const chunks = [];
-    for (let i = 0; i < array.length; i += chunkSize) {
-        chunks.push(array.slice(i, i + chunkSize));
-    }
-    return chunks;
-}
 
 const ReferralsScreen = ({ navigation }) => {
 
     const [referrals, setReferrals] = useState([]);
     const [filteredReferrals, setFilteredReferrals] = useState([]);
-    const [filters, setFilters] = useState([{ id: 'all', label: 'All', selected: false }, ...filterData, { id: 'more', label: 'More Filters', selected: false }]);
+    const [filters, setFilters] = useState([{ id: 'all', label: 'All', selected: false }, { id: 'more', label: 'More Filters', selected: false }]);
     const [selectedFilters, setSelectedFilters] = useState([]);
 
 
@@ -326,121 +291,9 @@ const styles = StyleSheet.create({
         paddingBottom: theme.spacing.xl,
         marginTop: theme.spacing.lg,
     },
-    header: {
-        alignItems: 'flex-end',
-        justifyContent: 'center',
-        paddingHorizontal: theme.spacing.lg,
-        height: theme.responsive.headerHeight(),
-    },
-    headerTitleContainer: {
-        position: 'absolute',
-        left: 0,
-        right: 0,
-        top: 0,
-        bottom: 0,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    headerTitle: {
-        ...theme.typography.h4,
-        color: theme.colors.text.primary,
-        fontWeight: theme.fontWeight.bold,
-        textAlign: 'center',
-    },
-    historyButton: {
-        paddingHorizontal: theme.spacing.md,
-        paddingVertical: theme.spacing.sm,
-        minHeight: theme.responsive.size(44),
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    historyButtonText: {
-        ...theme.typography.bodyMedium,
-        color: theme.colors.primary[500],
-    },
-    scrollContent: {
-        paddingHorizontal: theme.spacing.lg,
-        paddingBottom: theme.spacing.xl,
-    },
-    pointsCard: {
-        backgroundColor: theme.colors.primary[500],
-        borderRadius: theme.borderRadius.lg,
-        padding: theme.spacing.lg,
-        marginBottom: theme.spacing.lg,
-        ...theme.shadows.medium,
-    },
-    pointsHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: theme.spacing.md,
-    },
-    pointsTitle: {
-        ...theme.typography.h4,
-        color: theme.colors.background.primary,
-    },
-    pointsValue: {
-        ...theme.typography.h1,
-        color: theme.colors.background.primary,
-    },
-    levelContainer: {
-        marginTop: theme.spacing.md,
-    },
-    levelText: {
-        ...theme.typography.bodyMedium,
-        color: theme.colors.primary[100],
-        marginBottom: theme.spacing.sm,
-    },
-    progressContainer: {
-        marginTop: theme.spacing.sm,
-    },
-    progressBar: {
-        height: 8,
-        backgroundColor: theme.colors.primary[300],
-        borderRadius: theme.borderRadius.round,
-        marginBottom: theme.spacing.xs,
-    },
-    progressFill: {
-        height: '100%',
-        backgroundColor: theme.colors.background.primary,
-        borderRadius: theme.borderRadius.round,
-    },
-    progressText: {
-        ...theme.typography.captionMedium,
-        color: theme.colors.primary[100],
-    },
-    tabContainer: {
-        flexDirection: 'row',
-        backgroundColor: theme.colors.background.light,
-        borderRadius: theme.borderRadius.md,
-        padding: theme.spacing.xs,
-        marginVertical: theme.spacing.xl,
-    },
-    tabButton: {
-        flex: 1,
-        paddingVertical: theme.spacing.sm,
-        alignItems: 'center',
-        borderRadius: theme.borderRadius.md,
-    },
-    activeTabButton: {
-        backgroundColor: theme.colors.background.primary,
-        paddingHorizontal: theme.spacing.md,
-        ...theme.shadows.medium,
-    },
-    tabButtonText: {
-        ...theme.typography.buttonSmall,
-        color: theme.colors.text.secondary,
-        fontSize: theme.responsive.size(14),
-        paddingVertical: theme.spacing.xs,
-    },
-    activeTabButtonText: {
-        color: theme.colors.text.accent,
-        fontWeight: theme.fontWeight.bold,
-    },
     referralsContainer: {
         marginBottom: theme.spacing.xl,
     },
-
     referralCard: {
         backgroundColor: theme.colors.background.primary,
         borderRadius: theme.borderRadius.md,
@@ -485,153 +338,10 @@ const styles = StyleSheet.create({
         }),
         color: theme.colors.text.secondary,
     },
-    referralCardBadge: {
-        backgroundColor: theme.colors.primary[100],
-        borderRadius: theme.borderRadius.sm,
-        paddingHorizontal: theme.spacing.sm,
-        paddingVertical: theme.spacing.xs,
-    },
-    referralCardPointsBadgeText: {
-        ...theme.typography.buttonSmall,
-        color: theme.colors.primary[700],
-        fontWeight: theme.fontWeight.semiBold,
-    },
-    referralCardFooter: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-    },
-    referralCardValidUntilText: {
-        ...theme.typography.captionMedium,
-        color: theme.colors.text.tertiary,
-    },
-    referralCardRedeemButton: {
-        backgroundColor: theme.colors.primary[500],
-        borderRadius: theme.borderRadius.sm,
-        paddingHorizontal: theme.spacing.md,
-        paddingVertical: theme.spacing.sm,
-    },
-    referralCardRedeemButtonText: {
-        ...theme.typography.buttonSmall,
-        color: theme.colors.background.primary,
-    },
-    referralCardRedeemedCard: {
-        backgroundColor: theme.colors.background.primary,
-        borderRadius: theme.borderRadius.md,
-        padding: theme.spacing.lg,
-        marginBottom: theme.spacing.md,
-        borderWidth: 1,
-        borderColor: theme.colors.border.light,
-    },
-    referralCardRedeemedCardExpired: {
-        opacity: 0.6,
-    },
-    referralCardRedeemedCardHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: theme.spacing.sm,
-    },
-    referralCardRedeemedCardTitle: {
-        ...theme.typography.h5,
-        color: theme.colors.text.primary,
-    },
-    referralCardRedeemedCardStatusBadge: {
-        paddingHorizontal: theme.spacing.sm,
-        paddingVertical: theme.spacing.xs,
-        borderRadius: theme.borderRadius.round,
-    },
-    referralCardRedeemedCardActiveBadge: {
-        backgroundColor: theme.colors.success[100],
-    },
-    referralCardRedeemedCardExpiredBadge: {
-        backgroundColor: theme.colors.error[100],
-    },
-    referralCardRedeemedCardStatusBadgeText: {
-        ...theme.typography.captionSmall,
-        fontWeight: theme.fontWeight.semiBold,
-    },
-    referralCardRedeemedCardDetails: {
-        marginTop: theme.spacing.sm,
-    },
-    referralCardRedeemedCardDate: {
-        ...theme.typography.bodySmall,
-        color: theme.colors.text.secondary,
-        marginBottom: theme.spacing.xs,
-    },
-    referralCardRedeemedCardExpiryDate: {
-        ...theme.typography.bodySmall,
-        color: theme.colors.text.secondary,
-    },
-    achievementsSection: {
-        marginTop: theme.spacing.lg,
-    },
-    sectionTitle: {
-        ...theme.typography.h4,
-        color: theme.colors.text.primary,
-        marginBottom: theme.spacing.md,
-    },
-    achievementCard: {
-        backgroundColor: theme.colors.background.primary,
-        borderRadius: theme.borderRadius.md,
-        padding: theme.spacing.lg,
-        marginBottom: theme.spacing.md,
-        borderWidth: 1,
-        borderColor: theme.colors.border.light,
-    },
-    completedAchievement: {
-        borderColor: theme.colors.success[200],
-        backgroundColor: theme.colors.success[50],
-    },
-    achievementHeader: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    achievementIcon: {
-        fontSize: 24,
-        marginRight: theme.spacing.md,
-    },
-    achievementInfo: {
-        flex: 1,
-    },
-    achievementTitle: {
-        ...theme.typography.h5,
-        color: theme.colors.text.primary,
-        marginBottom: theme.spacing.xs,
-    },
-    achievementDescription: {
-        ...theme.typography.bodySmall,
-        color: theme.colors.text.secondary,
-    },
-    achievementPoints: {
-        backgroundColor: theme.colors.warning[100],
-        borderRadius: theme.borderRadius.round,
-        paddingHorizontal: theme.spacing.sm,
-        paddingVertical: theme.spacing.xs,
-    },
-    achievementPointsText: {
-        ...theme.typography.buttonSmall,
-        color: theme.colors.warning[700],
-        fontWeight: theme.fontWeight.semiBold,
-    },
-    completedBadge: {
-        backgroundColor: theme.colors.success[500],
-        borderRadius: theme.borderRadius.sm,
-        paddingHorizontal: theme.spacing.sm,
-        paddingVertical: theme.spacing.xs,
-        alignSelf: 'flex-start',
-        marginTop: theme.spacing.sm,
-    },
-    completedBadgeText: {
-        ...theme.typography.captionMedium,
-        color: theme.colors.background.primary,
-        fontWeight: theme.fontWeight.semiBold,
-    },
     referralCardTags: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: theme.spacing.sm,
-
     },
     referralCardTag: {
         borderRadius: theme.borderRadius.sm,
@@ -671,32 +381,7 @@ const styles = StyleSheet.create({
     filterColumn: {
         flexDirection: 'column',
         gap: theme.spacing.sm,
-        alignItems: 'flex-start', // Align chips to the start
-    },
-    filterColumnStaggered: {
-        marginTop: theme.spacing.md, // Creates staggered effect
-    },
-    filterChip: {
-        backgroundColor: theme.colors.background.light,
-        borderRadius: theme.borderRadius.lg,
-        paddingHorizontal: theme.spacing.md,
-        paddingVertical: theme.spacing.sm,
-        borderWidth: 1,
-        borderColor: theme.colors.border.light,
-        alignSelf: 'flex-start', // Allow chips to size based on content
-        minWidth: theme.responsive.size(60), // Minimum width
-    },
-    filterChipSelected: {
-        backgroundColor: theme.colors.primary[500],
-        borderColor: theme.colors.primary[500],
-    },
-    filterChipText: {
-        ...theme.typography.buttonSmall,
-        color: theme.colors.text.secondary,
-    },
-    filterChipTextSelected: {
-        color: theme.colors.background.primary,
-        fontWeight: theme.fontWeight.bold,
+        alignItems: 'flex-start',
     },
     filterChipContainer: {
         flexDirection: 'row',
@@ -714,7 +399,6 @@ const styles = StyleSheet.create({
         borderColor: theme.colors.border.white,
         margin: theme.spacing.xxs,
     },
-
     filterOption: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -736,14 +420,6 @@ const styles = StyleSheet.create({
     filterOptionTextSelected: {
         color: theme.colors.text.primary,
         fontWeight: theme.fontWeight.medium,
-    },
-    iconText: {
-        fontSize: 16,
-        color: theme.colors.text.secondary,
-        fontWeight: 'bold',
-    },
-    iconTextSelected: {
-        color: theme.colors.background.white,
     },
     filterOptionIcon: {
         width: 24,

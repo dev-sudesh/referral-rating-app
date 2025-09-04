@@ -3,7 +3,6 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import SplashScreen from '../screens/SplashScreen';
 import OnboardingScreen from '../screens/onboarding/OnboardingScreen';
-import AuthStack from './stacks/AuthStack';
 import MainTabs from './tabs/MainTabs';
 import Constants from '../constants/data';
 import SearchScreen from '../screens/main/search/SearchScreen';
@@ -27,7 +26,6 @@ const AppNavigator = () => {
             >
                 <Stack.Screen name={Constants.Screen.Splash} component={SplashScreen} />
                 <Stack.Screen name={Constants.Screen.Onboarding} component={OnboardingScreen} />
-                <Stack.Screen name={Constants.Screen.Stack.Auth} component={AuthStack} />
                 <Stack.Screen name={Constants.Screen.Stack.Main} component={MainTabs} />
                 <Stack.Screen name={Constants.Screen.Search} component={SearchScreen} />
                 <Stack.Screen name={Constants.Screen.PersonalInfo} component={PersonalInfo} />

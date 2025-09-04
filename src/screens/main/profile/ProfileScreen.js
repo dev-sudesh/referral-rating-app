@@ -9,11 +9,10 @@ import {
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { theme } from '../../../constants/theme';
-import ScreenContainer from '../../../components/common/ScreenContainer';
 import IconAsset from '../../../assets/icons/IconAsset';
+import ImageAsset from '../../../assets/images/ImageAsset';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AppImage from '../../../components/common/AppImage';
-import ImageAsset from '../../../assets/images/ImageAsset';
 import Constants from '../../../constants/data';
 import FirebaseStoreService from '../../../services/firebase/FirebaseStoreService';
 import WebViewController from '../../../controllers/webview/WebViewController';
@@ -159,22 +158,6 @@ const ProfileScreen = ({ navigation }) => {
 
     );
 
-    const renderStats = () => (
-        <View style={styles.statsContainer}>
-            <View style={styles.statCard}>
-                <Text style={styles.statValue}>{userProfile.totalPoints}</Text>
-                <Text style={styles.statLabel}>Total Points</Text>
-            </View>
-            <View style={styles.statCard}>
-                <Text style={styles.statValue}>{userProfile.level}</Text>
-                <Text style={styles.statLabel}>Current Level</Text>
-            </View>
-            <View style={styles.statCard}>
-                <Text style={styles.statValue}>8</Text>
-                <Text style={styles.statLabel}>Referrals</Text>
-            </View>
-        </View>
-    );
 
     const shareWithFriends = async () => {
         // setShareModalVisible(true); 
@@ -257,27 +240,6 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: theme.colors.background.primary,
     },
-    header: {
-        alignItems: 'flex-end',
-        justifyContent: 'center',
-        paddingHorizontal: theme.spacing.lg,
-        height: theme.responsive.headerHeight(),
-    },
-    headerTitleContainer: {
-        position: 'absolute',
-        left: 0,
-        right: 0,
-        top: 0,
-        bottom: 0,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    headerTitle: {
-        ...theme.typography.h4,
-        color: theme.colors.text.primary,
-        fontWeight: theme.fontWeight.bold,
-        textAlign: 'center',
-    },
     shareButton: {
         width: theme.responsive.size(50),
         height: theme.responsive.size(50),
@@ -297,9 +259,6 @@ const styles = StyleSheet.create({
         borderRadius: theme.borderRadius.lg,
         paddingVertical: theme.spacing.sm,
     },
-    avatarContainer: {
-        position: 'relative',
-    },
     avatarImageContainer: {
         width: theme.responsive.size(140),
         height: theme.responsive.size(140),
@@ -317,89 +276,11 @@ const styles = StyleSheet.create({
         marginTop: theme.spacing.sm,
         marginBottom: theme.spacing.md,
     },
-    profileName: {
-        ...theme.typography.h3,
-        color: theme.colors.text.primary,
-        marginBottom: theme.spacing.xs,
-        textAlign: 'center',
-    },
-    profileEmail: {
-        ...theme.typography.bodyMedium,
-        color: theme.colors.text.secondary,
-        marginBottom: theme.spacing.xs,
-        textAlign: 'center',
-    },
-    profilePhone: {
-        ...theme.typography.bodyMedium,
-        color: theme.colors.text.secondary,
-        marginBottom: theme.spacing.xs,
-        textAlign: 'center',
-    },
-    memberSince: {
-        ...theme.typography.captionMedium,
-        color: theme.colors.text.tertiary,
-    },
-    statsContainer: {
-        flexDirection: theme.responsive.isSmall() ? 'column' : 'row',
-        justifyContent: 'space-between',
-        marginBottom: theme.spacing.lg,
-        gap: theme.responsive.isSmall() ? theme.spacing.sm : 0,
-    },
-    statCard: {
-        flex: 1,
-        backgroundColor: theme.colors.background.primary,
-        borderRadius: theme.borderRadius.md,
-        padding: theme.spacing.md,
-        alignItems: 'center',
-        marginHorizontal: theme.spacing.xs,
-        borderWidth: 1,
-        borderColor: theme.colors.border.light,
-        ...theme.shadows.small,
-    },
-    statValue: {
-        ...theme.typography.h4,
-        color: theme.colors.primary[500],
-        marginBottom: theme.spacing.xs,
-    },
-    statLabel: {
-        ...theme.typography.captionMedium,
-        color: theme.colors.text.secondary,
-        textAlign: 'center',
-    },
-    quickActionsContainer: {
-        marginBottom: theme.spacing.xl,
-    },
     sectionTitle: {
         ...theme.typography.h4,
         color: theme.colors.text.primary,
         marginBottom: theme.spacing.md,
         fontWeight: theme.fontWeight.bold,
-    },
-    quickActionsGrid: {
-        flexDirection: theme.responsive.isSmall() ? 'column' : 'row',
-        justifyContent: 'space-between',
-        gap: theme.responsive.isSmall() ? theme.spacing.sm : 0,
-    },
-    quickActionButton: {
-        flex: theme.responsive.isSmall() ? 0 : 1,
-        backgroundColor: theme.colors.background.primary,
-        borderRadius: theme.borderRadius.md,
-        padding: theme.spacing.lg,
-        alignItems: 'center',
-        marginHorizontal: theme.responsive.isSmall() ? 0 : theme.spacing.xs,
-        borderWidth: 1,
-        borderColor: theme.colors.border.light,
-        minHeight: theme.responsive.height(80),
-        ...theme.shadows.small,
-    },
-    quickActionIcon: {
-        fontSize: theme.responsive.iconSize('large'),
-        marginBottom: theme.spacing.sm,
-    },
-    quickActionTitle: {
-        ...theme.typography.buttonSmall,
-        color: theme.colors.text.primary,
-        textAlign: 'center',
     },
     menuContainer: {
         backgroundColor: theme.colors.background.white,
@@ -427,45 +308,11 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         flex: 1,
     },
-    menuItemIcon: {
-        fontSize: theme.responsive.iconSize('large'),
-        marginRight: theme.spacing.md,
-    },
-    menuItemContent: {
-        flex: 1,
-    },
     menuItemTitle: {
         ...theme.typography.bodyLarge,
         color: theme.colors.text.primary,
         marginBottom: theme.spacing.xs,
         fontWeight: theme.fontWeight.semiBold,
-    },
-    menuItemSubtitle: {
-        ...theme.typography.bodySmall,
-        color: theme.colors.text.secondary,
-    },
-    menuItemArrow: {
-        ...theme.typography.bodyLarge,
-        color: theme.colors.text.tertiary,
-    },
-    logoutButton: {
-        backgroundColor: theme.colors.error[500],
-        borderRadius: theme.borderRadius.md,
-        paddingVertical: theme.spacing.md,
-        alignItems: 'center',
-        marginBottom: theme.spacing.lg,
-        ...theme.shadows.small,
-    },
-    logoutButtonText: {
-        ...theme.typography.buttonLarge,
-        color: theme.colors.background.primary,
-    },
-    versionContainer: {
-        alignItems: 'center',
-    },
-    versionText: {
-        ...theme.typography.captionMedium,
-        color: theme.colors.text.tertiary,
     },
 });
 

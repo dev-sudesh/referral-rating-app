@@ -3,21 +3,14 @@ import {
     StyleSheet,
     Text,
     View,
-    TextInput,
     TouchableOpacity,
     ScrollView,
-    SafeAreaView,
-    StatusBar,
 } from 'react-native';
 import { theme } from '../../../constants/theme';
-import IconAsset from '../../../assets/icons/IconAsset';
 import ScreenContainer from '../../../components/common/ScreenContainer';
-import { responsiveSize } from '../../../utils/responsive/ResponsiveUi';
 import SearchBar from '../../../components/ui/SearchBar';
-import SearchFilter from '../../../components/ui/SearchFilter';
 import FirebaseStoreService from '../../../services/firebase/FirebaseStoreService';
 import MapsController from '../../../controllers/maps/MapsController';
-import { useFirebaseStore } from '../../../hooks/useFirebaseStore';
 
 const SearchScreen = ({ navigation }) => {
     const [searchText, setSearchText] = useState('');
@@ -45,11 +38,6 @@ const SearchScreen = ({ navigation }) => {
         }
     }, [userLocation]);
 
-    const handleClearSearch = useCallback(() => {
-        setSearchText('');
-        setSearchResults([]);
-    }, []);
-
     const handleBackPress = useCallback(() => {
         navigation.goBack();
     }, [navigation]);
@@ -61,15 +49,6 @@ const SearchScreen = ({ navigation }) => {
 
     const handleFilterPress = useCallback(() => {
         setIsFilterVisible(true);
-    }, []);
-
-    const handleFilterClose = useCallback(() => {
-        setIsFilterVisible(false);
-    }, []);
-
-    const handleApplyFilters = useCallback((filters) => {
-        setActiveFilters(filters);
-        // TODO: Implement filter logic
     }, []);
 
     // Memoize active filter count calculation
@@ -230,43 +209,6 @@ const SearchScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: theme.colors.background.white,
-    },
-    searchBarContainer: {
-        paddingHorizontal: theme.spacing.screenPadding,
-        paddingVertical: theme.spacing.md,
-    },
-    searchBar: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: theme.colors.background.primary,
-        borderRadius: theme.borderRadius.md,
-        borderWidth: 1,
-        borderColor: theme.colors.border.light,
-        paddingHorizontal: theme.spacing.sm,
-        minHeight: 48,
-    },
-    backButton: {
-        padding: theme.spacing.sm,
-        marginRight: theme.spacing.xs,
-    },
-    searchInput: {
-        flex: 1,
-        ...theme.typography.bodyMedium,
-        color: theme.colors.text.primary,
-        paddingVertical: theme.spacing.sm,
-    },
-    clearButton: {
-        padding: theme.spacing.sm,
-        marginLeft: theme.spacing.xs,
-    },
-    clearButtonText: {
-        fontSize: 16,
-        color: theme.colors.text.secondary,
-        fontWeight: '500',
-    },
     content: {
         flex: 1,
     },
@@ -294,18 +236,10 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1,
         borderBottomColor: theme.colors.border.light,
     },
-    lastSearchItem: {
-        borderBottomWidth: 0,
-    },
     searchItemText: {
         ...theme.typography.bodyMedium,
         color: theme.colors.text.primary,
         flex: 1,
-    },
-    searchItemTime: {
-        ...theme.typography.captionMedium,
-        color: theme.colors.text.secondary,
-        marginLeft: theme.spacing.sm,
     },
     loadingContainer: {
         paddingVertical: theme.spacing.lg,
@@ -346,15 +280,6 @@ const styles = StyleSheet.create({
     },
     placeMeta: {
         alignItems: 'flex-end',
-    },
-    placeRating: {
-        ...theme.typography.captionMedium,
-        color: theme.colors.text.primary,
-        marginBottom: theme.spacing.xs,
-    },
-    placeDistance: {
-        ...theme.typography.captionSmall,
-        color: theme.colors.text.secondary,
     },
 });
 

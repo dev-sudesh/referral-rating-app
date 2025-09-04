@@ -3,18 +3,12 @@ import {
     StyleSheet,
     Text,
     View,
-    TextInput,
     TouchableOpacity,
     ScrollView,
-    SafeAreaView,
-    StatusBar,
 } from 'react-native';
 import { theme } from '../../../constants/theme';
 import IconAsset from '../../../assets/icons/IconAsset';
 import ScreenContainer from '../../../components/common/ScreenContainer';
-import { responsiveSize } from '../../../utils/responsive/ResponsiveUi';
-import SearchBar from '../../../components/ui/SearchBar';
-import SearchFilter from '../../../components/ui/SearchFilter';
 import ScreenHeader from '../../../components/ui/ScreenHeader';
 import Constants from '../../../constants/data';
 import FirebaseStoreService from '../../../services/firebase/FirebaseStoreService';

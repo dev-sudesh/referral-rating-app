@@ -9,7 +9,6 @@ import BuildVersion from '../components/ui/BuildVersion';
 import ImageAsset from '../assets/images/ImageAsset';
 import Constants from '../constants/data';
 import AsyncStoreUtils from '../utils/AsyncStoreUtils';
-import Toast from 'react-native-toast-message';
 
 import { useAppInitialization } from '../hooks/useAppInitialization';
 import { useDataRecovery } from '../hooks/useDataRecovery';

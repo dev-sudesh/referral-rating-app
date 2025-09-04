@@ -1,12 +1,4 @@
-import React, { useRef, useState } from 'react';
-import {
-    StyleSheet,
-    Text,
-    View,
-    TouchableOpacity,
-    ScrollView,
-    StatusBar,
-} from 'react-native';
+import React, { useRef } from 'react';
 import { theme } from '../../../constants/theme';
 import ScreenContainer from '../../../components/common/ScreenContainer';
 import ScreenHeader from '../../../components/ui/ScreenHeader';
@@ -17,7 +9,7 @@ import { useNavigation } from '@react-navigation/native';
 const WebViewScreen = () => {
     const navigation = useNavigation();
     const webViewRef = useRef(null);
-    const { pageTitle, isLoading, webViewUrl, isError, errorMessage, setIsLoading, setWebViewUrl, setIsError, setErrorMessage, webViewHtml } = WebViewController();
+    const { pageTitle, webViewUrl, webViewHtml } = WebViewController();
     return (
         <ScreenContainer {...ScreenContainer.presets.full}
             paddingCustom={{
@@ -45,16 +37,10 @@ const WebViewScreen = () => {
                     contentStyle={{
                         flex: 1,
                     }}
-                // onLoad={() => setIsLoading(false)}
-                // onError={() => setIsError(true)}
                 />
             )}
         </ScreenContainer>
     );
 };
-
-const styles = StyleSheet.create({
-
-});
 
 export default WebViewScreen;

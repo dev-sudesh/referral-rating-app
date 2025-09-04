@@ -4,10 +4,8 @@ import {
     Text,
     StyleSheet,
     TouchableOpacity,
-    StatusBar,
     Alert,
     FlatList,
-    ImageBackground,
     Pressable,
     Platform,
 } from 'react-native';
@@ -20,19 +18,14 @@ import IconAsset from '../../../assets/icons/IconAsset';
 import AppImage from '../../../components/common/AppImage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import ImageAsset from '../../../assets/images/ImageAsset';
-import SearchFilter from '../../../components/ui/SearchFilter';
-import RBSheet from 'react-native-raw-bottom-sheet';
 import SearchFilterController from '../../../controllers/filters/SearchFilterController';
 import CurvedCard from '../../../components/ui/CurvedCard';
 import CurrentLocationMarker from '../../../components/ui/CurrentLocationMarker';
 import ToastUtils from '../../../utils/ToastUtils';
-import Animated from 'react-native-reanimated';
 import MapUtils from '../../../utils/MapUtils';
-import Constants from '../../../constants/data';
 import ListScreen from './ListScreen';
 import MapsController from '../../../controllers/maps/MapsController';
 import FirebaseStoreService from '../../../services/firebase/FirebaseStoreService';
-import MethodUtils from '../../../utils/MethodUtils';
 import ReferralController from '../../../controllers/referrals/ReferralController';
 
 const MapScreen = ({ navigation }) => {
@@ -648,21 +641,6 @@ const styles = StyleSheet.create({
         paddingBottom: theme.spacing.md,
         gap: theme.spacing.md,
     },
-    headerTitle: {
-        ...theme.typography.h2,
-        color: theme.colors.text.primary,
-    },
-    searchButton: {
-        width: theme.responsive.size(40),
-        height: theme.responsive.size(40),
-        borderRadius: theme.borderRadius.round,
-        backgroundColor: theme.colors.neutral[100],
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    searchButtonText: {
-        fontSize: 18,
-    },
     mapContainer: {
         position: 'absolute',
         top: 0,
@@ -673,58 +651,6 @@ const styles = StyleSheet.create({
     },
     map: {
         position: 'absolute', top: 0, left: 0, right: 0, bottom: -25
-    },
-    locationButton: {
-        position: 'absolute',
-        bottom: theme.spacing.md,
-        right: theme.spacing.md,
-        width: theme.responsive.size(44),
-        height: theme.responsive.size(44),
-        borderRadius: theme.borderRadius.round,
-        backgroundColor: theme.colors.background.primary,
-        justifyContent: 'center',
-        alignItems: 'center',
-        ...theme.shadows.medium,
-    },
-    locationButtonText: {
-        fontSize: 20,
-    },
-    myLocationButton: {
-        position: 'absolute',
-        bottom: theme.spacing.xl * 6,
-        right: theme.spacing.lg,
-        width: theme.responsive.size(56),
-        height: theme.responsive.size(56),
-        borderRadius: theme.borderRadius.round,
-        backgroundColor: theme.colors.background.primary,
-        justifyContent: 'center',
-        alignItems: 'center',
-        ...theme.shadows.large,
-        borderWidth: 1,
-        borderColor: theme.colors.border.light,
-    },
-    loadingOverlay: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'rgba(255, 255, 255, 0.8)',
-        borderRadius: theme.borderRadius.round,
-    },
-    loadingText: {
-        fontSize: 20,
-        color: theme.colors.primary[500],
-        fontWeight: 'bold',
-    },
-
-    filtersContainer: {
-        marginBottom: theme.spacing.lg,
-    },
-    filtersScroll: {
-        paddingHorizontal: theme.spacing.lg,
     },
     filterButton: {
         width: theme.responsive.size(55),
@@ -754,14 +680,6 @@ const styles = StyleSheet.create({
         left: 0,
         right: 0,
     },
-    placesTitle: {
-        ...theme.typography.h4,
-        color: theme.colors.text.primary,
-        marginBottom: theme.spacing.md,
-    },
-    placesScroll: {
-        paddingBottom: theme.spacing.xl,
-    },
     placeCardBig: {
         width: theme.responsive.screen().width,
         marginBottom: theme.spacing.md,
@@ -774,328 +692,6 @@ const styles = StyleSheet.create({
     },
     // SVG Curved Card Styles
     svgCardContainer: {
-    },
-    // Curved Bottom Card Design (as shown in your image)
-    curvedBottomCard: {
-        width: '100%',
-        height: theme.responsive.size(200),
-        position: 'relative',
-        overflow: 'hidden',
-        borderTopLeftRadius: theme.borderRadius.lg,
-        borderTopRightRadius: theme.borderRadius.lg,
-        backgroundColor: theme.colors.background.primary,
-        ...theme.shadows.large,
-        borderWidth: 1,
-        borderColor: theme.colors.border.light,
-        borderBottomWidth: 0, // Remove bottom border since we'll have curved shape
-    },
-    curvedBottomShape: {
-        position: 'absolute',
-        bottom: -50,
-        left: -10,
-        right: -10,
-        height: 100,
-        backgroundColor: theme.colors.background.primary,
-        borderRadius: theme.responsive.size(50),
-        borderWidth: 1,
-        borderColor: theme.colors.border.light,
-        borderTopWidth: 0,
-        // Create the curved bottom effect
-        transform: [{ scaleX: 1.1 }],
-    },
-    curvedCardContent: {
-        flex: 1,
-        padding: theme.spacing.md,
-        justifyContent: 'space-between',
-        zIndex: 2,
-        paddingBottom: theme.spacing.xl, // Extra padding for curved bottom
-    },
-
-    // Alternative curved designs you can try:
-
-    // Option 2: Double Wave Bottom
-    doubleWaveCard: {
-        width: '100%',
-        height: theme.responsive.size(200),
-        position: 'relative',
-        overflow: 'hidden',
-        borderTopLeftRadius: theme.borderRadius.lg,
-        borderTopRightRadius: theme.borderRadius.lg,
-        backgroundColor: theme.colors.background.primary,
-        ...theme.shadows.large,
-        borderWidth: 1,
-        borderColor: theme.colors.border.light,
-        borderBottomWidth: 0,
-    },
-    doubleWaveShape1: {
-        position: 'absolute',
-        bottom: -30,
-        left: -20,
-        right: -20,
-        height: 80,
-        backgroundColor: theme.colors.primary[100],
-        borderRadius: theme.responsive.size(40),
-        transform: [{ scaleX: 1.2 }],
-    },
-    doubleWaveShape2: {
-        position: 'absolute',
-        bottom: -40,
-        left: -15,
-        right: -15,
-        height: 70,
-        backgroundColor: theme.colors.background.primary,
-        borderRadius: theme.responsive.size(35),
-        borderWidth: 1,
-        borderColor: theme.colors.border.light,
-        borderTopWidth: 0,
-        transform: [{ scaleX: 1.1 }],
-    },
-
-    // Alternative Shape Options (replace simpleCard with any of these):
-
-    // Option 2: Rounded Rectangle with Gradient Effect
-    gradientCard: {
-        width: '100%',
-        height: theme.responsive.size(200),
-        backgroundColor: theme.colors.primary[500],
-        borderRadius: theme.borderRadius.xl,
-        padding: theme.spacing.md,
-        ...theme.shadows.large,
-        // Create gradient effect with overlapping colors
-        borderWidth: 3,
-        borderColor: theme.colors.primary[300],
-    },
-
-    // Option 3: Card with Angled Top Corner
-    angledCard: {
-        width: '100%',
-        height: theme.responsive.size(200),
-        backgroundColor: theme.colors.background.primary,
-        borderRadius: theme.borderRadius.lg,
-        borderTopRightRadius: 0, // Remove top-right corner
-        padding: theme.spacing.md,
-        ...theme.shadows.large,
-        borderWidth: 2,
-        borderColor: theme.colors.primary[500],
-        position: 'relative',
-    },
-
-    // Option 4: Pill/Capsule Shape
-    pillCard: {
-        width: '100%',
-        height: theme.responsive.size(200),
-        backgroundColor: theme.colors.background.primary,
-        borderRadius: theme.responsive.size(100), // Half of height for pill effect
-        padding: theme.spacing.md,
-        ...theme.shadows.large,
-        borderWidth: 1,
-        borderColor: theme.colors.border.light,
-    },
-
-    // Option 5: Minimal Card with Colored Left Border
-    borderCard: {
-        width: '100%',
-        height: theme.responsive.size(200),
-        backgroundColor: theme.colors.background.primary,
-        borderRadius: theme.borderRadius.md,
-        padding: theme.spacing.md,
-        ...theme.shadows.medium,
-        borderLeftWidth: 6,
-        borderLeftColor: theme.colors.primary[500],
-        borderWidth: 1,
-        borderColor: theme.colors.border.light,
-    },
-
-    // Option 6: Card with Notched Corner
-    notchedCard: {
-        width: '100%',
-        height: theme.responsive.size(200),
-        backgroundColor: theme.colors.background.primary,
-        borderTopLeftRadius: theme.borderRadius.xl,
-        borderTopRightRadius: theme.borderRadius.sm,
-        borderBottomLeftRadius: theme.borderRadius.xl,
-        borderBottomRightRadius: theme.borderRadius.xl,
-        padding: theme.spacing.md,
-        ...theme.shadows.large,
-        borderWidth: 1,
-        borderColor: theme.colors.border.light,
-    },
-    // Alternative Shape Designs (replace the layers above to use these)
-
-    // Option 1: Curved Wave Shape
-    waveShapeContainer: {
-        width: '100%',
-        height: theme.responsive.size(200),
-        position: 'relative',
-        overflow: 'hidden',
-    },
-    waveLayer1: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: theme.colors.primary[500],
-        borderTopLeftRadius: theme.borderRadius.xl,
-        borderTopRightRadius: theme.borderRadius.xl,
-        borderBottomLeftRadius: theme.borderRadius.xxxl,
-        borderBottomRightRadius: theme.borderRadius.sm,
-    },
-    waveLayer2: {
-        position: 'absolute',
-        top: 8,
-        left: 8,
-        right: 8,
-        bottom: 8,
-        backgroundColor: theme.colors.background.primary,
-        borderTopLeftRadius: theme.borderRadius.lg,
-        borderTopRightRadius: theme.borderRadius.lg,
-        borderBottomLeftRadius: theme.borderRadius.xxl,
-        borderBottomRightRadius: theme.borderRadius.xs,
-        ...theme.shadows.medium,
-    },
-
-    // Option 2: Diamond/Geometric Shape
-    geometricShapeContainer: {
-        width: '100%',
-        height: theme.responsive.size(200),
-        position: 'relative',
-        overflow: 'hidden',
-    },
-    geometricLayer1: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: theme.colors.secondary[500],
-        transform: [{ rotate: '45deg' }, { scale: 1.2 }],
-        borderRadius: theme.borderRadius.md,
-    },
-    geometricLayer2: {
-        position: 'absolute',
-        top: 15,
-        left: 15,
-        right: 15,
-        bottom: 15,
-        backgroundColor: theme.colors.background.primary,
-        borderRadius: theme.borderRadius.lg,
-        ...theme.shadows.large,
-    },
-
-    // Option 3: Hexagon-like Shape
-    hexagonShapeContainer: {
-        width: '100%',
-        height: theme.responsive.size(200),
-        position: 'relative',
-        overflow: 'hidden',
-        borderRadius: theme.borderRadius.lg,
-    },
-    hexagonLayer1: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: theme.colors.secondary[500],
-        borderTopLeftRadius: theme.borderRadius.xxl,
-        borderTopRightRadius: theme.borderRadius.sm,
-        borderBottomLeftRadius: theme.borderRadius.sm,
-        borderBottomRightRadius: theme.borderRadius.xxl,
-        transform: [{ skewX: '10deg' }],
-    },
-    hexagonLayer2: {
-        position: 'absolute',
-        top: 12,
-        left: 12,
-        right: 12,
-        bottom: 12,
-        backgroundColor: theme.colors.background.primary,
-        borderTopLeftRadius: theme.borderRadius.xl,
-        borderTopRightRadius: theme.borderRadius.xs,
-        borderBottomLeftRadius: theme.borderRadius.xs,
-        borderBottomRightRadius: theme.borderRadius.xl,
-        ...theme.shadows.medium,
-    },
-
-    // Option 4: Card with Corner Cut
-    cutCornerContainer: {
-        width: '100%',
-        height: theme.responsive.size(200),
-        position: 'relative',
-        overflow: 'hidden',
-    },
-    cutCornerLayer1: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: theme.colors.primary[600],
-        borderTopLeftRadius: theme.borderRadius.xl,
-        borderTopRightRadius: theme.borderRadius.sm,
-        borderBottomLeftRadius: theme.borderRadius.xl,
-        borderBottomRightRadius: theme.borderRadius.xl,
-    },
-    cutCornerLayer2: {
-        position: 'absolute',
-        top: 6,
-        left: 6,
-        right: 6,
-        bottom: 6,
-        backgroundColor: theme.colors.background.primary,
-        borderTopLeftRadius: theme.borderRadius.lg,
-        borderTopRightRadius: theme.borderRadius.xs,
-        borderBottomLeftRadius: theme.borderRadius.lg,
-        borderBottomRightRadius: theme.borderRadius.lg,
-        ...theme.shadows.medium,
-    },
-    // Alternative Glass Morphism Design
-    placeCardGlass: {
-        width: '100%',
-        height: theme.responsive.size(200),
-        borderRadius: theme.borderRadius.lg,
-        padding: theme.spacing.md,
-        justifyContent: 'space-between',
-        backgroundColor: 'rgba(255, 255, 255, 0.1)',
-        borderWidth: 1,
-        borderColor: 'rgba(255, 255, 255, 0.2)',
-        ...theme.shadows.large,
-        // Backdrop blur effect (iOS only)
-        backdropFilter: 'blur(10px)',
-    },
-    // Alternative Neumorphism Design
-    placeCardNeumorphism: {
-        width: '100%',
-        height: theme.responsive.size(200),
-        borderRadius: theme.borderRadius.xl,
-        padding: theme.spacing.md,
-        justifyContent: 'space-between',
-        backgroundColor: theme.colors.neutral[50],
-        shadowColor: theme.colors.neutral[300],
-        shadowOffset: { width: 8, height: 8 },
-        shadowOpacity: 0.3,
-        shadowRadius: 16,
-        elevation: 8,
-        // Inner shadow effect
-        borderWidth: 1,
-        borderColor: theme.colors.neutral[100],
-    },
-    // Alternative Neon Glow Design
-    placeCardNeon: {
-        width: '100%',
-        height: theme.responsive.size(200),
-        borderRadius: theme.borderRadius.lg,
-        padding: theme.spacing.md,
-        justifyContent: 'space-between',
-        backgroundColor: theme.colors.background.primary,
-        borderWidth: 2,
-        borderColor: theme.colors.primary[400],
-        shadowColor: theme.colors.primary[400],
-        shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.8,
-        shadowRadius: 15,
-        elevation: 15,
     },
     placeCard: {
         width: theme.responsive.screen().width,
@@ -1114,10 +710,6 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: theme.colors.border.light,
         ...theme.shadows.medium,
-    },
-    placeCardImageFullBg: {
-        width: theme.responsive.width(theme.responsive.screen().width * 0.8),
-        borderRadius: theme.borderRadius.sm,
     },
     placeCardImageFull: {
         width: '100%',
@@ -1167,26 +759,6 @@ const styles = StyleSheet.create({
         textTransform: 'capitalize',
         fontWeight: '600',
     },
-    placeStatus: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    statusIndicator: {
-        width: 8,
-        height: 8,
-        borderRadius: theme.borderRadius.round,
-        marginRight: theme.spacing.xs,
-    },
-    statusOpen: {
-        backgroundColor: theme.colors.success[500],
-    },
-    statusClosed: {
-        backgroundColor: theme.colors.error[500],
-    },
-    statusText: {
-        ...theme.typography.captionSmall,
-        color: theme.colors.text.secondary,
-    },
     placeCardFooter: {
         position: 'absolute',
         bottom: theme.spacing.sm,
@@ -1215,33 +787,6 @@ const styles = StyleSheet.create({
         width: 50,
         height: 50,
         borderRadius: theme.borderRadius.round,
-    },
-    placeDetails: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    placeDistance: {
-        ...theme.typography.bodySmall,
-        color: theme.colors.text.secondary,
-        marginRight: theme.spacing.md,
-    },
-    ratingContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    ratingText: {
-        ...theme.typography.bodySmall,
-        color: theme.colors.text.secondary,
-    },
-    directionsButton: {
-        backgroundColor: theme.colors.primary[50],
-        borderRadius: theme.borderRadius.sm,
-        paddingHorizontal: theme.spacing.md,
-        paddingVertical: theme.spacing.sm,
-    },
-    directionsButtonText: {
-        ...theme.typography.buttonSmall,
-        color: theme.colors.primary[500],
     },
     searchContainer: {
         flex: 1,
@@ -1309,98 +854,6 @@ const styles = StyleSheet.create({
         width: theme.responsive.size(24),
         height: theme.responsive.size(24),
         borderRadius: theme.borderRadius.round,
-    },
-    selectedPlaceFullCard: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: theme.responsive.size(15),
-        justifyContent: 'space-between',
-    },
-    selectedPlaceFullCardBackground: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        width: theme.responsive.screen().width,
-        height: theme.responsive.screen().height * 0.37,
-        backgroundColor: theme.colors.background.primary,
-    },
-    selectedPlaceFullCardButtonItem: {
-        padding: theme.spacing.sm,
-        backgroundColor: theme.colors.background.primary,
-        borderRadius: theme.borderRadius.md,
-        ...theme.shadows.small,
-    },
-    selectedPlaceFullCardButtons: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingHorizontal: theme.spacing.md,
-        paddingVertical: theme.spacing.sm,
-        gap: theme.spacing.md,
-    },
-    selectedPlaceFullCardInfo: {
-        paddingHorizontal: theme.spacing.md,
-        paddingVertical: theme.spacing.sm,
-        gap: theme.spacing.md,
-    },
-    selectedPlaceFullCardInfoItem: {
-    },
-    selectedPlaceFullCardInfoItemHeaderText: {
-        ...theme.typography.h3,
-        color: theme.colors.text.primary,
-        fontWeight: '700',
-    },
-    selectedPlaceFullCardInfoItemSubText: {
-        ...theme.typography.bodyMedium,
-        color: theme.colors.text.secondary,
-    },
-    selectedPlaceFullCardTagsContainer: {
-        flexDirection: 'row',
-        gap: theme.spacing.md,
-    },
-    selectedPlaceFullCardTagItem: {
-        paddingHorizontal: theme.spacing.sm,
-        paddingVertical: theme.spacing.xs,
-        borderRadius: theme.borderRadius.sm,
-        backgroundColor: theme.colors.background.tagStyle3,
-        marginTop: theme.spacing.md,
-        ...theme.shadows.custom({
-            radius: 0.5,
-        }),
-    },
-    selectedPlaceFullCardTagItemText: {
-        ...theme.typography.bodySmall,
-        color: theme.colors.text.tagStyle3,
-        fontWeight: '600',
-    },
-    selectedPlaceFullCardInfoItemDescription: {
-        ...theme.typography.bodyMedium,
-        marginTop: theme.spacing.md,
-    },
-    selectedPlaceFullCardExtraInfoContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: theme.spacing.sm,
-        marginTop: theme.spacing.md,
-    },
-    selectedPlaceFullCardExtraInfoOpenContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    selectedPlaceFullCardExtraInfoOpenSeparator: {
-        ...theme.typography.bodySmall,
-        fontWeight: '800',
-    },
-    selectedPlaceFullCardExtraInfoText: {
-        ...theme.typography.bodySmall,
-    },
-    selectedPlaceFullCardExtraInfoOpenText: {
-        ...theme.typography.bodySmall,
-        color: theme.colors.text.success,
-        fontWeight: '700',
     },
 });
 
