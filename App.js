@@ -15,8 +15,6 @@ const App = () => {
     <SafeAreaProvider>
       <AppNavigator />
       <SearchFilter />
-
-
       {showPlaceFullCard && <PlaceFullCard />}
       <Toast />
     </SafeAreaProvider>

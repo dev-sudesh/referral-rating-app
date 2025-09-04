@@ -1,29 +1,46 @@
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
-import React, { useCallback, useState } from 'react'
+import React, { useCallback, useState, useRef, useEffect } from 'react'
 import { theme } from '../../constants/theme';
 import { responsiveSize } from '../../utils/responsive/ResponsiveUi';
 import IconAsset from '../../assets/icons/IconAsset';
 
-const SearchBar = ({ handleBackPress, setSearchText, onFilterPress, activeFilterCount = 0 }) => {
+const SearchBar = ({ handleBackPress, searchText = '', onSearch, onFilterPress, activeFilterCount = 0 }) => {
 
-    const [searchInput, setSearchInput] = useState('');
+    const [searchInput, setSearchInput] = useState(searchText);
+    const timeoutRef = useRef(null);
+
+    // Properly memoized debounce function that calls search callback
+    const debouncedSearch = useCallback((value) => {
+        if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+        }
+        timeoutRef.current = setTimeout(() => {
+            // Call the search callback instead of updating state
+            onSearch(value);
+        }, 500);
+    }, [onSearch]);
 
     const handleClearSearch = () => {
-        setSearchText('');
+        onSearch(''); // Call search callback to clear
         setSearchInput('');
-
+        if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+        }
     };
 
-    //custom debounce function for search input
-    const debounceSearch = (searchInput) => {
-        setTimeout(() => {
-            setSearchText(searchInput);
-        }, 500);
+    const handleInputChange = (text) => {
+        setSearchInput(text);
+        debouncedSearch(text);
     };
 
-    React.useEffect(() => {
-        debounceSearch(searchInput);
-    }, [searchInput]);
+    // Cleanup timeout on unmount
+    useEffect(() => {
+        return () => {
+            if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current);
+            }
+        };
+    }, []);
 
     return (
         <View style={styles.searchBarContainer}>
@@ -41,7 +58,7 @@ const SearchBar = ({ handleBackPress, setSearchText, onFilterPress, activeFilter
                     placeholder="Search now..."
                     placeholderTextColor={theme.colors.text.black}
                     value={searchInput}
-                    onChangeText={setSearchInput}
+                    onChangeText={handleInputChange}
                     returnKeyType="search"
                 />
 

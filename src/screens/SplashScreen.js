@@ -14,6 +14,7 @@ import Toast from 'react-native-toast-message';
 import { useAppInitialization } from '../hooks/useAppInitialization';
 import { useDataRecovery } from '../hooks/useDataRecovery';
 import NativeModuleUtils from '../utils/nativeModules/NativeModuleUtils';
+import FirebaseStoreService from '../services/firebase/FirebaseStoreService';
 
 const SplashScreen = () => {
     const navigation = useNavigation();
@@ -74,6 +75,7 @@ const SplashScreen = () => {
     // Navigate when initialization is complete
     useEffect(() => {
         if (!isInitializing && firebaseReady) {
+            FirebaseStoreService.storeRandomRewards();
             // Add a small delay to ensure smooth transition
             const navigationTimeout = setTimeout(() => {
                 checkLoginStatus();

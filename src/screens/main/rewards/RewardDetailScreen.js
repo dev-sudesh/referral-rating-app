@@ -9,7 +9,7 @@ import {
     Dimensions,
     FlatList,
 } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import { theme } from '../../../constants/theme';
 import ScreenContainer from '../../../components/common/ScreenContainer';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -17,85 +17,85 @@ import AppImage from '../../../components/common/AppImage';
 import ImageAsset from '../../../assets/images/ImageAsset';
 import ScreenHeader from '../../../components/ui/ScreenHeader';
 import MapsController from '../../../controllers/maps/MapsController';
-import Constants from '../../../constants/data';
+import Button from '../../../components/ui/Button';
+import WebView from 'react-native-webview';
+import HtmlWrapper from '../../../constants/data/HtmlWrapper';
+import RNRenderHtml from 'react-native-render-html';
 import FirebaseStoreService from '../../../services/firebase/FirebaseStoreService';
 import RewardController from '../../../controllers/rewards/RewardController';
+import Clipboard from '@react-native-clipboard/clipboard';
+import ToastUtils from '../../../utils/ToastUtils';
 
 const { width } = Dimensions.get('window');
 
-const RewardsScreen = ({ navigation }) => {
-    const [selectedTab, setSelectedTab] = useState('active');
-    const { rewards, setRewards, selectedReward, setSelectedReward } = RewardController();
-    const [filteredRewards, setFilteredRewards] = useState(rewards?.filter(item => item.status == 'active'))
+const RewardDetailScreen = () => {
+    const navigation = useNavigation();
+    const { selectedReward: reward, rewards, setRewards } = RewardController();
 
-    const selectedRewardPress = async (reward) => {
-        let selectedReward = reward;
-        selectedReward.isRedeemed = await getRewardRedeemedStatus(reward);
-        console.log('selectedReward', selectedReward)
-        setSelectedReward(selectedReward)
-        navigation.navigate(Constants.Screen.RewardDetail)
-    }
-    const renderRewardCard = (reward) => {
-
-        return (
-            <>
-                <TouchableOpacity
-                    key={reward.id}
-                    style={[styles.rewardCard, { filter: reward.status == 'past' ? 'grayscale(100%) brightness(120%) contrast(70%)' : 'none' }]}
-                    activeOpacity={1}
-                    onPress={() => selectedRewardPress(reward)}
-
-                >
-                    <View style={styles.rewardCardHeader}>
-                        <View style={styles.rewardCardImage}>
-                            <AppImage
-                                source={reward.image}
-
-                                style={{
-                                    width: '100%',
-                                    height: '100%',
-                                    borderRadius: theme.borderRadius.sm,
-                                }}
-                            />
-                        </View>
-                        <View style={styles.rewardCardInfo}>
-                            <View style={styles.rewardCardBadge}>
-                                <Text style={styles.rewardCardBadgeText}>{reward.type}</Text>
-                            </View>
-                            <Text style={styles.rewardCardTitle}>{reward.title}</Text>
-                            <Text style={styles.rewardCardValidText}>{`Valid until ${reward.validUntilDateString}`}</Text>
-                        </View>
-                    </View>
-                </TouchableOpacity>
-            </>
-        )
+    const [isRedeemed, setIsRedeemed] = useState(reward.isRedeemed);
+    const [isExpired, setIsExpired] = useState(reward.status == 'past' && !reward.isRedeemed);
+    const tagsStyles = {
+        p: {
+            fontSize: theme.responsive.size(16),
+        },
+        h1: {
+            fontSize: theme.responsive.size(24),
+        },
+        h2: {
+            fontSize: theme.responsive.size(20),
+        },
+        ol: {
+            fontSize: theme.responsive.size(16),
+            marginBottom: theme.spacing.sm,
+            marginTop: theme.spacing.sm,
+        },
+        ul: {
+            marginBottom: theme.spacing.sm,
+            marginTop: theme.spacing.md,
+            listStyleType: 'square',
+            paddingLeft: theme.responsive.size(20),
+            fontSize: theme.responsive.size(16),
+        },
+        li: {
+            marginBottom: theme.spacing.sm,
+            fontSize: theme.responsive.size(16),
+            paddingLeft: theme.responsive.size(10),
+        },
     };
 
-    const getRewardRedeemedStatus = async (reward) => {
-        return await FirebaseStoreService.isRewardRedeemed(reward.id)
+    const rewardButtonPress = () => {
+        if (isRedeemed) {
+            ToastUtils.info('Reward already redeemed');
+            return;
+        }
+        if (isExpired) {
+            ToastUtils.error('Reward expired');
+            return;
+        }
+        FirebaseStoreService.storeRewardRedeemed(reward.id);
+        setIsRedeemed(true);
+        setRewards(rewards.map(reward => reward.id === reward.id ? { ...reward, isRedeemed: true } : reward));
     }
 
-    const getRewards = React.useCallback(async () => {
-        const rewards = await FirebaseStoreService.getRewards(selectedTab)
-        rewards.forEach(async (reward) => {
-            reward.validUntil = new Date(reward.validUntil)
-            reward.validUntilDate = reward.validUntil.getDate()
-            reward.validUntilMonth = reward.validUntil.getMonth()
-            reward.validUntilYear = reward.validUntil.getFullYear()
-            reward.validUntilDateString = `${reward.validUntilMonth}/${reward.validUntilDate}/${reward.validUntilYear}`
-            reward.isRedeemed = await getRewardRedeemedStatus(reward)
-            return reward
-        })
-        setRewards(rewards)
-        setFilteredRewards(rewards)
-    }, [selectedTab])
+    const getRewardRedeemedStatus = () => {
+        FirebaseStoreService.isRewardRedeemed(reward.id).then((isRedeemed) => {
+            console.log('isRedeemed', isRedeemed);
+            setIsRedeemed(isRedeemed);
+        });
+    }
 
     React.useEffect(() => {
-        getRewards()
-    }, [selectedTab])
+        getRewardRedeemedStatus();
+    }, []);
 
     return (
-        <SafeAreaView style={styles.container}>
+        <ScreenContainer {...ScreenContainer.presets.full}
+            paddingCustom={{
+                paddingLeft: 0,
+                paddingRight: 0,
+                paddingTop: 0,
+                paddingBottom: 0,
+            }}>
             <ScreenHeader
                 style={{
                     paddingHorizontal: theme.spacing.lg,
@@ -103,61 +103,46 @@ const RewardsScreen = ({ navigation }) => {
                 titleStyle={{
                     fontWeight: theme.fontWeight.bold,
                 }}
-                title="Rewards"
-                showBackButton={false}
+                title="Reward Details"
+                showBackButton={true}
+                onBackPress={() => navigation.goBack()}
             />
 
             <View style={styles.innerContainer}>
+                <ScrollView showsVerticalScrollIndicator={false}>
+                    <View style={styles.rewardsContainer}>
+                        <View style={styles.rewardCard}>
+                            <View style={styles.rewardCardHeader}>
+                                <View style={styles.rewardCardImage}>
+                                    <AppImage source={reward.image} />
+                                </View>
+                                <View style={styles.rewardCardInfo}>
+                                    <View style={styles.rewardCardBadge}>
+                                        <Text style={styles.rewardCardPointsBadgeText}>{reward.type}</Text>
+                                    </View>
+                                    <Text style={styles.rewardCardTitle}>{reward.title}</Text>
+                                    <Text style={styles.rewardCardValidText}>{`Valid until ${reward.validUntilDateString}`}</Text>
+                                    {!isRedeemed || reward.status == 'active' && <View style={styles.rewardCardBadgeAvailable}>
+                                        <Text style={styles.rewardCardPointsBadgeTextAvailable}>{'Available'}</Text>
+                                    </View>}
+                                    <Button style={isRedeemed ? styles.rewardCardRedeemedButton : isExpired ? styles.rewardCardRedeemedButtonExpired : styles.rewardCardRedeemButton} textStyle={styles.rewardCardRedeemButtonText} title={isRedeemed ? 'Redeemed' : isExpired ? 'Expired' : 'Redeem Now'} onPress={rewardButtonPress} />
+                                    {isRedeemed && <Text onPress={() => Clipboard.setString(reward.redeemCode)} style={styles.rewardCardRedeemedText}>{reward.redeemCode}</Text>}
+                                    <View style={styles.howToUseContainer}>
+                                        <Text style={styles.howToUseTitle}>{reward.howToUse.title}</Text>
+                                        <RNRenderHtml
+                                            tagsStyles={tagsStyles}
+                                            contentWidth={width}
+                                            source={{ html: HtmlWrapper.renderContent(reward.howToUse.content) }}
+                                        />
+                                    </View>
+                                </View>
+                            </View>
+                        </View>
 
-                {/* Tab Navigation */}
-                <View style={styles.tabContainer}>
-                    <TouchableOpacity
-                        activeOpacity={1}
-                        style={[
-                            styles.tabButton,
-                            selectedTab === 'active' && styles.activeTabButton,
-                        ]}
-                        onPress={() => setSelectedTab('active')}
-                    >
-                        <Text style={[
-                            styles.tabButtonText,
-                            selectedTab === 'active' && styles.activeTabButtonText,
-                        ]}>
-                            Active
-                        </Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                        activeOpacity={1}
-                        style={[
-                            styles.tabButton,
-                            selectedTab === 'past' && styles.activeTabButton,
-                        ]}
-                        onPress={() => setSelectedTab('past')}
-                    >
-                        <Text style={[
-                            styles.tabButtonText,
-                            selectedTab === 'past' && styles.activeTabButtonText,
-                        ]}>
-                            Past
-                        </Text>
-                    </TouchableOpacity>
-                </View>
-
-                {/* Content */}
-                <View style={styles.rewardsContainer}>
-
-                    <FlatList
-                        showsVerticalScrollIndicator={false}
-                        data={filteredRewards}
-                        renderItem={({ item }) => renderRewardCard(item)}
-                        keyExtractor={(item) => item.id}
-                        decelerationRate="fast"
-
-                    />
-                </View>
+                    </View>
+                </ScrollView>
             </View>
-        </SafeAreaView>
+        </ScreenContainer >
     );
 };
 
@@ -169,6 +154,7 @@ const styles = StyleSheet.create({
     innerContainer: {
         flex: 1,
         paddingBottom: theme.spacing.xl,
+        paddingHorizontal: theme.spacing.lg,
     },
     header: {
         alignItems: 'flex-end',
@@ -284,60 +270,57 @@ const styles = StyleSheet.create({
         fontWeight: theme.fontWeight.bold,
     },
     rewardsContainer: {
+        flex: 1,
         marginBottom: theme.spacing.xl,
     },
     rewardCard: {
-        backgroundColor: theme.colors.background.primary,
-        borderRadius: theme.borderRadius.md,
-        padding: theme.spacing.sm,
-        marginBottom: theme.spacing.md,
-        marginHorizontal: theme.spacing.lg,
-        borderWidth: 1,
-        borderColor: theme.colors.border.light,
-        ...theme.shadows.custom({
-            color: theme.colors.neutral[500],
-            offset: { width: 0, height: 1 },
-            opacity: 0.05,
-            radius: 0.4,
-        }),
+        flex: 1,
     },
     rewardCardHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'flex-start',
-        gap: theme.spacing.md,
+        flex: 1,
     },
     rewardCardImage: {
-        width: theme.responsive.size(90),
-        height: theme.responsive.size(90),
-        borderRadius: theme.borderRadius.sm,
+        width: '100%',
+        height: theme.responsive.size(200),
+        borderRadius: theme.borderRadius.lg,
         overflow: 'hidden',
     },
     rewardCardInfo: {
-        flex: 1,
+        marginTop: theme.spacing.lg,
         justifyContent: 'center',
         alignItems: 'flex-start',
         gap: theme.spacing.sm,
     },
     rewardCardTitle: {
-        ...theme.typography.h4,
+        ...theme.typography.h2,
         fontWeight: theme.fontWeight.bold,
         color: theme.colors.text.primary,
     },
     rewardCardValidText: {
-        ...theme.typography.bodyMedium,
-        color: theme.colors.text.secondary,
+        ...theme.typography.bodyLarge,
+        color: theme.colors.text.primary,
     },
     rewardCardBadge: {
         backgroundColor: theme.colors.primary[100],
         borderRadius: theme.borderRadius.sm,
         paddingHorizontal: theme.spacing.sm,
-        paddingVertical: theme.spacing.xs,
+        paddingVertical: theme.spacing.sm,
     },
     rewardCardPointsBadgeText: {
-        ...theme.typography.buttonSmall,
+        ...theme.typography.buttonMedium,
         color: theme.colors.primary[700],
         fontWeight: theme.fontWeight.semiBold,
+    },
+    rewardCardPointsBadgeTextAvailable: {
+        ...theme.typography.bodyMedium,
+        color: theme.colors.text.primary,
+        fontWeight: theme.fontWeight.bold,
+    },
+    rewardCardBadgeAvailable: {
+        backgroundColor: theme.colors.success[100],
+        borderRadius: theme.borderRadius.sm,
+        paddingHorizontal: theme.spacing.sm,
+        paddingVertical: theme.spacing.xs,
     },
     rewardCardFooter: {
         flexDirection: 'row',
@@ -349,14 +332,27 @@ const styles = StyleSheet.create({
         color: theme.colors.text.tertiary,
     },
     rewardCardRedeemButton: {
-        backgroundColor: theme.colors.primary[500],
-        borderRadius: theme.borderRadius.sm,
-        paddingHorizontal: theme.spacing.md,
-        paddingVertical: theme.spacing.sm,
+        width: '98%',
+        alignSelf: 'center',
+        marginTop: theme.spacing.xs,
+    },
+    rewardCardRedeemedButton: {
+        width: '98%',
+        alignSelf: 'center',
+        marginTop: theme.spacing.xs,
+        backgroundColor: theme.colors.neutral[300],
+    },
+    rewardCardRedeemedButtonExpired: {
+        width: '98%',
+        alignSelf: 'center',
+        marginTop: theme.spacing.xs,
+        backgroundColor: theme.colors.error[300],
     },
     rewardCardRedeemButtonText: {
-        ...theme.typography.buttonSmall,
+        ...theme.typography.bodyLarge,
+        fontSize: theme.responsive.size(22),
         color: theme.colors.background.primary,
+        fontWeight: theme.fontWeight.semiBold,
     },
     rewardCardRedeemedCard: {
         backgroundColor: theme.colors.background.primary,
@@ -470,6 +466,34 @@ const styles = StyleSheet.create({
         color: theme.colors.background.primary,
         fontWeight: theme.fontWeight.semiBold,
     },
+    howToUseContainer: {
+        flex: 1,
+        width: '100%',
+        marginTop: theme.spacing.md,
+    },
+    howToUseTitle: {
+        ...theme.typography.h4,
+        color: theme.colors.text.primary,
+        marginBottom: theme.spacing.lg,
+        fontWeight: theme.fontWeight.bold,
+    },
+    howToUseDescription: {
+        ...theme.typography.bodyMedium,
+        color: theme.colors.text.secondary,
+    },
+    rewardCardRedeemedText: {
+        width: '98%',
+        alignSelf: 'center',
+        textAlign: 'center',
+        ...theme.typography.h3,
+        color: theme.colors.primary[500],
+        marginBottom: theme.spacing.sm,
+        borderWidth: 1,
+        borderColor: theme.colors.primary[500],
+        padding: theme.spacing.sm,
+        borderRadius: theme.borderRadius.sm,
+        borderStyle: 'dashed',
+    },
 });
 
-export default RewardsScreen; 
+export default RewardDetailScreen; 

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
     View,
     StyleSheet,
@@ -49,8 +49,8 @@ const ScreenContainer = ({
     alignItems = 'stretch',
     justifyContent = 'flex-start',
 }) => {
-    // Get padding value based on preset
-    const getPaddingValue = (preset) => {
+    // Memoize padding value based on preset
+    const paddingValue = useMemo(() => {
         const paddingMap = {
             none: 0,
             xs: theme.spacing.xs,
@@ -61,44 +61,44 @@ const ScreenContainer = ({
             xxl: theme.spacing.xxl,
             xxxl: theme.spacing.xxxl,
         };
-        return paddingMap[preset] || theme.spacing.md;
-    };
+        return paddingMap[padding] || theme.spacing.md;
+    }, [padding]);
 
-    // Determine status bar background color
-    const getStatusBarColor = () => {
+    // Memoize status bar background color
+    const statusBarBackgroundColor = useMemo(() => {
         if (statusBarColor) return statusBarColor;
         if (translucent) return 'transparent';
         return backgroundColor;
-    };
+    }, [statusBarColor, translucent, backgroundColor]);
 
-    // Base container styles
-    const baseContainerStyle = {
+    // Memoize base container styles
+    const baseContainerStyle = useMemo(() => ({
         flex: 1,
         backgroundColor,
         alignItems: centerContent ? 'center' : alignItems,
         justifyContent: centerContent ? 'center' : justifyContent,
-    };
+    }), [backgroundColor, centerContent, alignItems, justifyContent]);
 
-    // Content styles
-    const contentStyles = {
+    // Memoize content styles
+    const contentStyles = useMemo(() => ({
         flex: 1,
-        width: Dimensions.get('window').width,
+        width,
         ...(paddingCustom && { ...paddingCustom }),
-        ...(!paddingCustom && { padding: getPaddingValue(padding) }),
+        ...(!paddingCustom && { padding: paddingValue }),
         alignItems: centerContent ? 'center' : alignItems,
         justifyContent: centerContent ? 'center' : justifyContent,
-    };
+    }), [paddingCustom, paddingValue, centerContent, alignItems, justifyContent]);
 
-    // Status bar configuration
-    const statusBarConfig = {
+    // Memoize status bar configuration
+    const statusBarConfig = useMemo(() => ({
         barStyle: statusBarStyle,
-        backgroundColor: getStatusBarColor(),
+        backgroundColor: statusBarBackgroundColor,
         hidden: statusBarHidden,
         translucent,
-    };
+    }), [statusBarStyle, statusBarBackgroundColor, statusBarHidden, translucent]);
 
-    // Render content with appropriate wrapper
-    const renderContent = () => {
+    // Memoize render content function
+    const renderContent = useMemo(() => {
         const content = (
             <View style={[contentStyles, contentStyle]}>
                 {children}
@@ -125,7 +125,7 @@ const ScreenContainer = ({
                 {content}
             </View>
         );
-    };
+    }, [scrollable, contentStyles, contentStyle, children, baseContainerStyle, containerStyle]);
 
     // Render with SafeAreaView if enabled
     if (safeArea) {
@@ -139,7 +139,7 @@ const ScreenContainer = ({
                         style={[baseContainerStyle, containerStyle]}
                         edges={edges}
                     >
-                        {renderContent()}
+                        {renderContent}
                     </SafeAreaView>
                 </SafeAreaProvider>
             </>
@@ -149,7 +149,7 @@ const ScreenContainer = ({
     return (
         <>
             <StatusBar {...statusBarConfig} />
-            {renderContent()}
+            {renderContent}
         </>
     );
 };

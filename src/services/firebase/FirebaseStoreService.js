@@ -13,11 +13,14 @@ const db = getFirestore();
 const COLLECTIONS = {
     USERS: 'users',
     USER_FILTERS: 'user_filters',
-    SEARCH_HISTORY: 'search_history',
+    USER_SEARCH_HISTORY: 'user_search_history',
+    POPULAR_SEARCH: 'popular_search',
     PLACES: 'places',
     USER_LOCATIONS: 'user_locations',
     REFERRED_PLACES: 'referred_places',
-    DEVICE_MAPPINGS: 'device_mappings', // New collection for device-to-user mapping
+    DEVICE_MAPPINGS: 'device_mappings',
+    REWARDS: 'rewards',
+    REWARD_REDEEMED: 'reward_redeemed',
 };
 
 // Helper function to handle Firestore errors gracefully
@@ -237,16 +240,79 @@ const getUserFilters = async () => {
 const storeSearchKeyword = async (keyword) => {
     try {
         await ensureFirebaseReady();
-        const searchDoc = {
-            keyword: keyword.toLowerCase().trim(),
-            searchCount: increment(1),
-            lastSearched: serverTimestamp(),
-            createdAt: serverTimestamp(),
-        };
+        const userId = await getAnonymousUserId();
+        const normalizedKeyword = keyword.toLowerCase().trim();
 
-        // Use the keyword as document ID for easy updates
-        const docRef = collection(db, COLLECTIONS.SEARCH_HISTORY);
-        await setDoc(docRef, searchDoc, { merge: true });
+        // Check if this user's search history document exists
+        const docRef = doc(db, COLLECTIONS.USER_SEARCH_HISTORY, userId);
+        const docSnapshot = await getDoc(docRef);
+
+        if (docSnapshot.exists) {
+            // Document exists, check if keyword exists in the keywords map
+            const data = docSnapshot.data();
+            const keywords = data?.keywords || {};
+
+            if (keywords[normalizedKeyword]) {
+                // Keyword exists, increment the count
+                keywords[normalizedKeyword] = {
+                    count: (keywords[normalizedKeyword].count || 0) + 1,
+                    lastSearched: serverTimestamp(),
+                };
+            } else {
+                // New keyword, add it to the map
+                keywords[normalizedKeyword] = {
+                    count: 1,
+                    lastSearched: serverTimestamp(),
+                };
+            }
+
+            // Use setDoc with merge to update existing document
+            await setDoc(docRef, {
+                keywords,
+                updatedAt: serverTimestamp(),
+            }, { merge: true });
+        } else {
+            // New user document, create it with the first keyword
+            const keywords = {
+                [normalizedKeyword]: {
+                    count: 1,
+                    lastSearched: serverTimestamp(),
+                }
+            };
+
+            await setDoc(docRef, {
+                userId,
+                keywords,
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp(),
+            });
+        }
+
+        // Also update popular search collection (global, no user ID)
+        try {
+            const popularSearchRef = doc(db, COLLECTIONS.POPULAR_SEARCH, normalizedKeyword);
+            const popularSearchSnapshot = await getDoc(popularSearchRef);
+
+            if (popularSearchSnapshot.exists) {
+                // Keyword exists in popular search, increment count
+                await setDoc(popularSearchRef, {
+                    keyword: normalizedKeyword,
+                    count: increment(1),
+                    updatedAt: serverTimestamp(),
+                }, { merge: true });
+            } else {
+                // New keyword in popular search, create with count 1
+                await setDoc(popularSearchRef, {
+                    keyword: normalizedKeyword,
+                    count: 1,
+                    createdAt: serverTimestamp(),
+                    updatedAt: serverTimestamp(),
+                });
+            }
+        } catch (popularError) {
+            // Don't fail the main operation if popular search update fails
+            console.warn('Failed to update popular search:', popularError);
+        }
 
         return true;
     } catch (error) {
@@ -256,33 +322,33 @@ const storeSearchKeyword = async (keyword) => {
 };
 
 // Get search suggestions
-const getSearchSuggestions = async (limit = 10) => {
+const getSearchSuggestions = async (limit = 4) => {
     try {
         await ensureFirebaseReady();
-        const collectionRef = collection(db, COLLECTIONS.SEARCH_HISTORY);
+        const userId = await getAnonymousUserId();
+        const docRef = doc(db, COLLECTIONS.USER_SEARCH_HISTORY, userId);
+        const docSnapshot = await getDoc(docRef);
 
-        // Get all documents and filter client-side to avoid index requirements
-        const snapshot = await getDocs(collectionRef);
+        if (!docSnapshot.exists) {
+            return [];
+        }
 
-        const suggestions = [];
-        snapshot.forEach((doc) => {
-            const data = doc.data();
-            // Only include documents that belong to this user (check document ID)
-            if (data.keyword) {
-                suggestions.push({
-                    id: doc.id,
-                    keyword: data.keyword,
-                    searchCount: data.searchCount || 1,
-                    lastSearched: data.lastSearched?.toDate(),
-                });
-            }
-        });
+        const data = docSnapshot.data();
+        const keywords = data.keywords || {};
 
-        // Sort client-side by lastSearched (most recent first)
+        // Convert keywords map to array format
+        const suggestions = Object.entries(keywords).map(([keyword, info]) => ({
+            id: keyword,
+            keyword,
+            searchCount: info.count || 1,
+            lastSearched: info.lastSearched?.toDate(),
+        }));
+
+        // Sort by lastSearched (most recent first)
         suggestions.sort((a, b) => {
             if (!a.lastSearched && !b.lastSearched) return 0;
             if (!a.lastSearched) return 1;
-            if (!b.lastSearched) return -1;
+            if (!b.lastSearched) return 0;
             return b.lastSearched.getTime() - a.lastSearched.getTime();
         });
 
@@ -351,7 +417,6 @@ const storeReferredPlace = async (place) => {
         const referredPlacesDocRef = doc(db, COLLECTIONS.REFERRED_PLACES, userId);
         const snapshot = await getDoc(referredPlacesDocRef);
         let referredPlacesData = snapshot.data() || {};
-        console.log(referredPlacesData);
         if (!place.isReferred) {
             referredPlacesData = { ...referredPlacesData, [place.id]: place };
 
@@ -363,8 +428,6 @@ const storeReferredPlace = async (place) => {
 
             await updateDoc(referredPlacesDocRef, updateData);
         }
-        console.log(referredPlacesData);
-
 
         return true;
     } catch (error) {
@@ -463,9 +526,13 @@ const getUserStats = async () => {
         const hasFilters = filtersDoc.exists && Object.keys(filtersDoc.data()?.filters || {}).length > 0;
 
         // Get search count
-        const searchCollectionRef = collection(db, COLLECTIONS.SEARCH_HISTORY);
-        const searchSnapshot = await getDocs(searchCollectionRef);
-        const searchCount = searchSnapshot.docs.filter(doc => doc.id.startsWith(`${userId}_`)).length;
+        const searchDocRef = doc(db, COLLECTIONS.USER_SEARCH_HISTORY, userId);
+        const searchDoc = await getDoc(searchDocRef);
+        let searchCount = 0;
+        if (searchDoc.exists) {
+            const keywords = searchDoc.data()?.keywords || {};
+            searchCount = Object.keys(keywords).length;
+        }
 
         // Get location
         const locationDocRef = doc(db, COLLECTIONS.USER_LOCATIONS, userId);
@@ -519,13 +586,8 @@ const clearUserData = async () => {
         batch.delete(filtersDocRef);
 
         // Delete search history
-        const searchCollectionRef = collection(db, COLLECTIONS.SEARCH_HISTORY);
-        const searchSnapshot = await getDocs(searchCollectionRef);
-        searchSnapshot.forEach((doc) => {
-            if (doc.id.startsWith(`${userId}_`)) {
-                batch.delete(doc.ref);
-            }
-        });
+        const searchDocRef = doc(db, COLLECTIONS.USER_SEARCH_HISTORY, userId);
+        batch.delete(searchDocRef);
 
         // Delete user location
         const locationDocRef = doc(db, COLLECTIONS.USER_LOCATIONS, userId);
@@ -872,6 +934,174 @@ const getUserPersonalInfo = async () => {
     }
 };
 
+// Get search count for a specific keyword
+const getKeywordSearchCount = async (keyword) => {
+    try {
+        await ensureFirebaseReady();
+        const userId = await getAnonymousUserId();
+        const docRef = doc(db, COLLECTIONS.USER_SEARCH_HISTORY, userId);
+        const docSnapshot = await getDoc(docRef);
+
+        if (!docSnapshot.exists) {
+            return 0;
+        }
+
+        const data = docSnapshot.data();
+        const keywords = data.keywords || {};
+        const normalizedKeyword = keyword.toLowerCase().trim();
+
+        return keywords[normalizedKeyword]?.count || 0;
+    } catch (error) {
+        handleFirestoreError(error, 'getKeywordSearchCount');
+        return 0;
+    }
+};
+
+// Get popular search keywords (global, sorted by count)
+const getPopularSearchKeywords = async (limit = 4) => {
+    try {
+        await ensureFirebaseReady();
+        const collectionRef = collection(db, COLLECTIONS.POPULAR_SEARCH);
+
+        // Get all popular search documents
+        const snapshot = await getDocs(collectionRef);
+
+        const popularKeywords = [];
+        snapshot.forEach((doc) => {
+            const data = doc.data();
+            if (data.keyword && data.count) {
+                popularKeywords.push({
+                    id: doc.id,
+                    keyword: data.keyword,
+                    count: data.count,
+                    updatedAt: data.updatedAt?.toDate(),
+                });
+            }
+        });
+
+        // Sort by count (highest first)
+        popularKeywords.sort((a, b) => b.count - a.count);
+
+        // Return only the requested limit
+        return popularKeywords.slice(0, limit);
+    } catch (error) {
+        handleFirestoreError(error, 'getPopularSearchKeywords');
+        return [];
+    }
+};
+
+const createRandomRewards = async () => {
+    const randomRewards = [];
+    for (let i = 0; i < 20; i++) {
+        const image = faker.image.urlPicsumPhotos({ width: 150, height: 150, blur: 0 });
+
+        const redeemCode = faker.string.alphanumeric(8).toUpperCase();
+        const status = faker.helpers.arrayElement(['active', 'past']);
+        let validUntilFormatted = '';
+        if (status === 'past') {
+            const validUntil = faker.date.past();
+            validUntilFormatted = validUntil.toISOString().split('T')[0] + ' 23:59:59';
+        } else {
+            const validUntil = faker.date.future();
+            validUntilFormatted = validUntil.toISOString().split('T')[0] + ' 23:59:59';
+        }
+
+        randomRewards.push({
+            id: faker.string.uuid(),
+            title: faker.company.name(),
+            type: faker.helpers.arrayElement(['Free Product', 'Discount']),
+            redeemCode: redeemCode,
+            description: faker.lorem.sentence(),
+            validUntil: validUntilFormatted,
+            status: status,
+            image: image,
+            howToUse: {
+                title: 'How to redeem',
+                content: `<p>To redeem this reward, please follow these steps:</p>
+                <ul style="list-style-type: none;">
+                    <li>Visit the store</li>
+                    <li>Select the reward</li>
+                    <li>Redeem the reward</li>
+                </ul>`,
+            }
+        });
+
+    }
+    return randomRewards;
+};
+
+const storeRandomRewards = async () => {
+    try {
+        await ensureFirebaseReady();
+        // check if rewards collection is empty
+        const rewards = await getRewards('active');
+        if (rewards.length > 0) {
+            return;
+        }
+        const randomRewards = await createRandomRewards();
+        const batch = writeBatch(db);
+        randomRewards.forEach(reward => {
+            const rewardDocRef = doc(collection(db, COLLECTIONS.REWARDS), reward.id);
+            batch.set(rewardDocRef, reward);
+        });
+        await batch.commit();
+        return randomRewards;
+    }
+    catch (error) {
+        handleFirestoreError(error, 'storeRandomRewards');
+        return [];
+    }
+};
+
+const getRewards = async (status) => {
+    try {
+        await ensureFirebaseReady();
+        const docRef = collection(db, COLLECTIONS.REWARDS);
+        const snapshot = await getDocs(docRef);
+        const currentDate = new Date();
+        const sixMonthsAgo = new Date(currentDate.getTime() - 6 * 30 * 24 * 60 * 60 * 1000);
+        const sortedRewards = snapshot.docs.map(doc => doc.data()).filter(reward => new Date(reward.validUntil) >= sixMonthsAgo).sort((a, b) => new Date(a.validUntil) - new Date(b.validUntil));
+        console.log('sortedRewards', sortedRewards);
+        if (status) {
+            return sortedRewards.filter(reward => reward.status === status);
+        }
+        return sortedRewards;
+    }
+    catch (error) {
+        handleFirestoreError(error, 'getRewards');
+        return [];
+    }
+};
+
+const storeRewardRedeemed = async (rewardId) => {
+    try {
+        await ensureFirebaseReady();
+        const userId = await getAnonymousUserId();
+        const docRef = doc(db, COLLECTIONS.REWARD_REDEEMED, userId);
+        const docSnapshot = await getDoc(docRef);
+        const data = docSnapshot.data() || {};
+        data[rewardId] = { redeemedAt: serverTimestamp() };
+        await setDoc(docRef, data);
+    } catch (error) {
+        handleFirestoreError(error, 'storeRewardRedeemed');
+        return false;
+    }
+};
+
+const isRewardRedeemed = async (rewardId) => {
+    try {
+        await ensureFirebaseReady();
+        const userId = await getAnonymousUserId();
+        const docRef = doc(db, COLLECTIONS.REWARD_REDEEMED, userId);
+        const docSnapshot = await getDoc(docRef);
+        const data = docSnapshot.data() || {};
+        return data[rewardId]?.redeemedAt;
+    } catch (error) {
+        handleFirestoreError(error, 'isRewardRedeemed');
+        return false;
+    }
+};
+
 const FirebaseStoreService = {
     // User management
     getAnonymousUserId,
@@ -886,6 +1116,8 @@ const FirebaseStoreService = {
     // Search
     storeSearchKeyword,
     getSearchSuggestions,
+    getKeywordSearchCount,
+    getPopularSearchKeywords,
 
     // Location
     storeLastLocation,
@@ -921,6 +1153,12 @@ const FirebaseStoreService = {
     // Personal info
     updateUserPersonalInfo,
     getUserPersonalInfo,
+
+    // Rewards
+    storeRewardRedeemed,
+    isRewardRedeemed,
+    storeRandomRewards,
+    getRewards,
     // Collections
     COLLECTIONS,
 };

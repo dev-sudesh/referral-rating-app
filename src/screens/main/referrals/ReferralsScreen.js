@@ -23,14 +23,15 @@ import FirebaseStoreService from '../../../services/firebase/FirebaseStoreServic
 import ScreenHeader from '../../../components/ui/ScreenHeader';
 import SearchFilterController from '../../../controllers/filters/SearchFilterController';
 import NoDataAnimation from '../../../components/common/NoDataAnimation';
+import Constants from '../../../constants/data';
 
 const { width, height } = Dimensions.get('window');
 
 // Filter data for the staggered horizontal list
 const filterData = [
-    { id: '2', label: 'Food', selected: true },
+    { id: '2', label: 'Food', selected: false },
     { id: '3', label: 'Parking lots', selected: false },
-    { id: '4', label: 'Cinemas', selected: true },
+    { id: '4', label: 'Cinemas', selected: false },
     { id: '5', label: 'Shopping', selected: false },
     { id: '6', label: 'Museums', selected: false },
     { id: '7', label: 'Restaurants', selected: false },
@@ -57,115 +58,13 @@ function chunkData(array, chunkSize) {
     return chunks;
 }
 
-const referrals = [
-    {
-        id: 'referral-001',
-        tags: [{
-            id: 'referral-001-tag-001',
-            title: 'No.1',
-            style: 'tagStyle1',
-        }, {
-            id: 'referral-001-tag-002',
-            title: 'Food',
-            style: 'tagStyle2',
-        }],
-        title: 'Boucherie Union Square',
-        image: ImageAsset.places.place01,
-        address: '225 Park Ave, New York, NY 10177',
-        validUntil: '2025-03-25',
-        status: 'active'
-    },
-    {
-        id: 'referral-002',
-        tags: [{
-            id: 'referral-002-tag-001',
-            title: 'Cinema',
-            style: 'tagStyle2',
-        }],
-        title: 'AMC Empire 25',
-        image: ImageAsset.places.place01,
-        address: '234 West 42nd St, New York, NY 10036',
-        validUntil: '2025-03-25',
-        status: 'active'
-    },
-    {
-        id: 'referral-003',
-        tags: [{
-            id: 'referral-003-tag-001',
-            title: 'Food',
-            style: 'tagStyle2',
-        }],
-        title: 'Piccola Cucina Osteria',
-        image: ImageAsset.places.place01,
-        address: '225 Park Ave, New York, NY 10177',
-        validUntil: '2025-03-25',
-        status: 'active'
-    },
-    {
-        id: 'referral-004',
-        tags: [{
-            id: 'referral-004-tag-001',
-            title: 'No.3',
-            style: 'tagStyle1',
-        }, {
-            id: 'referral-004-tag-002',
-            title: 'Drinks',
-            style: 'tagStyle2',
-        }],
-        title: 'Talk Story Rooftop',
-        image: ImageAsset.places.place01,
-        address: '160 N 12th Street Brooklyn',
-        validUntil: '2024-03-31',
-        status: 'active'
-    },
-    {
-        id: 'referral-005',
-        tags: [{
-            id: 'referral-005-tag-001',
-            title: 'Steak House',
-            style: 'tagStyle2',
-        }],
-        title: 'Boucherie Union Square',
-        image: ImageAsset.places.place01,
-        address: '225 Park Ave, New York, NY 10177',
-        validUntil: '2025-03-25',
-        status: 'active'
-    },
-    {
-        id: 'referral-006',
-        tags: [{
-            id: 'referral-006-tag-001',
-            title: 'Steak House',
-            style: 'tagStyle2',
-        }],
-        title: 'Boucherie Union Square',
-        image: ImageAsset.places.place01,
-        address: '225 Park Ave, New York, NY 10177',
-        validUntil: '2025-03-25',
-        status: 'active'
-    },
-    {
-        id: 'referral-007',
-        tags: [{
-            id: 'referral-007-tag-001',
-            title: 'Steak House',
-            style: 'tagStyle2',
-        }],
-        title: 'Boucherie Union Square',
-        image: ImageAsset.places.place01,
-        address: '225 Park Ave, New York, NY 10177',
-        validUntil: '2025-03-25',
-        status: 'active'
-    }
-];
-
 const ReferralsScreen = ({ navigation }) => {
-    const [referralCode, setReferralCode] = useState('RNFRIEND2024');
-    const [totalReferrals, setTotalReferrals] = useState(8);
-    const [totalEarnings, setTotalEarnings] = useState(240);
-    const [selectedFilter, setSelectedFilter] = useState('active');
+
+    const [referrals, setReferrals] = useState([]);
     const [filteredReferrals, setFilteredReferrals] = useState([]);
     const [filters, setFilters] = useState([{ id: 'all', label: 'All', selected: false }, ...filterData, { id: 'more', label: 'More Filters', selected: false }]);
+    const [selectedFilters, setSelectedFilters] = useState([]);
+
 
     const { places, setSelectedPlace, setShowPlaceFullCard } = MapsController();
     const { isSearchFilterVisible, setIsSearchFilterVisible } = SearchFilterController();
@@ -310,6 +209,7 @@ const ReferralsScreen = ({ navigation }) => {
 
     const getReferredPlaces = async () => {
         const referredPlaces = await FirebaseStoreService.getReferredPlaces()
+        setReferrals(referredPlaces)
         setFilteredReferrals(referredPlaces)
 
     }
@@ -317,6 +217,32 @@ const ReferralsScreen = ({ navigation }) => {
     React.useEffect(() => {
         getReferredPlaces()
     }, [places])
+
+    React.useEffect(() => {
+        setSelectedFilters(filters.filter(filter => filter.selected).map(filter => filter.id))
+    }, [filters])
+
+    React.useEffect(() => {
+        if (selectedFilters.length == 0 || selectedFilters.includes('all')) {
+            setFilteredReferrals(referrals)
+            return;
+        }
+        setFilteredReferrals(referrals.filter(referral => selectedFilters.includes(referral.category) || selectedFilters.includes('all')))
+    }, [selectedFilters])
+
+    React.useEffect(() => {
+        // get 2 filters from all categories of Constants.filters
+        const filtersData = Constants.filters.map(filter => {
+            return filter.options.slice(0, 3).map(option => {
+                return {
+                    id: option.id,
+                    label: option.label,
+                    selected: false
+                }
+            })
+        }).flat()
+        setFilters([{ id: 'all', label: 'All', selected: false }, ...filtersData, { id: 'more', label: 'More Filters', selected: false }])
+    }, [])
 
     return (
         <SafeAreaView style={styles.container}>

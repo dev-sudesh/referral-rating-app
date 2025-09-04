@@ -1,5 +1,5 @@
 const HtmlWrapper = {
-    html: (content) => `
+  html: (content) => `
 <!doctype html>
 <html lang="en">
 <head>
@@ -9,7 +9,7 @@ const HtmlWrapper = {
   <meta name="description" content="Sample Terms & Conditions for a website or app." />
   <style>
     :root {
-      --bg: #f9fafb;
+      --bg: #F7F8FB;
       --card: #ffffff;
       --muted: #4b5563;
       --text: #111827;
@@ -33,7 +33,7 @@ const HtmlWrapper = {
     .container {
       max-width: var(--max);
       margin: 0 auto;
-      padding: 24px;
+      // padding: 24px;
     }
     header {
       margin: 24px 0 16px;
@@ -125,7 +125,7 @@ const HtmlWrapper = {
 </body>
 </html>
 `,
-    terms: ` 
+  terms: ` 
 
     <section id="acceptance" class="card" aria-labelledby="acceptance-h">
       <h2 id="acceptance-h">1. Acceptance of Terms</h2>
@@ -240,7 +240,7 @@ const HtmlWrapper = {
       <p>© <span id="year"></span> Sample App. All rights reserved.</p>
     </footer>
 `,
-    privacy: `
+  privacy: `
 
     <section id="info" class="card">
       <h2>1. Information We Collect</h2>
@@ -328,7 +328,7 @@ const HtmlWrapper = {
       <p>© <span id="year"></span> Sample App. All rights reserved.</p>
     </footer>
 `,
-    faqs: `
+  faqs: `
     <section id="faqs" class="card" aria-labelledby="faqs-h">
       <h2 id="faqs-h">Frequently Asked Questions</h2>
 
@@ -380,9 +380,12 @@ const HtmlWrapper = {
       <p>© <span id="year"></span> Sample App. All rights reserved.</p>
     </footer>
 `,
-    getContent: (content) => {
-        return HtmlWrapper.html(HtmlWrapper[content]);
-    }
+  getContent: (content) => {
+    return HtmlWrapper.html(HtmlWrapper[content]);
+  },
+  renderContent: (content) => {
+    return HtmlWrapper.html(content);
+  }
 }
 
 export default HtmlWrapper;

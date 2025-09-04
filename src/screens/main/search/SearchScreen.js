@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
     StyleSheet,
     Text,
@@ -17,6 +17,7 @@ import SearchBar from '../../../components/ui/SearchBar';
 import SearchFilter from '../../../components/ui/SearchFilter';
 import FirebaseStoreService from '../../../services/firebase/FirebaseStoreService';
 import MapsController from '../../../controllers/maps/MapsController';
+import { useFirebaseStore } from '../../../hooks/useFirebaseStore';
 
 const SearchScreen = ({ navigation }) => {
     const [searchText, setSearchText] = useState('');
@@ -25,20 +26,11 @@ const SearchScreen = ({ navigation }) => {
     const [searchResults, setSearchResults] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
     const { userLocation, setSelectedPlace, setShowPlaceFullCard } = MapsController();
+    const [popularSearches, setPopularSearches] = useState([]);
+    const [recentSearches, setRecentSearches] = useState([]);
 
-    const [recentSearches] = useState([
-        { id: 1, text: 'Meat', time: 'Today' },
-        { id: 2, text: 'Vege food', time: 'Yesterday' },
-        { id: 3, text: 'Drink bars', time: '2 days ago' },
-    ]);
-
-    const [popularSearches] = useState([
-        { id: 1, text: 'European cuisine' },
-        { id: 2, text: 'Asian cuisine' },
-        { id: 3, text: 'Local' },
-    ]);
-
-    const handleSearch = async (searchTerm) => {
+    // Memoize the search function to prevent recreation on every render
+    const handleSearch = useCallback(async (searchTerm) => {
         if (!searchTerm.trim() || !userLocation) return;
 
         setIsSearching(true);
@@ -51,66 +43,60 @@ const SearchScreen = ({ navigation }) => {
         } finally {
             setIsSearching(false);
         }
-    };
+    }, [userLocation]);
 
-    const handleClearSearch = () => {
+    const handleClearSearch = useCallback(() => {
         setSearchText('');
         setSearchResults([]);
-    };
+    }, []);
 
-    const handleBackPress = () => {
+    const handleBackPress = useCallback(() => {
         navigation.goBack();
-    };
+    }, [navigation]);
 
-    const handleSearchItemPress = (item) => {
-        setSearchText(item.text);
-        handleSearch(item.text);
-    };
+    const handleSearchItemPress = useCallback((keyword) => {
+        setSearchText(keyword);
+        handleSearch(keyword);
+    }, [handleSearch]);
 
-    const handleFilterPress = () => {
+    const handleFilterPress = useCallback(() => {
         setIsFilterVisible(true);
-    };
+    }, []);
 
-    const handleFilterClose = () => {
+    const handleFilterClose = useCallback(() => {
         setIsFilterVisible(false);
-    };
+    }, []);
 
-    const handleApplyFilters = (filters) => {
+    const handleApplyFilters = useCallback((filters) => {
         setActiveFilters(filters);
         // TODO: Implement filter logic
-    };
+    }, []);
 
-    // Calculate active filter count
-    const getActiveFilterCount = () => {
+    // Memoize active filter count calculation
+    const activeFilterCount = useMemo(() => {
         return Object.values(activeFilters).flat().length;
-    };
+    }, [activeFilters]);
 
-    // create debounce function
-    const debounce = (func, delay) => {
-        let timeout;
-        return function (...args) {
-            clearTimeout(timeout);
-            timeout = setTimeout(() => func.apply(this, args), delay);
-        };
-    };
-
-    const debouncedSearch = debounce(handleSearch, 500);
-
-    const searchKeyword = (text) => {
-        setSearchText(text);
-        if (text.trim()) {
-            debouncedSearch(text);
+    // Create a search callback that SearchBar can call directly
+    const handleSearchCallback = useCallback((searchTerm) => {
+        if (searchTerm.trim()) {
+            setSearchText(searchTerm);
+            handleSearch(searchTerm);
         } else {
+            setSearchText('');
             setSearchResults([]);
         }
-    };
+    }, [handleSearch]);
 
+    const showPlaceDetails = useCallback((place) => {
+        FirebaseStoreService.storeSearchKeyword(place.category);
+        initData();
+        setSelectedPlace(place);
+        setShowPlaceFullCard(true);
+    }, [setSelectedPlace, setShowPlaceFullCard]);
 
-    // Remove the old useEffect as we're now using debounced search
-
-
-
-    const SearchSection = ({ title, items, showTime = false }) => (
+    // Memoize the SearchSection component to prevent recreation
+    const SearchSection = useCallback(({ title, items, showTime = false }) => (
         <View style={styles.section}>
             <Text style={styles.sectionTitle}>{title}</Text>
             {items.map((item, index) => (
@@ -119,19 +105,17 @@ const SearchScreen = ({ navigation }) => {
                     style={[
                         styles.searchItem,
                     ]}
-                    onPress={() => handleSearchItemPress(item)}
+                    onPress={() => handleSearchItemPress(item.keyword)}
                     activeOpacity={1}
                 >
-                    <Text style={styles.searchItemText}>{item.text}</Text>
-                    {showTime && (
-                        <Text style={styles.searchItemTime}>{item.time}</Text>
-                    )}
+                    <Text style={styles.searchItemText}>{item.keyword}</Text>
                 </TouchableOpacity>
             ))}
         </View>
-    );
+    ), [handleSearchItemPress]);
 
-    const SearchResultsSection = ({ results, isLoading }) => {
+    // Memoize the SearchResultsSection component
+    const SearchResultsSection = useCallback(({ results, isLoading }) => {
         if (isLoading) {
             return (
                 <View style={styles.section}>
@@ -163,8 +147,7 @@ const SearchScreen = ({ navigation }) => {
                             key={place.id}
                             style={styles.searchItem}
                             onPress={() => {
-                                setSelectedPlace(place);
-                                setShowPlaceFullCard(true);
+                                showPlaceDetails(place);
                             }}
                             activeOpacity={1}
                         >
@@ -174,8 +157,6 @@ const SearchScreen = ({ navigation }) => {
                                 <Text style={styles.placeCategory}>{place.category}</Text>
                             </View>
                             <View style={styles.placeMeta}>
-                                {/* <Text style={styles.placeRating}>⭐ {place.rating}</Text> */}
-                                {/* <Text style={styles.placeDistance}>{place.distance?.toFixed(1)}km</Text> */}
                             </View>
                         </TouchableOpacity>
                     ))}
@@ -184,7 +165,26 @@ const SearchScreen = ({ navigation }) => {
         }
 
         return null;
-    };
+    }, [searchText, showPlaceDetails]);
+
+    const loadPopularSearches = useCallback(async () => {
+        const popularSearches = await FirebaseStoreService.getPopularSearchKeywords();
+        setPopularSearches(popularSearches);
+    }, []);
+
+    const loadRecentSearches = useCallback(async () => {
+        const recentSearches = await FirebaseStoreService.getSearchSuggestions();
+        setRecentSearches(recentSearches);
+    }, []);
+
+    const initData = useCallback(async () => {
+        await loadRecentSearches();
+        await loadPopularSearches();
+    }, [loadRecentSearches, loadPopularSearches]);
+
+    useEffect(() => {
+        initData();
+    }, [initData]);
 
     return (
         <ScreenContainer {...ScreenContainer.presets.full}
@@ -194,9 +194,10 @@ const SearchScreen = ({ navigation }) => {
         >
             <SearchBar
                 handleBackPress={handleBackPress}
-                setSearchText={searchKeyword}
+                searchText={searchText}
+                onSearch={handleSearchCallback}
                 onFilterPress={handleFilterPress}
-                activeFilterCount={getActiveFilterCount()}
+                activeFilterCount={activeFilterCount}
             />
 
             <ScrollView
@@ -223,8 +224,6 @@ const SearchScreen = ({ navigation }) => {
                     results={searchResults}
                     isLoading={isSearching}
                 />
-
-
             </ScrollView>
         </ScreenContainer>
     );

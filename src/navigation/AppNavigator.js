@@ -12,6 +12,7 @@ import NotificationSettings from '../screens/main/notificaiton-settings/Notifica
 import FavoriteFilters from '../screens/main/favorite-filters/FavoriteFilters';
 import ListScreen from '../screens/main/map/ListScreen';
 import WebViewScreen from '../screens/main/webview/WebViewScreen';
+import RewardDetailScreen from '../screens/main/rewards/RewardDetailScreen';
 
 const Stack = createStackNavigator();
 
@@ -34,6 +35,7 @@ const AppNavigator = () => {
                 <Stack.Screen name={Constants.Screen.FavoriteFilters} component={FavoriteFilters} />
                 <Stack.Screen name={Constants.Screen.List} component={ListScreen} />
                 <Stack.Screen name={Constants.Screen.WebView} component={WebViewScreen} />
+                <Stack.Screen name={Constants.Screen.RewardDetail} component={RewardDetailScreen} />
             </Stack.Navigator>
         </NavigationContainer>
     );
