@@ -53,6 +53,9 @@ export const useSharing = () => {
                 description: referralData.description || 'Check out this incredible place!',
                 address: referralData.address || '',
                 imageUrl: referralData.imageUrl,
+                imagePath: referralData.imagePath,
+                latitude: referralData.latitude,
+                longitude: referralData.longitude,
                 appName: 'ReferralRating'
             });
             return { success: true };

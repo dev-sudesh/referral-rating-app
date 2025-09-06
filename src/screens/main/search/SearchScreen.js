@@ -11,6 +11,7 @@ import ScreenContainer from '../../../components/common/ScreenContainer';
 import SearchBar from '../../../components/ui/SearchBar';
 import FirebaseStoreService from '../../../services/firebase/FirebaseStoreService';
 import MapsController from '../../../controllers/maps/MapsController';
+import { getPlaceDistance } from '../../../utils/DistanceUtils';
 
 const SearchScreen = ({ navigation }) => {
     const [searchText, setSearchText] = useState('');
@@ -120,7 +121,7 @@ const SearchScreen = ({ navigation }) => {
         if (results.length > 0) {
             return (
                 <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Search Results</Text>
+                    <Text style={styles.sectionTitle}>Search Results: {searchText} </Text>
                     {results.map((place, index) => (
                         <TouchableOpacity
                             key={place.id}
@@ -136,6 +137,9 @@ const SearchScreen = ({ navigation }) => {
                                 <Text style={styles.placeCategory}>{place.category}</Text>
                             </View>
                             <View style={styles.placeMeta}>
+                                <Text style={styles.placeDistance}>
+                                    {getPlaceDistance(userLocation, place)}
+                                </Text>
                             </View>
                         </TouchableOpacity>
                     ))}
@@ -226,6 +230,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: theme.spacing.screenPadding,
         borderBottomWidth: 1,
         borderBottomColor: theme.colors.border.light,
+        textTransform: 'capitalize',
     },
     searchItem: {
         flexDirection: 'row',
@@ -263,23 +268,26 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     placeName: {
-        ...theme.typography.bodyMedium,
-        fontWeight: theme.fontWeight.semiBold,
+        ...theme.typography.bodyLarge,
+        fontWeight: theme.fontWeight.bold,
         color: theme.colors.text.primary,
-        marginBottom: theme.spacing.xs,
     },
     placeAddress: {
-        ...theme.typography.captionMedium,
+        ...theme.typography.body,
         color: theme.colors.text.secondary,
-        marginBottom: theme.spacing.xs,
     },
     placeCategory: {
-        ...theme.typography.captionSmall,
+        ...theme.typography.bodySmall,
         color: theme.colors.text.tertiary,
         textTransform: 'capitalize',
     },
     placeMeta: {
         alignItems: 'flex-end',
+    },
+    placeDistance: {
+        ...theme.typography.bodySmall,
+        color: theme.colors.text.secondary,
+        fontWeight: theme.fontWeight.medium,
     },
 });
 

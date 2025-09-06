@@ -56,6 +56,9 @@ const ShareUtils = {
      * @param {string} options.description - Description to share
      * @param {string} options.address - Address of the place
      * @param {string} options.imageUrl - Image URL to share
+     * @param {string} options.imagePath - Local image file path to share
+     * @param {string} options.latitude - Latitude of the place
+     * @param {string} options.longitude - Longitude of the place
      * @param {string} options.appName - Name of the app
      */
     async shareReferral(options = {}) {
@@ -64,20 +67,52 @@ const ShareUtils = {
             description,
             address,
             imageUrl,
+            imagePath,
+            latitude,
+            longitude,
             appName = 'ReferralRating'
         } = options;
 
         try {
-            const message = `Check out this amazing place I found on ${appName}!\n\n${title}\n${description}\n\n📍 ${address}\n\nDiscover more great places on ${appName}!`;
+            // Generate map link
+            let mapLink = '';
+            if (latitude && longitude) {
+                if (Platform.OS === 'ios') {
+                    mapLink = `\n🗺️ View on Maps: https://maps.apple.com/?q=${latitude},${longitude}`;
+                } else {
+                    mapLink = `\n🗺️ View on Maps: https://www.google.com/maps?q=${latitude},${longitude}`;
+                }
+            } else if (address) {
+                // Fallback to address-based map link
+                const encodedAddress = encodeURIComponent(address);
+                if (Platform.OS === 'ios') {
+                    mapLink = `\n🗺️ View on Maps: https://maps.apple.com/?q=${encodedAddress}`;
+                } else {
+                    mapLink = `\n🗺️ View on Maps: https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
+                }
+            }
+
+            // Generate app download link
+            const appDownloadLink = `\n📱 Download ${appName}: ${getAppStoreUrl()}`;
+
+            const message = `Check out this amazing place I found on ${appName}!\n\n${title}\n${description}\n\n📍 ${address}${mapLink}${appDownloadLink}\n\nDiscover more great places on ${appName}!`;
 
             const shareOptions = {
                 title: `Check out ${title}!`,
                 message,
-                url: imageUrl,
                 subject: `Amazing place: ${title}`,
                 showAppsToView: true,
                 showAppsToShare: true,
             };
+
+            // If we have a local image path, share the image file
+            if (imagePath) {
+                shareOptions.url = `file://${imagePath}`;
+                shareOptions.type = 'image/jpeg';
+            } else if (imageUrl) {
+                // Fallback to sharing the URL if no local image
+                shareOptions.url = imageUrl;
+            }
 
             const result = await Share.open(shareOptions);
             return result;

@@ -25,7 +25,7 @@ const RewardDetailScreen = () => {
     const navigation = useNavigation();
     const { selectedReward: reward, rewards, setRewards } = RewardController();
 
-    const [isRedeemed, setIsRedeemed] = useState(reward.isRedeemed);
+    const [isRedeemed, setIsRedeemed] = useState();
     const [isExpired, setIsExpired] = useState(reward.status == 'past' && !reward.isRedeemed);
     const tagsStyles = {
         p: {
@@ -73,7 +73,7 @@ const RewardDetailScreen = () => {
     const getRewardRedeemedStatus = () => {
         FirebaseStoreService.isRewardRedeemed(reward.id).then((isRedeemed) => {
             console.log('isRedeemed', isRedeemed);
-            setIsRedeemed(isRedeemed);
+            // setIsRedeemed(isRedeemed);
         });
     }
 
@@ -115,11 +115,12 @@ const RewardDetailScreen = () => {
                                     </View>
                                     <Text style={styles.rewardCardTitle}>{reward.title}</Text>
                                     <Text style={styles.rewardCardValidText}>{`Valid until ${reward.validUntilDateString}`}</Text>
-                                    {!isRedeemed || reward.status == 'active' && <View style={styles.rewardCardBadgeAvailable}>
-                                        <Text style={styles.rewardCardPointsBadgeTextAvailable}>{'Available'}</Text>
-                                    </View>}
-                                    <Button style={isRedeemed ? styles.rewardCardRedeemedButton : isExpired ? styles.rewardCardRedeemedButtonExpired : styles.rewardCardRedeemButton} textStyle={styles.rewardCardRedeemButtonText} title={isRedeemed ? 'Redeemed' : isExpired ? 'Expired' : 'Redeem Now'} onPress={rewardButtonPress} />
-                                    {isRedeemed && <Text onPress={() => Clipboard.setString(reward.redeemCode)} style={styles.rewardCardRedeemedText}>{reward.redeemCode}</Text>}
+
+                                    {
+                                        isRedeemed
+                                            ? <Text onPress={() => Clipboard.setString(reward.redeemCode)} style={styles.rewardCardRedeemedText}>{reward.redeemCode}</Text>
+                                            : <Button style={isRedeemed ? styles.rewardCardRedeemedButton : isExpired ? styles.rewardCardRedeemedButtonExpired : styles.rewardCardRedeemButton} textStyle={styles.rewardCardRedeemButtonText} title={isRedeemed ? 'Redeemed' : isExpired ? 'Expired' : 'Redeem Now'} onPress={rewardButtonPress} />
+                                    }
                                     <View style={styles.howToUseContainer}>
                                         <Text style={styles.howToUseTitle}>{reward.howToUse.title}</Text>
                                         <RNRenderHtml

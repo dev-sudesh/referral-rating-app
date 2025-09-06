@@ -1,5 +1,5 @@
-import { Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import React, { useState } from 'react'
+import { Pressable, StyleSheet, Text, TouchableOpacity, View, Alert } from 'react-native'
+import React, { useState, useRef } from 'react'
 import MapsController from '../../controllers/maps/MapsController'
 import AppImage from '../common/AppImage';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -11,12 +11,14 @@ import MethodUtils from '../../utils/MethodUtils';
 import FirebaseStoreService from '../../services/firebase/FirebaseStoreService';
 import ReferralController from '../../controllers/referrals/ReferralController';
 import { useSharing } from '../../hooks/useSharing';
+import ViewShot from 'react-native-view-shot';
 
 const PlaceFullCard = () => {
     const { selectedPlace, setSelectedPlace, setShowPlaceFullCard, setShowPlaceBigCard, showPlaceFullCard, places, setPlaces } = MapsController();
     const [fullSelectedPlace, setFullSelectedPlace] = useState(selectedPlace);
     const { setShowReferralAlert, placeReferredStatus } = ReferralController();
     const { shareReferral } = useSharing();
+    const imageRef = useRef(null);
     const referPlace = async (place) => {
         //     if (!place?.isReferred) {
         //         setShowReferralAlert(true);
@@ -53,12 +55,28 @@ const PlaceFullCard = () => {
 
     const sharePlace = async () => {
         try {
+            let imagePath = null;
+
+            // Take screenshot of the image if imageRef is available
+            if (imageRef.current && fullSelectedPlace?.imageFull) {
+                try {
+                    const uri = await imageRef.current.capture();
+                    imagePath = uri;
+                } catch (screenshotError) {
+                    console.warn('Failed to capture screenshot, falling back to URL:', screenshotError);
+                }
+            }
+
             const result = await shareReferral({
                 title: fullSelectedPlace?.name,
                 description: fullSelectedPlace?.description,
                 address: fullSelectedPlace?.address,
-                imageUrl: fullSelectedPlace?.imageFull
+                imageUrl: fullSelectedPlace?.imageFull,
+                imagePath: imagePath,
+                latitude: fullSelectedPlace?.latitude,
+                longitude: fullSelectedPlace?.longitude
             });
+
             if (!result.success) {
                 Alert.alert(
                     'Share Error',
@@ -83,15 +101,23 @@ const PlaceFullCard = () => {
             }],
         }]}>
             <View style={styles.selectedPlaceFullCardBackground}>
-                <AppImage
-                    source={fullSelectedPlace?.imageFull}
-                    style={{
-                        width: '100%',
-                        height: '100%',
-                        borderRadius: theme.borderRadius.sm,
-                        resizeMode: 'stretch',
+                <ViewShot
+                    ref={imageRef}
+                    options={{
+                        format: 'jpg',
+                        quality: 0.8,
                     }}
-                />
+                >
+                    <AppImage
+                        source={fullSelectedPlace?.imageFull}
+                        style={{
+                            width: '100%',
+                            height: '100%',
+                            borderRadius: theme.borderRadius.sm,
+                            resizeMode: 'stretch',
+                        }}
+                    />
+                </ViewShot>
             </View>
             <SafeAreaView>
                 <View style={styles.selectedPlaceFullCardButtons}>
@@ -144,15 +170,12 @@ const PlaceFullCard = () => {
                                 {fullSelectedPlace?.address}
                             </Text>
                             <View style={styles.selectedPlaceFullCardTagsContainer}>
-                                <View style={styles.selectedPlaceFullCardTagItem}>
-                                    <Text style={styles.selectedPlaceFullCardTagItemText}>No. 1</Text>
-                                </View>
-                                <View style={styles.selectedPlaceFullCardTagItem}>
-                                    <Text style={styles.selectedPlaceFullCardTagItemText}>Steak house</Text>
-                                </View>
-                                <View style={styles.selectedPlaceFullCardTagItem}>
-                                    <Text style={styles.selectedPlaceFullCardTagItemText}>Meat</Text>
-                                </View>
+                                {fullSelectedPlace?.tags.map((tag, index) => (
+                                    <View key={tag.id} style={[styles.referralCardTag, { backgroundColor: styles[tag.style].backgroundColor }]}>
+                                        <Text style={[styles.referralCardTagText, { color: styles[tag.style].color }]}>{tag.title}</Text>
+                                    </View>
+                                ))}
+
                             </View>
                             <Text style={styles.selectedPlaceFullCardInfoItemDescription}>
                                 {fullSelectedPlace?.description}
@@ -374,5 +397,36 @@ const styles = StyleSheet.create({
         width: theme.responsive.size(24),
         height: theme.responsive.size(24),
         borderRadius: theme.borderRadius.round,
+    },
+
+    referralCardTag: {
+        marginTop: theme.spacing.md,
+        borderRadius: theme.borderRadius.sm,
+        paddingHorizontal: theme.spacing.sm,
+        paddingVertical: theme.spacing.xs,
+        ...theme.shadows.custom({
+            color: theme.colors.neutral[500],
+            offset: { width: 0, height: 1 },
+            opacity: 0.05,
+            radius: 1,
+        }),
+    },
+    referralCardTagText: {
+        fontSize: theme.responsive.size(12),
+        color: theme.colors.text.white,
+        fontWeight: theme.fontWeight.semiBold,
+        textTransform: 'capitalize',
+    },
+    tagStyle1: {
+        backgroundColor: theme.colors.background.tagStyle1,
+        color: theme.colors.text.tagStyle1,
+    },
+    tagStyle2: {
+        backgroundColor: theme.colors.background.tagStyle2,
+        color: theme.colors.text.tagStyle2,
+    },
+    tagStyle3: {
+        backgroundColor: theme.colors.background.tagStyle3,
+        color: theme.colors.text.tagStyle3,
     },
 })

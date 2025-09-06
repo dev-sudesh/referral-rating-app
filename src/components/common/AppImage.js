@@ -136,9 +136,15 @@ const AppImage = ({
 
     // Update image source when final source changes
     useEffect(() => {
-        setImageSource(finalImageSource);
-        setIsLoading(true);
-        setHasError(false);
+        if (finalImageSource) {
+            setImageSource(finalImageSource);
+            setIsLoading(true);
+            setHasError(false);
+        } else {
+            // If no source is available, show placeholder or fallback
+            setImageSource(null);
+            setIsLoading(false);
+        }
     }, [finalImageSource]);
 
     const handleLoad = useCallback(() => {
@@ -175,18 +181,35 @@ const AppImage = ({
     // Memoize loader visibility logic
     const shouldShowLoader = useMemo(() => {
         if (!showLoader) return false;
-        if (!isLoading && !isCaching) return false;
+
+        // Show loader if we're loading or caching
+        if (isLoading || isCaching) return true;
 
         // Don't show loader if image is already cached and cache is ready
         if (isCacheReady && source && typeof source === 'string' && source.includes('http') && isImageCached(source)) {
             return false;
         }
 
-        return true;
-    }, [showLoader, isLoading, isCaching, isCacheReady, source]);
+        // Show loader if we have no image source yet
+        if (!imageSource && source) return true;
+
+        return false;
+    }, [showLoader, isLoading, isCaching, isCacheReady, source, imageSource]);
 
     const renderImage = useCallback(() => {
         if (!imageSource) {
+            // Show placeholder if no image source is available
+            if (placeholderSource) {
+                return (
+                    <FastImage
+                        source={placeholderSource}
+                        style={[styles.image, imageStyle]}
+                        resizeMode={resizeMode}
+                        fadeDuration={fadeDurationOptimized}
+                        {...rest}
+                    />
+                );
+            }
             return null;
         }
 
@@ -202,7 +225,7 @@ const AppImage = ({
                 {...rest}
             />
         );
-    }, [imageSource, imageStyle, resizeMode, fadeDurationOptimized, handleLoad, handleError, rest]);
+    }, [imageSource, imageStyle, resizeMode, fadeDurationOptimized, handleLoad, handleError, placeholderSource, rest]);
 
     const renderLoader = useCallback(() => {
         if (!shouldShowLoader) {
@@ -220,33 +243,38 @@ const AppImage = ({
     }, [shouldShowLoader, loaderStyle, loaderSize, loaderColor]);
 
     const renderError = useCallback(() => {
-        if (!hasError || !fallbackSource) {
+        if (!hasError) {
             return null;
+        }
+
+        // Try fallback source first, then placeholder
+        const errorSource = fallbackSource || placeholderSource;
+
+        if (!errorSource) {
+            return (
+                <View style={[styles.errorContainer, styles.placeholderContainer]}>
+                    <View style={styles.placeholderBox} />
+                </View>
+            );
         }
 
         return (
             <View style={styles.errorContainer}>
                 <FastImage
-                    source={fallbackSource}
+                    source={errorSource}
                     defaultSource={placeholderSource}
                     style={[styles.image, imageStyle]}
                     resizeMode={resizeMode}
                     {...rest}
                 />
-                {/* <Image
-                    source={fallbackSource}
-                    style={[styles.image, imageStyle]}
-                    resizeMode={resizeMode}
-                    {...rest}
-                /> */}
             </View>
         );
-    }, [hasError, fallbackSource, imageStyle, resizeMode, fadeDurationOptimized, placeholderSource, rest]);
+    }, [hasError, fallbackSource, placeholderSource, imageStyle, resizeMode, rest]);
 
     return (
         <View style={[styles.container, containerStyle, style]}>
             {renderImage()}
-            {/* {renderLoader()} */}
+            {renderLoader()}
             {renderError()}
         </View>
     );
@@ -277,6 +305,17 @@ const styles = StyleSheet.create({
         left: 0,
         right: 0,
         bottom: 0,
+    },
+    placeholderContainer: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#f0f0f0',
+    },
+    placeholderBox: {
+        width: 40,
+        height: 40,
+        backgroundColor: '#d0d0d0',
+        borderRadius: 4,
     },
 });
 

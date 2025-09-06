@@ -481,8 +481,9 @@ const MapScreen = ({ navigation }) => {
                         showsTraffic={false}
                         showsIndoors={true}
                         mapType="standard"
+                        userInterfaceStyle="light"
                     >
-                        {selectedViewType === 'map' && filteredPlaces.map((place, index) => (
+                        {selectedViewType === 'map' && filteredPlaces.length > 0 && filteredPlaces.map((place, index) => (
                             <Marker
                                 key={place.id}
                                 coordinate={{

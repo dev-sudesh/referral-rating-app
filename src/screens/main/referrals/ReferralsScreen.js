@@ -29,7 +29,11 @@ const ReferralsScreen = ({ navigation }) => {
     const [filteredReferrals, setFilteredReferrals] = useState([]);
     const [filters, setFilters] = useState([{ id: 'all', label: 'All', selected: false }, { id: 'more', label: 'More Filters', selected: false }]);
     const [selectedFilters, setSelectedFilters] = useState([]);
-
+    const [filterToShow, setFilterToShow] = useState({
+        line1: [],
+        line2: [],
+    });
+    const [otherSelectedFilters, setOtherSelectedFilters] = useState([]);
 
     const { places, setSelectedPlace, setShowPlaceFullCard } = MapsController();
     const { isSearchFilterVisible, setIsSearchFilterVisible } = SearchFilterController();
@@ -44,51 +48,62 @@ const ReferralsScreen = ({ navigation }) => {
         }, [])
     );
 
+    const handleFilterCallback = (filters) => {
+        setOtherSelectedFilters([])
+        filters.map(filter => {
+            if (!filterToShow.line1.find(item => filter.id == item.id) && !filterToShow.line2.find(item => filter.id == item.id)) {
+                setOtherSelectedFilters(prev => [...prev, filter.id])
+            }
+
+        })
+        setSelectedFilters(filters)
+    }
+
     // Function to handle filter selection
     const handleFilterPress = (filterId) => {
         if (filterId == 'more') {
-            setIsSearchFilterVisible({ isSearchFilterVisible: true, filterHeight: Dimensions.get('window').height * 0.6, showSearchBar: false });
+            setIsSearchFilterVisible({
+                isSearchFilterVisible: true,
+                filterHeight: Dimensions.get('window').height * 0.7,
+                showSearchBar: false,
+                initialFilters: selectedFilters,
+                handleFilterCallback: handleFilterCallback
+            });
             return;
         }
         if (filterId == 'all') {
-            // if all is already selected unselect all keys
-            if (filters.find(filter => filter.id === filterId).selected) {
-                let newFilters = filters.map(filter => {
-                    if (filter.id != 'more') {
-                        return { ...filter, selected: false }
-                    }
-                    return filter;
-                })
-                setFilters(newFilters);
-            } else {
-                let newFilters = filters.map(filter => {
-                    if (filter.id != 'more') {
-                        return { ...filter, selected: true }
-                    }
-                    return filter;
-                })
-                setFilters(newFilters);
-            }
-        }
-        else {
+            // select only all key and unselected all the other keys
+            setOtherSelectedFilters([])
             setFilters(prevFilters =>
                 prevFilters.map(filter =>
                     filter.id == filterId
-                        ? { ...filter, selected: !filter.selected }
-                        : filter
+                        ? { ...filter, selected: true }
+                        : { ...filter, selected: false }
                 )
-            );
+            )
+            return;
         }
+
+        setFilters(prevFilters =>
+            prevFilters.map(filter =>
+                filter.id == filterId
+                    ? { ...filter, selected: !filter.selected }
+                    : filter.id == 'all'
+                        ? { ...filter, selected: false }
+                        : filter
+            )
+        )
+        return;
     };
 
     // Render individual filter chip
-    const renderFilterChip = (chip) => {
+    const renderFilterChip = (chip, count = null) => {
         return (
             <View style={styles.filterChipContainer} >
                 <TouchableOpacity
                     style={[
                         styles.filterOption,
-                        chip.selected && styles.filterOptionSelected
+                        (chip.selected || count > 0) && styles.filterOptionSelected
                     ]}
                     onPress={() => handleFilterPress(chip.id)}
                     activeOpacity={1}
@@ -113,9 +128,10 @@ const ReferralsScreen = ({ navigation }) => {
                         )}
                     <Text style={[
                         styles.filterOptionText,
-                        chip.selected && styles.filterOptionTextSelected
+                        chip.selected && styles.filterOptionTextSelected,
                     ]}>
                         {chip.label}
+                        {count > 0 && <Text style={styles.filterOptionTextCount}> ({count})</Text>}
                     </Text>
                 </TouchableOpacity>
             </View>
@@ -184,7 +200,12 @@ const ReferralsScreen = ({ navigation }) => {
     }, [places])
 
     React.useEffect(() => {
-        setSelectedFilters(filters.filter(filter => filter.selected).map(filter => filter.id))
+        setFilterToShow({
+            line1: filters.slice(0, Math.ceil(filters.length / 2)),
+            line2: filters.slice(Math.ceil(filters.length / 2)),
+        });
+        let updatedFilters = [...filters,]
+        setSelectedFilters(updatedFilters.filter(filter => filter.selected).map(filter => filter.id))
     }, [filters])
 
     React.useEffect(() => {
@@ -207,6 +228,7 @@ const ReferralsScreen = ({ navigation }) => {
             })
         }).flat()
         setFilters([{ id: 'all', label: 'All', selected: false }, ...filtersData, { id: 'more', label: 'More Filters', selected: false }])
+
     }, [])
 
     return (
@@ -236,7 +258,7 @@ const ReferralsScreen = ({ navigation }) => {
                         <View style={{ flexDirection: 'column', gap: theme.spacing.sm }}>
                             <View style={{ flexDirection: 'row', gap: theme.spacing.sm }}>
 
-                                {filters.slice(0, Math.ceil(filters.length / 2)).map((item, index) => (
+                                {filterToShow.line1.map((item, index) => (
                                     <View key={item.id} style={[
                                         styles.filterColumn,
                                     ]}>
@@ -245,13 +267,19 @@ const ReferralsScreen = ({ navigation }) => {
                                 ))}
                             </View>
                             <View style={{ flexDirection: 'row', gap: theme.spacing.sm }}>
-                                {filters.slice(Math.ceil(filters.length / 2)).map((item, index) => (
-                                    <View key={item.id} style={[
-                                        styles.filterColumn,
-                                    ]}>
-                                        {renderFilterChip(item)}
-                                    </View>
-                                ))}
+                                {filterToShow.line2.map((item, index) => {
+                                    let count = null;
+                                    if (item.id == 'more') {
+                                        count = otherSelectedFilters.length;
+                                    }
+                                    return (
+                                        <View key={item.id} style={[
+                                            styles.filterColumn,
+                                        ]}>
+                                            {renderFilterChip(item, count)}
+                                        </View>
+                                    )
+                                })}
                             </View>
                         </View>
                     </ScrollView>
@@ -420,6 +448,11 @@ const styles = StyleSheet.create({
     filterOptionTextSelected: {
         color: theme.colors.text.primary,
         fontWeight: theme.fontWeight.medium,
+    },
+    filterOptionTextCount: {
+        ...theme.typography.buttonSmall,
+        color: theme.colors.primary[500],
+        fontWeight: theme.fontWeight.bold,
     },
     filterOptionIcon: {
         width: 24,

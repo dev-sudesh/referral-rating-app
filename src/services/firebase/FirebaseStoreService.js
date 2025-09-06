@@ -825,7 +825,7 @@ const getFilteredPlaces = async (location, filters) => {
                 .filter(place =>
                     place.longitude >= longitude - lngRange &&
                     place.longitude <= longitude + lngRange &&
-                    filters.includes(place.category)
+                    filters.length === 0 || filters.includes(place.category)
                 ).sort((a, b) => a.rank - b.rank)
                 .slice(0, 10);
 

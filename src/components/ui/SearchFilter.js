@@ -11,6 +11,7 @@ import {
     Platform,
     StatusBar,
     Keyboard,
+    KeyboardAvoidingView,
 } from 'react-native';
 import RBSheet from 'react-native-raw-bottom-sheet';
 import { theme } from '../../constants/theme';
@@ -20,19 +21,14 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import Constants from '../../constants/data';
 import FirebaseStoreService from '../../services/firebase/FirebaseStoreService';
 import MapsController from '../../controllers/maps/MapsController';
-import KeyboardAvoidingView from '../common/KeyboardAvoidingView';
 
-const SearchFilter = ({
-    initialFilters = {},
-    loading = false
-}) => {
+const SearchFilter = () => {
 
     const [filterCategories, setFilterCategories] = useState(Constants.filters);
     const [filters, setFilters] = useState([]);
     const [searchFilterText, setSearchFilterText] = useState('');
     const bottomSheetRef = useRef(null);
-    const initialFiltersRef = useRef(JSON.stringify(initialFilters));
-    const { isSearchFilterVisible, setIsSearchFilterVisible, filterHeight, showSearchBar } = SearchFilterController();
+    const { isSearchFilterVisible, setIsSearchFilterVisible, filterHeight, showSearchBar, initialFilters, handleFilterCallback } = SearchFilterController();
     const { places, setPlaces, userLocation } = MapsController();
     const insets = useSafeAreaInsets();
 
@@ -74,8 +70,14 @@ const SearchFilter = ({
 
     // Apply filters and close
     const handleApplyFilters = async () => {
-        const places = await FirebaseStoreService.getFilteredPlaces(userLocation, filters);
-        setPlaces(places);
+        if (handleFilterCallback) {
+
+            handleFilterCallback(filters);
+        } else {
+            const places = await FirebaseStoreService.getFilteredPlaces(userLocation, filters);
+            setPlaces(places);
+        }
+
         if (onClose) {
             onClose();
         }
@@ -168,6 +170,12 @@ const SearchFilter = ({
         getFilters();
     }, []);
 
+    React.useEffect(() => {
+        if (initialFilters) {
+            setFilters(initialFilters);
+        }
+    }, [initialFilters]);
+
     return (
         <RBSheet
             ref={bottomSheetRef}
@@ -230,13 +238,15 @@ const SearchFilter = ({
                         </View>
                     </View>
                 }
+                <KeyboardAvoidingView style={{ flex: 1 }}
+                    behavior="padding"
+                    keyboardVerticalOffset={0}
+                >
 
-
-                <KeyboardAvoidingView style={{ flex: 1 }}>
-
-                    {/* Filter Categories */}
                     <ScrollView
                         style={styles.filterContent}
+                        keyboardShouldPersistTaps="handled"
+                        keyboardDismissMode="none"
                         showsVerticalScrollIndicator={false}
                         contentContainerStyle={styles.filterContentContainer}
                     >
@@ -257,7 +267,6 @@ const SearchFilter = ({
                             <Text style={styles.applyButtonText}>Show results</Text>
                         </TouchableOpacity>
                     </View>
-
                 </KeyboardAvoidingView>
 
             </View>
