@@ -27,6 +27,8 @@ import ListScreen from './ListScreen';
 import MapsController from '../../../controllers/maps/MapsController';
 import FirebaseStoreService from '../../../services/firebase/FirebaseStoreService';
 import ReferralController from '../../../controllers/referrals/ReferralController';
+import PlaceCard from '../../../components/ui/PlaceCard';
+import PlaceSelectedCard from '../../../components/ui/PlaceSelectedCard';
 
 const MapScreen = ({ navigation }) => {
     const [selectedFilter, setSelectedFilter] = useState('all');
@@ -276,22 +278,17 @@ const MapScreen = ({ navigation }) => {
     }, [centerLocation, isMapReady, isScreenFocused]);
 
     const referPlace = async (place) => {
-        //     if (!place?.isReferred) {
-        //         setShowReferralAlert(true);
-        //     }
-        // };
-
-        // const referPlaceSubmit = async (place) => {
-        await FirebaseStoreService.storeReferredPlace(place);
+        FirebaseStoreService.storeReferredPlace(place);
         if (place.isReferred) {
             // unrefer place
-            setFilteredPlaces(filteredPlaces.map(p => p.id === place.id ? { ...p, isReferred: false } : p));
-            setPlaces(places.map(p => p.id === place.id ? { ...p, isReferred: false } : p));
+            const updatedPlaces = places.map(p => p.id === place.id ? { ...p, isReferred: false } : p);
+            setPlaces(updatedPlaces);
             setSelectedPlace(prev => prev.id === place.id ? { ...prev, isReferred: false } : prev);
             return;
         }
-        setFilteredPlaces(filteredPlaces.map(p => p.id === place.id ? { ...p, isReferred: true } : p));
-        setPlaces(places.map(p => p.id === place.id ? { ...p, isReferred: true } : p));
+        // refer place
+        const updatedPlaces = places.map(p => p.id === place.id ? { ...p, isReferred: true } : p);
+        setPlaces(updatedPlaces);
         setSelectedPlace(prev => prev.id === place.id ? { ...prev, isReferred: true } : prev);
     };
 
@@ -370,10 +367,6 @@ const MapScreen = ({ navigation }) => {
             return renderSelectedPlaceCard();
         }
 
-        // Calculate opacity based on distance from focused index
-        const distanceFromFocused = Math.abs(index - focusedPlaceIndex);
-        const opacity = distanceFromFocused === 0 ? 1 : Math.max(0.2, 1 - (distanceFromFocused * 0.7));
-
         return (
             <>
                 <TouchableOpacity
@@ -405,18 +398,20 @@ const MapScreen = ({ navigation }) => {
     }
 
     const showPlaceCard = ({ place, scroll }) => {
-        setSelectedPlace(place);
+        // Find the updated place from places array to get the latest isReferred status
+        const updatedPlace = places.find(p => p.id === place.id) || place;
+        setSelectedPlace(updatedPlace);
         setShowPlaceBigCard(true);
         const location = {
-            latitude: place.latitude,
-            longitude: place.longitude,
+            latitude: updatedPlace.latitude,
+            longitude: updatedPlace.longitude,
             latitudeDelta: 0.032,
             longitudeDelta: 0.032,
         };
         setCenterLocation(location);
         try {
             if (scroll) {
-                placesListRef.current.scrollToIndex({ index: place.rank - 1, viewPosition: 0.5 });
+                placesListRef.current.scrollToIndex({ index: updatedPlace.rank - 1, viewPosition: 0.5 });
             }
         } catch (error) {
         }
@@ -429,7 +424,7 @@ const MapScreen = ({ navigation }) => {
     }, [centerLocation?.latitude, centerLocation?.longitude, isScreenFocused]);
 
     React.useEffect(() => {
-        if (userLocation) {
+        if (userLocation && places.length === 0) {
             const location = {
                 latitude: userLocation.latitude,
                 longitude: userLocation.longitude,
@@ -443,13 +438,13 @@ const MapScreen = ({ navigation }) => {
                 setPlaceUpdated(true);
             });
         }
-    }, [userLocation]);
+    }, [userLocation, places.length]);
 
     React.useEffect(() => {
-        if (placeReferredStatus) {
-            referPlaceSubmit(selectedPlace);
+        if (placeReferredStatus && selectedPlace) {
+            referPlace(selectedPlace);
         }
-    }, [placeReferredStatus]);
+    }, [placeReferredStatus, selectedPlace]);
 
     // Cleanup animation timeout on unmount
     React.useEffect(() => {
@@ -571,7 +566,7 @@ const MapScreen = ({ navigation }) => {
                                     horizontal
                                     showsHorizontalScrollIndicator={false}
                                     data={filteredPlaces}
-                                    renderItem={renderPlaceCard}
+                                    renderItem={({ item, index }) => selectedPlace?.id === item.id ? <PlaceSelectedCard /> : <PlaceCard place={item} />}
                                     keyExtractor={(item) => item.id}
                                     snapToInterval={theme.responsive.screen().width}
                                     decelerationRate="fast"
@@ -587,7 +582,9 @@ const MapScreen = ({ navigation }) => {
                                     }}
                                     scrollEventThrottle={16}
                                 />
-
+                                <View style={{
+                                    height: showPlaceFullCard ? theme.responsive.size(60) : 0,
+                                }} />
                             </View>
                             : <View style={{
                                 position: 'absolute',

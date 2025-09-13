@@ -463,7 +463,9 @@ const getReferredPlaces = async () => {
 
         const places = [];
         Object.keys(referredPlaces).forEach(key => {
-            places.push(referredPlaces[key]);
+            const place = referredPlaces[key];
+            // Ensure the place has isReferred set to true since it's from the referred places collection
+            places.push({ ...place, isReferred: true });
         });
 
         // Sort client-side by referredAt (most recent first)
