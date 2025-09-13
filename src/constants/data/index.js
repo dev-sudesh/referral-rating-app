@@ -74,6 +74,7 @@ const Constants = {
         SignInOptions: 'SignInOptions',
         WebView: 'WebView',
         RewardDetail: 'RewardDetail',
+        NetworkError: 'NetworkError',
     },
     nearbyPlaces: [
         {

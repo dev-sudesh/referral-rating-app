@@ -12,10 +12,19 @@ import FavoriteFilters from '../screens/main/favorite-filters/FavoriteFilters';
 import ListScreen from '../screens/main/map/ListScreen';
 import WebViewScreen from '../screens/main/webview/WebViewScreen';
 import RewardDetailScreen from '../screens/main/rewards/RewardDetailScreen';
+import NetworkErrorScreen from '../screens/NetworkErrorScreen';
+import useNetworkConnectivity from '../hooks/useNetworkConnectivity';
 
 const Stack = createStackNavigator();
 
 const AppNavigator = () => {
+    const { hasValidConnection } = useNetworkConnectivity();
+
+    // If no network connection, show network error screen
+    if (!hasValidConnection) {
+        return <NetworkErrorScreen onRetry={() => { }} />;
+    }
+
     return (
         <NavigationContainer>
             <Stack.Navigator
@@ -34,6 +43,7 @@ const AppNavigator = () => {
                 <Stack.Screen name={Constants.Screen.List} component={ListScreen} />
                 <Stack.Screen name={Constants.Screen.WebView} component={WebViewScreen} />
                 <Stack.Screen name={Constants.Screen.RewardDetail} component={RewardDetailScreen} />
+                <Stack.Screen name={Constants.Screen.NetworkError} component={NetworkErrorScreen} />
             </Stack.Navigator>
         </NavigationContainer>
     );
