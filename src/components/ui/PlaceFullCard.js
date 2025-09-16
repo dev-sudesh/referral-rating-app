@@ -124,6 +124,7 @@ const PlaceFullCard = () => {
                     <Pressable style={styles.selectedPlaceFullCardButtonItem} onPress={() => {
                         setShowPlaceFullCard(false);
                         setShowPlaceBigCard(false);
+                        setSelectedPlace(null);
                     }}>
                         <IconAsset.closeIcon
                             width={24}

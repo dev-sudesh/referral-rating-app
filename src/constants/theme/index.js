@@ -12,7 +12,7 @@ export const spacing = {
     xl: ResponsiveUI.size(32),
     xxl: ResponsiveUI.size(48),
     xxxl: ResponsiveUI.size(64),
-
+    custom: (size) => ResponsiveUI.size(size),
     // Specific spacing for common use cases - now responsive
     screenPadding: ResponsiveUI.horizontalPadding(),
     cardPadding: ResponsiveUI.padding.md,

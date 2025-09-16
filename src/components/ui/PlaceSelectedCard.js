@@ -49,11 +49,11 @@ const PlaceSelectedCard = () => {
                         <AppImage
                             source={selectedPlace?.imageFull}
                             placeholderSource={selectedPlace?.image}
+                            resizeMode='cover'
                             style={{
                                 width: '100%',
                                 height: '100%',
                                 borderRadius: theme.borderRadius.sm,
-                                resizeMode: 'cover',
                             }}
                         />
                     </View>

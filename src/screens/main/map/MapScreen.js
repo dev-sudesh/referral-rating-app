@@ -8,9 +8,7 @@ import {
     FlatList,
     Pressable,
     Platform,
-    Animated,
 } from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
 import { useFocusEffect, useIsFocused } from '@react-navigation/native';
 import MapView, { Animated as AnimatedMap, AnimatedRegion, Marker, AnimatedMapView } from 'react-native-maps';
 import Geolocation from '@react-native-community/geolocation';
@@ -55,14 +53,6 @@ const MapScreen = ({ navigation }) => {
     const [isScreenFocused, setIsScreenFocused] = useState(false);
     const [focusedPlaceIndex, setFocusedPlaceIndex] = useState(0);
     const isFocused = useIsFocused();
-    const scrollX = useRef(new Animated.Value(0)).current;
-
-    // Create animated gradient opacity based on scroll position
-    const gradientOpacity = scrollX.interpolate({
-        inputRange: [50, 50],
-        outputRange: [0.5, 0.5],
-        extrapolate: 'clamp',
-    });
 
 
     const { setShowReferralAlert, placeReferredStatus } = ReferralController();
@@ -575,31 +565,6 @@ const MapScreen = ({ navigation }) => {
                                         />
                                     </Pressable>
                                 </View>
-                                {/* Left Fade Gradient - only show when not at the beginning */}
-                                {!showPlaceFullCard && focusedPlaceIndex > 0 && (
-                                    <Animated.View style={[styles.leftFadeGradient, { opacity: gradientOpacity }]}>
-                                        <LinearGradient
-                                            colors={['rgba(0, 0, 0, 0.5)', 'rgba(0, 0, 0, 0)']}
-                                            locations={[0, 1]}
-                                            start={{ x: 0, y: 0 }}
-                                            end={{ x: 1, y: 0 }}
-                                            style={styles.fadeGradient}
-                                        />
-                                    </Animated.View>
-                                )}
-
-                                {/* Right Fade Gradient - only show when not at the end */}
-                                {!showPlaceFullCard && focusedPlaceIndex < filteredPlaces.length - 1 && (
-                                    <Animated.View style={[styles.rightFadeGradient, { opacity: gradientOpacity }]}>
-                                        <LinearGradient
-                                            colors={['rgba(0, 0, 0, 0)', 'rgba(0, 0, 0, 0.5)',]}
-                                            locations={[0, 1]}
-                                            start={{ x: 0, y: 0 }}
-                                            end={{ x: 1, y: 0 }}
-                                            style={styles.fadeGradient}
-                                        />
-                                    </Animated.View>
-                                )}
                                 <FlatList
                                     ref={placesListRef}
                                     horizontal
@@ -613,18 +578,12 @@ const MapScreen = ({ navigation }) => {
                                     pagingEnabled={true}
                                     scrollEnabled={true}
                                     contentContainerStyle={styles.placeCardContainer}
-                                    onScroll={Animated.event(
-                                        [{ nativeEvent: { contentOffset: { x: scrollX } } }],
-                                        {
-                                            useNativeDriver: false,
-                                            listener: (event) => {
-                                                const contentOffset = event.nativeEvent.contentOffset.x;
-                                                const itemWidth = theme.responsive.screen().width;
-                                                const focusedIndex = Math.round(contentOffset / itemWidth);
-                                                setFocusedPlaceIndex(Math.max(0, Math.min(focusedIndex, filteredPlaces.length - 1)));
-                                            }
-                                        }
-                                    )}
+                                    onScroll={(event) => {
+                                        const contentOffset = event.nativeEvent.contentOffset.x;
+                                        const itemWidth = theme.responsive.screen().width;
+                                        const focusedIndex = Math.round(contentOffset / itemWidth);
+                                        setFocusedPlaceIndex(Math.max(0, Math.min(focusedIndex, filteredPlaces.length - 1)));
+                                    }}
                                     scrollEventThrottle={16}
                                 />
 
@@ -899,27 +858,6 @@ const styles = StyleSheet.create({
         height: theme.responsive.size(24),
         borderRadius: theme.borderRadius.round,
     },
-    leftFadeGradient: {
-        position: 'absolute',
-        left: 0,
-        height: theme.responsive.size(100),
-        bottom: theme.spacing.md,
-        width: theme.responsive.size(25),
-        pointerEvents: 'none',
-    },
-    rightFadeGradient: {
-        position: 'absolute',
-        right: 0,
-        height: theme.responsive.size(100),
-        bottom: theme.spacing.md,
-        width: theme.responsive.size(25),
-        pointerEvents: 'none',
-    },
-    fadeGradient: {
-        flex: 1,
-        width: '100%',
-        height: '100%',
-    }
 });
 
 export default MapScreen; 
