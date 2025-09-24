@@ -15,6 +15,7 @@ const AsyncStoreUtils = {
         APP_SETTINGS: 'app_settings',
         LAST_LOGIN_DATE: 'last_login_date',
         USER_DETAILS: 'user_details',
+        USER_LAST_LOCATION: 'user_last_location',
     },
 
     // Secure Keys - stored in Keychain

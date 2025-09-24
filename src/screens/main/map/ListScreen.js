@@ -22,6 +22,8 @@ import ToastUtils from '../../../utils/ToastUtils';
 import MapsController from '../../../controllers/maps/MapsController';
 import FirebaseStoreService from '../../../services/firebase/FirebaseStoreService';
 import ReferralController from '../../../controllers/referrals/ReferralController';
+import PlaceSelectedCard from '../../../components/ui/PlaceSelectedCard';
+import PlaceCard from '../../../components/ui/PlaceCard';
 
 const ListScreen = () => {
     const [selectedFilter, setSelectedFilter] = useState('all');
@@ -41,24 +43,14 @@ const ListScreen = () => {
     const bottomSheetRef = useRef(null);
     const { isSearchFilterVisible, setIsSearchFilterVisible } = SearchFilterController();
     const placesListRef = useRef(null);
-    const { selectedViewType, setSelectedViewType, showPlaceFullCard, setShowPlaceFullCard, selectedPlace, setSelectedPlace, places, setPlaces } = MapsController();
+    const { selectedViewType, setSelectedViewType, showPlaceFullCard, setShowPlaceFullCard, selectedPlace, setSelectedPlace, places, setPlaces, showPlaceBigCard, setShowPlaceBigCard } = MapsController();
     const [isMapReady, setIsMapReady] = useState(false);
-    const [showPlaceBigCard, setShowPlaceBigCard] = useState(false);
     const [isScreenFocused, setIsScreenFocused] = useState(false);
 
     const { setShowReferralAlert, placeReferredStatus } = ReferralController();
     const isFocused = useIsFocused();
 
     const timeoutRef = useRef(null);
-
-    useEffect(() => {
-        if (isFocused) {
-            setTimeout(() => {
-                requestLocationPermission();
-            }, 1000);
-
-        }
-    }, [isFocused]);
 
     // Hide status bar when screen is focused
     useFocusEffect(
@@ -70,141 +62,6 @@ const ListScreen = () => {
             };
         }, [])
     );
-
-    const requestLocationPermission = async () => {
-        try {
-            setIsLoadingLocation(true);
-
-            // Determine the correct permission based on platform
-            const locationPermission = Platform.OS === 'ios'
-                ? PERMISSIONS.IOS.LOCATION_WHEN_IN_USE
-                : PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION;
-
-            // Check current permission status
-            const permissionStatus = await check(locationPermission);
-
-            if (permissionStatus === RESULTS.GRANTED) {
-                setLocationPermissionGranted(true);
-                getCurrentLocation();
-                return;
-            }
-
-            if (permissionStatus === RESULTS.DENIED) {
-                // Request permission
-                const requestResult = await request(locationPermission);
-
-                if (requestResult === RESULTS.GRANTED) {
-                    setLocationPermissionGranted(true);
-                    getCurrentLocation();
-                } else {
-                    handleLocationPermissionDenied();
-                }
-            } else {
-                handleLocationPermissionDenied();
-            }
-        } catch (error) {
-            ToastUtils.error('Failed to request location permission');
-            setIsLoadingLocation(false);
-        }
-    };
-
-    const getCurrentLocation = () => {
-        Geolocation.getCurrentPosition(
-            (position) => {
-                if (!isFocused) {
-                    setIsLoadingLocation(false);
-                    return;
-                }
-                const { latitude, longitude } = position.coords;
-                const newUserLocation = { latitude, longitude };
-
-                setUserLocation(newUserLocation);
-                setIsLoadingLocation(false);
-
-                // Center map on user location
-                const newRegion = {
-                    latitude,
-                    longitude,
-                    latitudeDelta: 0.032,
-                    longitudeDelta: 0.032,
-                };
-                setCenterLocation(newRegion);
-
-                if (placeUpdated) {
-                    return;
-                }
-
-                // update places lat and long based on current location create new lat and long randomly within 3000 meters of the current location
-                const updatedPlaces = places.map(place => ({
-                    ...place,
-                    latitude: latitude + (Math.random() * 0.03 - 0.015),
-                    longitude: longitude + (Math.random() * 0.03 - 0.015),
-                }));
-                setPlaces(updatedPlaces);
-                setPlaceUpdated(true);
-            },
-            (error) => {
-                setIsLoadingLocation(false);
-
-                switch (error.code) {
-                    case 1:
-                        ToastUtils.error('Location access denied');
-                        break;
-                    case 2:
-                        ToastUtils.error('Location unavailable');
-                        break;
-                    case 3:
-                        ToastUtils.error('Location request timeout');
-                        break;
-                    default:
-                        ToastUtils.error('Failed to get location');
-                        break;
-                }
-
-                // Fallback to default location
-                setUserLocation({
-                    latitude: 37.78825,
-                    longitude: -122.4324,
-                });
-            },
-            {
-                enableHighAccuracy: true,
-            }
-        );
-    };
-
-    const handleLocationPermissionDenied = () => {
-        setLocationPermissionGranted(false);
-        setIsLoadingLocation(false);
-
-        ToastUtils.warning('Location permission denied. Using default location.', {
-            title: 'Location Access',
-        });
-
-        // Use default location
-        setUserLocation({
-            latitude: 37.78825,
-            longitude: -122.4324,
-        });
-    };
-
-    const centerOnUserLocation = () => {
-        if (locationPermissionGranted && userLocation) {
-            getCurrentLocation();
-        } else {
-            requestLocationPermission();
-        }
-    };
-
-    const filters = [
-        { id: 'all', label: 'All' },
-        { id: 'restaurants', label: 'Restaurants' },
-        { id: 'shops', label: 'Shops' },
-        { id: 'services', label: 'Services' },
-    ];
-
-
-
     React.useEffect(() => {
         const filterData = selectedFilter === 'all'
             ? places
@@ -212,53 +69,25 @@ const ListScreen = () => {
         setFilteredPlaces(filterData);
     }, [places, selectedFilter]);
 
-    const centerOnLocation = React.useCallback(() => {
-        if (!centerLocation || !mapRef.current || !isMapReady || !isScreenFocused) {
-            console.warn('Cannot animate map: missing centerLocation, mapRef, map not ready, or screen not focused');
-            return;
-        }
-
-        try {
-            mapRef.current.animateToRegion(centerLocation, 1000);
-        } catch (error) {
-            console.error('Error animating map region:', error);
-            // Fallback to setRegion if animation fails
-            try {
-                mapRef.current.setRegion(centerLocation);
-            } catch (fallbackError) {
-                console.error('Fallback setRegion also failed:', fallbackError);
-            }
-        } finally {
-            timeoutRef.current = setTimeout(() => {
-                setRegion(centerLocation);
-            }, 1000);
-        }
-    }, [centerLocation, isMapReady, isScreenFocused]);
-
     const referPlace = async (place) => {
-        if (!place?.isReferred) {
-            setShowReferralAlert(true);
-        }
-    };
-
-    const referPlaceSubmit = async (place) => {
-        await FirebaseStoreService.storeReferredPlace(place);
+        FirebaseStoreService.storeReferredPlace(place);
         if (place.isReferred) {
             // unrefer place
-            setFilteredPlaces(filteredPlaces.map(p => p.id === place.id ? { ...p, isReferred: false } : p));
-            setPlaces(places.map(p => p.id === place.id ? { ...p, isReferred: false } : p));
+            const updatedPlaces = places.map(p => p.id === place.id ? { ...p, isReferred: false } : p);
+            setPlaces(updatedPlaces);
             setSelectedPlace(prev => prev.id === place.id ? { ...prev, isReferred: false } : prev);
             return;
         }
-        setFilteredPlaces(filteredPlaces.map(p => p.id === place.id ? { ...p, isReferred: true } : p));
-        setPlaces(places.map(p => p.id === place.id ? { ...p, isReferred: true } : p));
+        // refer place
+        const updatedPlaces = places.map(p => p.id === place.id ? { ...p, isReferred: true } : p);
+        setPlaces(updatedPlaces);
         setSelectedPlace(prev => prev.id === place.id ? { ...prev, isReferred: true } : prev);
     };
 
 
     React.useEffect(() => {
         if (placeReferredStatus) {
-            referPlaceSubmit(selectedPlace);
+            referPlace(selectedPlace);
         }
     }, [placeReferredStatus]);
 
@@ -268,132 +97,6 @@ const ListScreen = () => {
         }
     }, [isScreenFocused]);
 
-    const renderSelectedPlaceCard = React.useCallback(() => {
-        return (
-            <Pressable style={[styles.placeCardBig, { opacity: showPlaceFullCard ? 0 : 1 }]} activeOpacity={0.8} onPress={() => {
-                setShowPlaceFullCard(true);
-                setShowPlaceBigCard(false);
-            }}>
-                {/* SVG Curved Card */}
-                {selectedPlace.isReferred && (
-                    <View style={styles.placeCardReferred}>
-                        <View style={styles.placeCardReferredContent}>
-                            <AppImage
-                                source={ImageAsset.logos.logoSmall}
-                                style={styles.placeCardReferredLogo}
-                            />
-                            <Text style={styles.placeCardReferredText}>Referred Location</Text>
-                        </View>
-                    </View>
-                )}
-                <CurvedCard
-                    width={theme.responsive.screen().width - (theme.spacing.lg * 2)}
-                    height={theme.responsive.size(220)}
-                    curveDepth={40}
-                    cornerRadius={theme.borderRadius.lg}
-                    style={styles.svgCardContainer}
-                >
-                    <View style={styles.placeCardHeader}>
-                        <View style={styles.placeCardImageFull}>
-                            <AppImage
-                                source={selectedPlace?.imageFull}
-                                placeholderSource={selectedPlace?.image}
-                                style={{
-                                    width: '100%',
-                                    height: '100%',
-                                    borderRadius: theme.borderRadius.sm,
-                                    resizeMode: 'cover',
-                                }}
-                            />
-                        </View>
-                    </View>
-                    <View style={styles.placeCardInfo}>
-                        <View style={styles.placeInfoFull}>
-                            <Text style={styles.placeNameFull}>
-                                {selectedPlace?.name}
-                            </Text>
-                            <Text style={styles.placeCategory}>
-                                {selectedPlace?.address}
-                            </Text>
-                        </View>
-                    </View>
-                </CurvedCard>
-
-                <Pressable style={styles.placeCardFooter} onPress={() => referPlace(selectedPlace)}>
-                    <View style={[styles.placeCardFooterContent, selectedPlace.isReferred && styles.placeCardFooterContentReferred]}>
-                        <AppImage
-                            source={ImageAsset.logos.logoSmall}
-                            style={styles.placeLogo}
-                        />
-                    </View>
-                </Pressable>
-            </Pressable>
-        )
-    }, [selectedPlace, showPlaceFullCard, showPlaceBigCard]);
-
-    const renderPlaceCard = (place, index) => {
-        if (selectedPlace?.id === place.id && (showPlaceFullCard || showPlaceBigCard)) {
-            return renderSelectedPlaceCard();
-        }
-        return (
-            <>
-                <TouchableOpacity
-
-                    key={place.id}
-                    style={[styles.placeCard]}
-                    activeOpacity={1}
-                    onPress={() => showPlaceCard({ place, scroll: false })}
-                >
-                    <View style={styles.placeCardInner}>
-                        <View style={styles.placeCardImage}>
-                            <AppImage
-                                source={place.imageFull}
-                                placeholderSource={place.image}
-                                style={{
-                                    width: '100%',
-                                    height: '100%',
-                                    borderRadius: theme.borderRadius.sm,
-                                }}
-                            />
-                        </View>
-                        <View style={styles.placeInfo}>
-                            <Text style={styles.placeName}>{place.name}</Text>
-                            <Text style={styles.placeCategory}>{place.address}</Text>
-                        </View>
-                    </View>
-                    <View style={styles.placeCardIndex}>
-                        <Text style={styles.placeCardIndexText}>
-                            {index + 1}
-                        </Text>
-                    </View>
-                </TouchableOpacity>
-            </>
-        )
-    }
-
-    const showPlaceCard = ({ place, scroll }) => {
-        setSelectedPlace(place);
-        setShowPlaceBigCard(true);
-        const location = {
-            latitude: place.latitude,
-            longitude: place.longitude,
-            latitudeDelta: 0.032,
-            longitudeDelta: 0.032,
-        };
-        setCenterLocation(location);
-        try {
-            if (scroll) {
-                placesListRef.current.scrollToIndex({ index: place.rank - 1, viewPosition: 0.5 });
-            }
-        } catch (error) {
-        }
-    };
-
-    React.useEffect(() => {
-        if (centerLocation?.latitude && centerLocation?.longitude && isScreenFocused) {
-            centerOnLocation();
-        }
-    }, [centerLocation?.latitude, centerLocation?.longitude, isScreenFocused]);
 
     React.useEffect(() => {
         if (userLocation) {
@@ -429,7 +132,7 @@ const ListScreen = () => {
                     <FlatList
                         ref={placesListRef}
                         data={filteredPlaces}
-                        renderItem={({ item, index }) => renderPlaceCard(item, index)}
+                        renderItem={({ item, index }) => selectedPlace?.id === item.id ? <PlaceSelectedCard /> : <PlaceCard place={item} />}
                         keyExtractor={(item) => item.id}
                         contentContainerStyle={styles.placeCardContainer}
                     />
@@ -553,6 +256,10 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
         alignItems: 'center',
         zIndex: 1000,
+    },
+    placeCardPressable: {
+        width: '100%',
+        alignItems: 'center',
     },
     // SVG Curved Card Styles
     svgCardContainer: {

@@ -58,7 +58,23 @@ const SplashScreen = () => {
         }
     }
 
+    const getLastLocation = async () => {
+        try {
+            const lastLocation = await AsyncStoreUtils.getItem(AsyncStoreUtils.Keys.USER_LAST_LOCATION);
+            global.userLastLocation = {
+                latitude: lastLocation.latitude,
+                longitude: lastLocation.longitude,
+                latitudeDelta: 0.032,
+                longitudeDelta: 0.032,
+            };
+            return lastLocation;
+        } catch (error) {
+            console.error('Error getting last location:', error);
+        }
+    }
+
     useEffect(() => {
+        getLastLocation();
         // Hide splash screen after a minimum delay
         splashTimeout.current = setTimeout(() => {
             NativeModuleUtils.SplashScreen.hide();
