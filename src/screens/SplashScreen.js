@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { useNavigation } from '@react-navigation/native';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, StatusBar } from 'react-native';
 import { theme } from '../constants/theme';
 import AppImage from '../components/common/AppImage';
 import LoadingIndicator from '../components/animated/LoadingIndicator';
@@ -74,6 +74,8 @@ const SplashScreen = () => {
     }
 
     useEffect(() => {
+
+        StatusBar.setHidden(true);
         getLastLocation();
         // Hide splash screen after a minimum delay
         splashTimeout.current = setTimeout(() => {

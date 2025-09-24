@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import {
     View,
     Text,
@@ -6,6 +6,7 @@ import {
     FlatList,
     TouchableOpacity,
     ActivityIndicator,
+    StatusBar,
 } from 'react-native';
 import { theme } from '../../constants/theme';
 import Constants from '../../constants/data';
@@ -79,6 +80,10 @@ const OnboardingScreen = ({ navigation }) => {
         isLastSlide ? 'Get Started' : 'Next',
         [isLastSlide]
     );
+
+    useEffect(() => {
+        StatusBar.setHidden(true);
+    }, []);
 
     return (
         <ScreenContainer {...ScreenContainer.presets.full}
