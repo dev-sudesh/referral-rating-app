@@ -25,17 +25,13 @@ const DatabaseConnectionTest = () => {
             await FirebaseStoreService.storeUserFilters(testFilters);
             const retrievedFilters = await FirebaseStoreService.getUserFilters();
             results.filters = Object.keys(retrievedFilters).length > 0 ? '✅ Success' : '❌ Failed';
-            console.log('Filters test result:', results.filters);
 
             // Test 3: Store and retrieve search keyword
-            console.log('Testing search keywords...');
             await FirebaseStoreService.storeSearchKeyword('test restaurant');
             const suggestions = await FirebaseStoreService.getSearchSuggestions();
             results.search = suggestions.length > 0 ? '✅ Success' : '❌ Failed';
-            console.log('Search test result:', results.search);
 
             // Test 4: Store and retrieve location
-            console.log('Testing location storage...');
             const testLocation = {
                 latitude: 37.7749,
                 longitude: -122.4194,
@@ -45,10 +41,8 @@ const DatabaseConnectionTest = () => {
             await FirebaseStoreService.storeLastLocation(testLocation);
             const retrievedLocation = await FirebaseStoreService.getLastLocation();
             results.location = retrievedLocation ? '✅ Success' : '❌ Failed';
-            console.log('Location test result:', results.location);
 
             // Test 5: Store and retrieve referred place
-            console.log('Testing referred places...');
             const testPlace = {
                 placeId: 'test_place_123',
                 name: 'Test Restaurant',
@@ -61,13 +55,10 @@ const DatabaseConnectionTest = () => {
             await FirebaseStoreService.storeReferredPlace(testPlace);
             const places = await FirebaseStoreService.getReferredPlaces();
             results.places = places.length > 0 ? '✅ Success' : '❌ Failed';
-            console.log('Places test result:', results.places);
 
             // Test 6: Get user stats
-            console.log('Testing user statistics...');
             const stats = await FirebaseStoreService.getUserStats();
             results.stats = stats ? '✅ Success' : '❌ Failed';
-            console.log('Stats test result:', results.stats);
 
         } catch (error) {
             console.error('Database connection test failed:', error);

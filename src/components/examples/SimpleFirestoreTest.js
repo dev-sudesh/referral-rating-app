@@ -11,24 +11,18 @@ const SimpleFirestoreTest = () => {
         setTestResult('Testing...');
 
         try {
-            console.log('Starting Firestore connection test...');
 
             // Test 1: Basic Firestore instance
             const db = getFirestore();
-            console.log('Firestore instance created:', !!db);
 
             // Test 2: Try to access a collection
             const testCollection = collection(db, 'test_connection');
-            console.log('Test collection reference created:', !!testCollection);
 
             // Test 3: Try to get a document (this should work even if empty)
             const testDoc = doc(testCollection, 'test_doc');
-            console.log('Test document reference created:', !!testDoc);
 
             // Test 4: Try to get the document (this will fail if Firestore is not accessible)
             const docSnapshot = await getDoc(testDoc);
-            console.log('Document snapshot retrieved:', !!docSnapshot);
-            console.log('Document exists:', docSnapshot.exists);
 
             // Test 5: Try to write a test document
             const testData = {
@@ -38,16 +32,13 @@ const SimpleFirestoreTest = () => {
             };
 
             await setDoc(testDoc, testData);
-            console.log('Test document written successfully');
 
             // Test 6: Read it back
             const readSnapshot = await getDoc(testDoc);
             const readData = readSnapshot.data();
-            console.log('Test document read back:', readData);
 
             // Test 7: Clean up - delete the test document
             await deleteDoc(testDoc);
-            console.log('Test document deleted');
 
             setTestResult('✅ Firestore connection successful!');
             Alert.alert('Success', 'Firestore is properly connected and working!');

@@ -72,7 +72,6 @@ const RewardDetailScreen = () => {
 
     const getRewardRedeemedStatus = () => {
         FirebaseStoreService.isRewardRedeemed(reward.id).then((isRedeemed) => {
-            console.log('isRedeemed', isRedeemed);
             // setIsRedeemed(isRedeemed);
         });
     }

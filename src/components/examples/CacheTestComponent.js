@@ -13,11 +13,8 @@ const CacheTestComponent = () => {
 
     useEffect(() => {
         // Log cache status when component mounts
-        console.log('[CacheTest] Component mounted, cache ready:', isCacheReady);
         if (isCacheReady) {
             const isCached = checkCached(testImageUrl);
-            console.log('[CacheTest] Image cached:', isCached);
-            console.log('[CacheTest] Cache stats:', cacheStats);
         }
     }, [isCacheReady, testImageUrl, checkCached, cacheStats]);
 

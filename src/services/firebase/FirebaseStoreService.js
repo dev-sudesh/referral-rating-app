@@ -1063,7 +1063,6 @@ const getRewards = async (status) => {
         const currentDate = new Date();
         const sixMonthsAgo = new Date(currentDate.getTime() - 6 * 30 * 24 * 60 * 60 * 1000);
         const sortedRewards = snapshot.docs.map(doc => doc.data()).filter(reward => new Date(reward.validUntil) >= sixMonthsAgo).sort((a, b) => new Date(a.validUntil) - new Date(b.validUntil));
-        console.log('sortedRewards', sortedRewards);
         if (status) {
             return sortedRewards.filter(reward => reward.status === status);
         }

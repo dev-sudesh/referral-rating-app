@@ -41,7 +41,6 @@ const MapScreen = ({ navigation }) => {
     });
     const [placeUpdated, setPlaceUpdated] = useState(false);
     const [filteredPlaces, setFilteredPlaces] = useState([]);
-    const [centerLocation, setCenterLocation] = useState(null);
     const [locationPermissionGranted, setLocationPermissionGranted] = useState(false);
     const [isLoadingLocation, setIsLoadingLocation] = useState(false);
     const mapRef = useRef(null);
@@ -59,15 +58,6 @@ const MapScreen = ({ navigation }) => {
 
     const timeoutRef = useRef(null);
 
-    useEffect(() => {
-        if (isFocused) {
-            setTimeout(() => {
-                requestLocationPermission();
-            }, 1000);
-
-        }
-    }, [isFocused]);
-
     // Hide status bar when screen is focused
     useFocusEffect(
         React.useCallback(() => {
@@ -78,156 +68,8 @@ const MapScreen = ({ navigation }) => {
         }, [])
     );
 
-    const { selectedViewType, setSelectedViewType, showPlaceFullCard, setShowPlaceFullCard, selectedPlace, setSelectedPlace, places, setPlaces, userLocation, setUserLocation, showPlaceBigCard, setShowPlaceBigCard } = MapsController();
+    const { selectedViewType, setSelectedViewType, showPlaceFullCard, setShowPlaceFullCard, selectedPlace, setSelectedPlace, places, setPlaces, userLocation, setUserLocation, showPlaceBigCard, setShowPlaceBigCard, centerLocation, setCenterLocation } = MapsController();
 
-    const requestLocationPermission = async () => {
-        try {
-            setIsLoadingLocation(true);
-
-            // Determine the correct permission based on platform
-            const locationPermission = Platform.OS === 'ios'
-                ? PERMISSIONS.IOS.LOCATION_WHEN_IN_USE
-                : PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION;
-
-            // Check current permission status
-            const permissionStatus = await check(locationPermission);
-
-            if (permissionStatus === RESULTS.GRANTED) {
-                setLocationPermissionGranted(true);
-                getCurrentLocation();
-                return;
-            }
-
-            if (permissionStatus === RESULTS.DENIED) {
-                // Request permission
-                const requestResult = await request(locationPermission);
-
-                if (requestResult === RESULTS.GRANTED) {
-                    setLocationPermissionGranted(true);
-                    getCurrentLocation();
-                } else {
-                    handleLocationPermissionDenied();
-                }
-            } else {
-                handleLocationPermissionDenied();
-            }
-        } catch (error) {
-            ToastUtils.error('Failed to request location permission');
-            setIsLoadingLocation(false);
-        }
-    };
-
-    const getCurrentLocation = async () => {
-        const lastLocation = await AsyncStoreUtils.getItem(AsyncStoreUtils.Keys.USER_LAST_LOCATION);
-        if (lastLocation) {
-            const { latitude, longitude } = lastLocation;
-            setUserLocation(lastLocation);
-            setIsLoadingLocation(false);
-
-            // Center map on user location
-            const newRegion = {
-                latitude,
-                longitude,
-                latitudeDelta: 0.032,
-                longitudeDelta: 0.032,
-            };
-            setRegion(newRegion);
-            setCenterLocation(newRegion);
-            return;
-        }
-        Geolocation.getCurrentPosition(
-            (position) => {
-                if (!isFocused) {
-                    setIsLoadingLocation(false);
-                    return;
-                }
-                const { latitude, longitude } = position.coords;
-                const newUserLocation = { latitude, longitude };
-
-                setUserLocation(newUserLocation);
-                setIsLoadingLocation(false);
-                updateUserLastLocation(newUserLocation);
-
-                // Center map on user location
-                const newRegion = {
-                    latitude,
-                    longitude,
-                    latitudeDelta: 0.032,
-                    longitudeDelta: 0.032,
-                };
-                setCenterLocation(newRegion);
-
-                if (placeUpdated) {
-                    return;
-                }
-
-                // update places lat and long based on current location create new lat and long randomly within 3000 meters of the current location
-                // const updatedPlaces = places.map(place => ({
-                //     ...place,
-                //     latitude: latitude + (Math.random() * 0.03 - 0.015),
-                //     longitude: longitude + (Math.random() * 0.03 - 0.015),
-                // }));
-                // setPlaces(updatedPlaces); 
-            },
-            (error) => {
-                setIsLoadingLocation(false);
-
-                switch (error.code) {
-                    case 1:
-                        ToastUtils.error('Location access denied');
-                        break;
-                    case 2:
-                        ToastUtils.error('Location unavailable');
-                        break;
-                    case 3:
-                        ToastUtils.error('Location request timeout');
-                        break;
-                    default:
-                        ToastUtils.error('Failed to get location');
-                        break;
-                }
-
-                // Fallback to default location
-                setUserLocation({
-                    latitude: 37.78825,
-                    longitude: -122.4324,
-                });
-            },
-            {
-                enableHighAccuracy: true,
-                timeout: 10000,
-                maximumAge: 10000,
-                accuracy: 10,
-                altitude: true,
-                altitudeAccuracy: true,
-                heading: true,
-                speed: true,
-            }
-        );
-    };
-
-    const handleLocationPermissionDenied = () => {
-        setLocationPermissionGranted(false);
-        setIsLoadingLocation(false);
-
-        ToastUtils.warning('Location permission denied. Using default location.', {
-            title: 'Location Access',
-        });
-
-        // Use default location
-        setUserLocation({
-            latitude: 37.78825,
-            longitude: -122.4324,
-        });
-    };
-
-    const centerOnUserLocation = () => {
-        if (locationPermissionGranted && userLocation) {
-            getCurrentLocation();
-        } else {
-            requestLocationPermission();
-        }
-    };
 
     const filters = [
         { id: 'all', label: 'All' },

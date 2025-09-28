@@ -8,6 +8,8 @@ const MapsController = create((set) => ({
     showPlaceBigCard: false,
     places: [],
     userLocation: null,
+    centerLocation: null,
+    setCenterLocation: (centerLocation) => set({ centerLocation: centerLocation }),
     setUserLocation: (userLocation) => set({ userLocation: userLocation }),
     setPlaces: (places) => set({ places: places }),
     setSelectedViewType: (viewType) => set({ selectedViewType: viewType }),

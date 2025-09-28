@@ -25,7 +25,6 @@ const RewardsScreen = ({ navigation }) => {
     const selectedRewardPress = async (reward) => {
         let selectedReward = reward;
         selectedReward.isRedeemed = await getRewardRedeemedStatus(reward);
-        console.log('selectedReward', selectedReward)
         setSelectedReward(selectedReward)
         navigation.navigate(Constants.Screen.RewardDetail)
     }

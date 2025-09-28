@@ -46,16 +46,13 @@ class CacheEntry {
  */
 export const initializeCache = async () => {
     if (isCacheInitialized) {
-        if (DEBUG) console.log('[ImageCache] Cache already initialized');
         return;
     }
 
     if (cacheInitPromise) {
-        if (DEBUG) console.log('[ImageCache] Cache initialization already in progress');
         return cacheInitPromise;
     }
 
-    if (DEBUG) console.log('[ImageCache] Starting cache initialization...');
 
     cacheInitPromise = new Promise(async (resolve) => {
         try {
@@ -88,18 +85,14 @@ export const initializeCache = async () => {
                     }
                 }
 
-                if (DEBUG) console.log(`[ImageCache] Restored ${restoredCount} cached images in ${Date.now() - startTime}ms`);
             } else {
-                if (DEBUG) console.log('[ImageCache] No cached data found');
             }
 
             isCacheInitialized = true;
-            if (DEBUG) console.log('[ImageCache] Cache initialization complete');
             resolve();
         } catch (error) {
             console.warn('Failed to initialize image cache:', error);
             isCacheInitialized = true; // Mark as initialized even on error
-            if (DEBUG) console.log('[ImageCache] Cache initialization failed, but marked as ready');
             resolve();
         }
     });
@@ -112,9 +105,7 @@ export const initializeCache = async () => {
  */
 export const waitForCacheInit = async () => {
     if (!isCacheInitialized) {
-        if (DEBUG) console.log('[ImageCache] Waiting for cache initialization...');
         await initializeCache();
-        if (DEBUG) console.log('[ImageCache] Cache initialization wait complete');
     }
 };
 

@@ -9,15 +9,12 @@ import { colors, spacing, typography } from '../../constants/theme';
  */
 const ScreenHeaderExamples = () => {
     const handleBackPress = () => {
-        console.log('Back button pressed');
     };
 
     const handleMenuPress = () => {
-        console.log('Menu button pressed');
     };
 
     const handleActionPress = () => {
-        console.log('Action button pressed');
     };
 
     // Custom icon component example

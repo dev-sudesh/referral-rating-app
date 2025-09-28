@@ -49,10 +49,6 @@ const useImageCache = () => {
                 } else {
                     updateCacheStats();
                 }
-
-                if (__DEV__) {
-                    console.log(`[useImageCache] Cache initialized in ${Date.now() - startTime}ms`);
-                }
             } catch (error) {
                 console.error('Failed to initialize cache:', error);
                 if (isMounted) {
@@ -108,9 +104,6 @@ const useImageCache = () => {
 
             const result = await cacheImageUrl(url, options);
 
-            if (__DEV__) {
-                console.log(`[useImageCache] Cached URL in ${Date.now() - startTime}ms:`, url);
-            }
 
             // Throttle stats update on iOS
             if (isIOS) {
@@ -151,9 +144,6 @@ const useImageCache = () => {
 
             const results = await cacheImageUrls(uniqueUrls, onProgress);
 
-            if (__DEV__) {
-                console.log(`[useImageCache] Cached ${results.successful} URLs in ${Date.now() - startTime}ms`);
-            }
 
             // Throttle stats update on iOS
             if (isIOS) {
@@ -195,9 +185,6 @@ const useImageCache = () => {
 
             await clearImageCache();
 
-            if (__DEV__) {
-                console.log(`[useImageCache] Cache cleared in ${Date.now() - startTime}ms`);
-            }
 
             updateCacheStats();
         } catch (error) {
@@ -217,9 +204,6 @@ const useImageCache = () => {
 
             await clearExpiredCache();
 
-            if (__DEV__) {
-                console.log(`[useImageCache] Expired cache cleared in ${Date.now() - startTime}ms`);
-            }
 
             updateCacheStats();
         } catch (error) {
@@ -270,9 +254,6 @@ const useImageCache = () => {
                 }
             }
 
-            if (__DEV__) {
-                console.log(`[useImageCache] Batch cached ${results.successful} URLs in ${Date.now() - startTime}ms`);
-            }
 
             updateCacheStats();
             return results;
@@ -297,9 +278,6 @@ const useImageCache = () => {
             // Use higher priority for critical images with iOS optimization
             const results = await cacheImageUrls(criticalUrls, onProgress);
 
-            if (__DEV__) {
-                console.log(`[useImageCache] Critical images preloaded in ${Date.now() - startTime}ms`);
-            }
 
             updateCacheStats();
             return results;

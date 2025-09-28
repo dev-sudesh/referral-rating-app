@@ -39,7 +39,6 @@ const ImageCachingExample = () => {
 
     const handleCacheBatch = async () => {
         const results = await batchCache(sampleUrls, 2, (progress, completed, total, currentUrl) => {
-            console.log(`Progress: ${progress.toFixed(1)}% - ${completed}/${total} - ${currentUrl}`);
         });
         alert(`Batch cache complete!\nSuccess: ${results.successful}\nFailed: ${results.failed}`);
     };

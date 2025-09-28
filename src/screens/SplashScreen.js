@@ -12,18 +12,31 @@ import AsyncStoreUtils from '../utils/AsyncStoreUtils';
 
 import { useAppInitialization } from '../hooks/useAppInitialization';
 import { useDataRecovery } from '../hooks/useDataRecovery';
+import useLocationCheck from '../hooks/useLocationCheck';
 import NativeModuleUtils from '../utils/nativeModules/NativeModuleUtils';
 import FirebaseStoreService from '../services/firebase/FirebaseStoreService';
+import LocationUtils from '../utils/LocationUtils';
+import PermissionController from '../controllers/permissions/PermissionController';
+import MapsController from '../controllers/maps/MapsController';
 
 const SplashScreen = () => {
     const navigation = useNavigation();
     const splashTimeout = useRef();
+    const navigationTimeout = useRef();
+    const { userLocation } = MapsController();
 
     // Initialize app services
     const { firebaseReady, error, isInitializing } = useAppInitialization();
 
     // Initialize data recovery
     const { wasRecovered } = useDataRecovery();
+
+    // Initialize location checking
+    const {
+        isChecking,
+        locationStatus,
+        checkLocationStatus
+    } = useLocationCheck();
 
     // Show recovery notification
     useEffect(() => {
@@ -59,32 +72,49 @@ const SplashScreen = () => {
     }
 
     const getLastLocation = async () => {
-        try {
-            const lastLocation = await AsyncStoreUtils.getItem(AsyncStoreUtils.Keys.USER_LAST_LOCATION);
-            global.userLastLocation = {
-                latitude: lastLocation.latitude,
-                longitude: lastLocation.longitude,
-                latitudeDelta: 0.032,
-                longitudeDelta: 0.032,
-            };
-            return lastLocation;
-        } catch (error) {
-            console.error('Error getting last location:', error);
+        LocationUtils.getCurrentLocation();
+    }
+
+    const getStarted = async () => {
+
+        // Only proceed if location is ready
+        if (locationStatus.canProceed) {
+            // Add a small delay to ensure smooth transition
+            navigationTimeout.current = setTimeout(() => {
+                checkLoginStatus();
+            }, 1000);
+        } else {
         }
     }
 
     useEffect(() => {
+        if (userLocation && locationStatus.canProceed) {
+            global.userLastLocation = {
+                latitude: userLocation.latitude,
+                longitude: userLocation.longitude,
+                latitudeDelta: 0.032,
+                longitudeDelta: 0.032,
+            }
+            getStarted();
+        }
+    }, [JSON.stringify(userLocation), locationStatus.canProceed]);
 
+
+    useEffect(() => {
         StatusBar.setHidden(true);
-        getLastLocation();
-        // Hide splash screen after a minimum delay
-        splashTimeout.current = setTimeout(() => {
-            NativeModuleUtils.SplashScreen.hide();
-        }, 1000); // Increased from 500ms to 1000ms for better UX
-
+        NativeModuleUtils.SplashScreen.hide();
+        const unsubscribePermission = PermissionController.subscribe((state) => {
+            if (state.locationPermissionGranted) {
+                getLastLocation();
+            }
+        });
         return () => {
-            if (splashTimeout.current) {
+            unsubscribePermission();
+            if (splashTimeout && splashTimeout.current) {
                 clearTimeout(splashTimeout.current);
+            }
+            if (navigationTimeout && navigationTimeout.current) {
+                clearTimeout(navigationTimeout.current);
             }
         };
     }, []);
@@ -93,12 +123,7 @@ const SplashScreen = () => {
     useEffect(() => {
         if (!isInitializing && firebaseReady) {
             FirebaseStoreService.storeRandomRewards();
-            // Add a small delay to ensure smooth transition
-            const navigationTimeout = setTimeout(() => {
-                checkLoginStatus();
-            }, 500);
 
-            return () => clearTimeout(navigationTimeout);
         }
     }, [isInitializing, firebaseReady]);
 
