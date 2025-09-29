@@ -102,7 +102,9 @@ const SplashScreen = () => {
 
     useEffect(() => {
         StatusBar.setHidden(true);
-        NativeModuleUtils.SplashScreen.hide();
+        setTimeout(() => {
+            NativeModuleUtils.SplashScreen.hide();
+        }, 500);
         const unsubscribePermission = PermissionController.subscribe((state) => {
             if (state.locationPermissionGranted) {
                 getLastLocation();

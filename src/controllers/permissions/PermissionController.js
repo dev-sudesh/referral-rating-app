@@ -1,9 +1,9 @@
 import { create } from 'zustand';
 
 const PermissionController = create((set, get) => ({
-    locationServiceEnabled: false,
+    locationServiceEnabled: null,
     locationPermissionGranted: null,
-    showPermissionError: false,
+    showPermissionError: null,
     errorType: null, // 'permission' | 'gps' | null
     setLocationPermissionGranted: (granted) => {
         set({ locationPermissionGranted: granted });
@@ -24,12 +24,12 @@ const PermissionController = create((set, get) => ({
         const { locationPermissionGranted, locationServiceEnabled } = state;
 
         // Determine error type and whether to show error
-        if (!locationPermissionGranted) {
+        if (locationPermissionGranted === false) {
             set({
                 showPermissionError: true,
                 errorType: 'permission'
             });
-        } else if (!locationServiceEnabled) {
+        } else if (locationServiceEnabled === false) {
             set({
                 showPermissionError: true,
                 errorType: 'gps'
