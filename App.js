@@ -9,16 +9,20 @@ import MapsController from './src/controllers/maps/MapsController';
 // Initialize Firebase
 import '@react-native-firebase/app';
 import PermissionError from './src/components/ui/PermissionError';
+import PermissionController from './src/controllers/permissions/PermissionController';
+import LocationUtils from './src/utils/LocationUtils';
 
+LocationUtils.init();
 const App = () => {
   const { showPlaceFullCard } = MapsController();
+  const { showPermissionError, } = PermissionController();
   return (
     <SafeAreaProvider>
       <AppNavigator />
       <SearchFilter />
       {showPlaceFullCard && <PlaceFullCard />}
       <Toast />
-      <PermissionError />
+      {showPermissionError && <PermissionError />}
     </SafeAreaProvider>
   );
 };

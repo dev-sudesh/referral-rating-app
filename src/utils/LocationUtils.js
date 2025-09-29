@@ -18,7 +18,8 @@ const locationPermission = Platform.OS === 'ios'
 
 const grantedPermissions = [RESULTS.GRANTED, RESULTS.GRANTED_WHEN_IN_USE, RESULTS.GRANTED_FOREGROUND];
 const isGrantedPermission = (permissionStatus) => {
-    return grantedPermissions.includes(permissionStatus);
+    const isGranted = grantedPermissions.includes(permissionStatus);
+    return isGranted;
 }
 
 const LocationUtils = {
@@ -43,7 +44,6 @@ const LocationUtils = {
             }
             return false;
         } catch (error) {
-            console.error('Error checking location service status:', error);
             // Fallback method: try to get current position with a timeout
             return new Promise((resolve) => {
                 const timeout = setTimeout(() => {
@@ -57,7 +57,6 @@ const LocationUtils = {
                     },
                     (error) => {
                         clearTimeout(timeout);
-                        console.error('Location service check failed:', error);
                         // Check specific error codes
                         if (error.code === 1) {
                             // PERMISSION_DENIED - location services might be disabled
@@ -104,13 +103,11 @@ const LocationUtils = {
                     return false;
                 }
             } catch (error) {
-                console.error('❌ Native location enabler failed:', error);
                 // Fallback to settings
                 try {
                     await LocationUtils.openLocationSettings();
                     return true;
                 } catch (settingsError) {
-                    console.error('❌ Settings fallback failed:', settingsError);
                     return false;
                 }
             }
@@ -182,7 +179,6 @@ const LocationUtils = {
             }
             return true;
         } catch (error) {
-            console.error('Error opening location settings:', error);
             ToastUtils.error('Failed to open settings');
             return false;
         }
@@ -208,14 +204,12 @@ const LocationUtils = {
                 throw new Error('Location services not enabled by user');
             }
         } catch (error) {
-            console.error('❌ Error with native location enabler:', error);
 
             // Fallback to manual settings approach
             try {
                 await LocationUtils.openLocationSettings();
                 return true;
             } catch (settingsError) {
-                console.error('❌ Settings fallback also failed:', settingsError);
                 throw error;
             }
         }
@@ -265,7 +259,6 @@ const LocationUtils = {
 
 
             } catch (error) {
-                console.error(`Error in attempt ${attempt}:`, error);
                 if (attempt === maxRetries) {
                     return false;
                 }
@@ -305,13 +298,17 @@ const LocationUtils = {
             }
 
         } catch (error) {
-            console.error('Error enabling location and permission:', error);
             ToastUtils.error('Failed to setup location services');
             return false;
         }
     },
     requestLocationPermission: async () => {
-        const permissionStatus = await LocationUtils.checkLocationPermission();
+        let permissionStatus = false;
+        try {
+            permissionStatus = await LocationUtils.checkLocationPermission();
+        } catch (error) {
+            return false;
+        }
         if (!permissionStatus) {
             const requestResult = await request(locationPermission);
             if (isGrantedPermission(requestResult)) {
@@ -331,8 +328,6 @@ const LocationUtils = {
             PermissionController.getState().setLocationPermissionGranted(true);
             return true;
         }
-        console.info('permissionStatus', permissionStatus);
-        PermissionController.getState().setLocationPermissionGranted(false);
         return false;
     },
     getCurrentLocation: async () => {

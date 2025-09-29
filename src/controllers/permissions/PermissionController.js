@@ -2,7 +2,7 @@ import { create } from 'zustand';
 
 const PermissionController = create((set, get) => ({
     locationServiceEnabled: false,
-    locationPermissionGranted: false,
+    locationPermissionGranted: null,
     showPermissionError: false,
     errorType: null, // 'permission' | 'gps' | null
     setLocationPermissionGranted: (granted) => {
