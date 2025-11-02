@@ -12,7 +12,9 @@ const DeviceInfo = {
     buildVersion: RNDeviceInfo.getVersion(),
     statusBarHeight: StatusBar.currentHeight || 0,
     isEmulator: RNDeviceInfo.isEmulator(),
-    init: function () {
+    deviceId: RNDeviceInfo.getDeviceId(),
+    deviceUniqueId: null,
+    init: async function () {
         this.isIOS = Platform.OS === 'ios';
         this.isAndroid = Platform.OS === 'android';
         this.isTablet = Dimensions.get('window').width >= 768;
@@ -23,6 +25,11 @@ const DeviceInfo = {
         this.buildVersion = RNDeviceInfo.getVersion();
         this.statusBarHeight = StatusBar.currentHeight || 0;
         this.isEmulator = RNDeviceInfo.isEmulator();
+        this.deviceId = RNDeviceInfo.getDeviceId();
+        RNDeviceInfo.getUniqueId().then((uniqueId) => {
+            console.log('uniqueId', uniqueId)
+            this.deviceUniqueId = uniqueId;
+        });
     },
 };
 

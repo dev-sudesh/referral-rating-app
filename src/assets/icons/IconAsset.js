@@ -27,6 +27,7 @@ import EditIcon from '../../assets/icons/others/edit-icon.svg';
 import CheckSquareIcon from '../../assets/icons/others/check-square.svg';
 import MoreIcon from '../../assets/icons/others/more-icon.svg';
 import EmptyStateIcon from '../../assets/icons/others/empty-state-icon.svg';
+import PlacePlaceholderIcon from '../../assets/icons/others/place-placeholder.svg';
 
 const IconAsset = {
     eyeOn: EyeOn,
@@ -65,6 +66,7 @@ const IconAsset = {
     checkSquareIcon: CheckSquareIcon,
     moreIcon: MoreIcon,
     emptyStateIcon: EmptyStateIcon,
+    placePlaceholderIcon: PlacePlaceholderIcon,
 }
 
 export default IconAsset;

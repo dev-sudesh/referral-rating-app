@@ -10,8 +10,8 @@ export const MAP_CONFIG = {
     defaultRegion: {
         latitude: 37.78825,
         longitude: -122.4324,
-        latitudeDelta: 0.01,
-        longitudeDelta: 0.01,
+        latitudeDelta: 0.001,
+        longitudeDelta: 0.001,
     },
 
     // Map features

@@ -30,14 +30,15 @@ import ReferralController from '../../../controllers/referrals/ReferralControlle
 import PlaceCard from '../../../components/ui/PlaceCard';
 import PlaceSelectedCard from '../../../components/ui/PlaceSelectedCard';
 import AsyncStoreUtils from '../../../utils/AsyncStoreUtils';
+import ConfettiCannon from '../../../components/animated/ConfettiCannon';
 
 const MapScreen = ({ navigation }) => {
     const [selectedFilter, setSelectedFilter] = useState('all');
     const [region, setRegion] = useState(global.userLastLocation || {
         latitude: 37.78825,
         longitude: -122.4324,
-        latitudeDelta: 0.032,
-        longitudeDelta: 0.032,
+        latitudeDelta: 0.001,
+        longitudeDelta: 0.001,
     });
     const [placeUpdated, setPlaceUpdated] = useState(false);
     const [filteredPlaces, setFilteredPlaces] = useState([]);
@@ -68,7 +69,9 @@ const MapScreen = ({ navigation }) => {
         }, [])
     );
 
-    const { selectedViewType, setSelectedViewType, showPlaceFullCard, setShowPlaceFullCard, selectedPlace, setSelectedPlace, places, setPlaces, userLocation, setUserLocation, showPlaceBigCard, setShowPlaceBigCard, centerLocation, setCenterLocation } = MapsController();
+    const places = MapsController(state => state.places);
+
+    const { selectedViewType, setSelectedViewType, showPlaceFullCard, setShowPlaceFullCard, selectedPlace, setSelectedPlace, setPlaces, userLocation, setUserLocation, showPlaceBigCard, setShowPlaceBigCard, centerLocation, setCenterLocation, showConfetti, confettiOrigin, setShowConfetti } = MapsController();
 
 
     const filters = [
@@ -108,7 +111,12 @@ const MapScreen = ({ navigation }) => {
     }, [places, selectedFilter]);
 
     const handleMapPress = () => {
-        // Handle map press if needed
+        // Deselect place when map is tapped to return to dynamic view
+        if (selectedPlace) {
+            setSelectedPlace(null);
+            setShowPlaceBigCard(false);
+            setShowPlaceFullCard(false);
+        }
     };
 
     const handleMarkerPress = (place) => {
@@ -174,11 +182,12 @@ const MapScreen = ({ navigation }) => {
         const updatedPlace = places.find(p => p.id === place.id) || place;
         setSelectedPlace(updatedPlace);
         setShowPlaceBigCard(true);
+        // When showing a specific place card, zoom to that place with fixed delta
         const location = {
             latitude: updatedPlace.latitude,
             longitude: updatedPlace.longitude,
-            latitudeDelta: 0.032,
-            longitudeDelta: 0.032,
+            latitudeDelta: 0.001,
+            longitudeDelta: 0.001,
         };
         setCenterLocation(location);
         try {
@@ -206,8 +215,8 @@ const MapScreen = ({ navigation }) => {
             const location = {
                 latitude: userLocation.latitude,
                 longitude: userLocation.longitude,
-                latitudeDelta: 0.032,
-                longitudeDelta: 0.032,
+                latitudeDelta: 0.001,
+                longitudeDelta: 0.001,
             };
             setCenterLocation(location);
 
@@ -217,6 +226,17 @@ const MapScreen = ({ navigation }) => {
             });
         }
     }, [userLocation, places.length]);
+
+    // Update region when filteredPlaces change to fit all places
+    React.useEffect(() => {
+        if (filteredPlaces.length > 0 && !selectedPlace && isScreenFocused && isMapReady) {
+            const calculatedRegion = MapUtils.getRegionForPlaces(filteredPlaces);
+            if (calculatedRegion) {
+                // Only update if the region is significantly different to avoid unnecessary re-renders
+                setCenterLocation(calculatedRegion);
+            }
+        }
+    }, [filteredPlaces, selectedPlace, isScreenFocused, isMapReady]);
 
     React.useEffect(() => {
         if (placeReferredStatus && selectedPlace) {
@@ -232,6 +252,16 @@ const MapScreen = ({ navigation }) => {
             }
         };
     }, []);
+
+    React.useEffect(() => {
+        // Reset confetti after animation completes
+        if (showConfetti) {
+            const timer = setTimeout(() => {
+                setShowConfetti(false, null);
+            }, 2500);
+            return () => clearTimeout(timer);
+        }
+    }, [showConfetti, setShowConfetti]);
 
     return (
         <SafeAreaView style={{ flex: 1 }} edges={[]}>
@@ -400,6 +430,11 @@ const MapScreen = ({ navigation }) => {
 
                 {/* list View */}
                 {selectedViewType === 'list' && <ListScreen />}
+
+                <ConfettiCannon
+                    visible={showConfetti}
+                    origin={confettiOrigin}
+                />
             </View>
         </SafeAreaView>
     );

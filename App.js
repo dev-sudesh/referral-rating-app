@@ -11,19 +11,34 @@ import '@react-native-firebase/app';
 import PermissionError from './src/components/ui/PermissionError';
 import PermissionController from './src/controllers/permissions/PermissionController';
 import LocationUtils from './src/utils/LocationUtils';
-
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import DeviceInfo from './src/utils/deviceInfo/DeviceInfo';
 LocationUtils.init();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: true,
+      refetchOnMount: true,
+      refetchOnReconnect: true,
+      staleTime: 1000 * 5,
+      cacheTime: 1000 * 5,
+      retry: 3,
+    },
+  },
+})
 const App = () => {
   const { showPlaceFullCard } = MapsController();
   const { showPermissionError, } = PermissionController();
   return (
-    <SafeAreaProvider>
-      <AppNavigator />
-      <SearchFilter />
-      {showPlaceFullCard && <PlaceFullCard />}
-      <Toast />
-      {showPermissionError && <PermissionError />}
-    </SafeAreaProvider>
+    <QueryClientProvider client={queryClient}>
+      <SafeAreaProvider>
+        <AppNavigator />
+        <SearchFilter />
+        {showPlaceFullCard && <PlaceFullCard />}
+        <Toast />
+        {showPermissionError && <PermissionError />}
+      </SafeAreaProvider>
+    </QueryClientProvider>
   );
 };
 

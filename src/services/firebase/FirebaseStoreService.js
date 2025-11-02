@@ -40,6 +40,32 @@ const handleFirestoreError = (error, operation) => {
     throw error;
 };
 
+// Helper function to remove undefined fields from objects (Firestore doesn't support undefined)
+const removeUndefinedFields = (obj) => {
+    if (obj === null || obj === undefined) {
+        return obj;
+    }
+
+    if (Array.isArray(obj)) {
+        return obj.map(item => removeUndefinedFields(item));
+    }
+
+    if (typeof obj === 'object') {
+        const cleaned = {};
+        for (const key in obj) {
+            if (obj.hasOwnProperty(key)) {
+                const value = obj[key];
+                if (value !== undefined) {
+                    cleaned[key] = removeUndefinedFields(value);
+                }
+            }
+        }
+        return cleaned;
+    }
+
+    return obj;
+};
+
 // Helper function to ensure Firebase is ready before operations
 const ensureFirebaseReady = async () => {
     try {
@@ -418,9 +444,11 @@ const storeReferredPlace = async (place) => {
         const snapshot = await getDoc(referredPlacesDocRef);
         let referredPlacesData = snapshot.data() || {};
         if (!place.isReferred) {
-            referredPlacesData = { ...referredPlacesData, [place.id]: place };
+            // Remove undefined fields before storing to avoid Firestore errors
+            const cleanedPlace = removeUndefinedFields(place);
+            referredPlacesData = { ...referredPlacesData, [place.id]: cleanedPlace };
 
-            await setDoc(referredPlacesDocRef, { ...referredPlacesData }, { merge: true });
+            await setDoc(referredPlacesDocRef, removeUndefinedFields(referredPlacesData), { merge: true });
         } else {
             // Use updateDoc with deleteField to properly remove the field
             const updateData = {};
@@ -786,6 +814,7 @@ const createRandomPlaces = async (location) => {
     }
     return randomPlaces;
 };
+
 const storeRandomPlacesOfCurrentLocation = async (location) => {
     try {
         const randomPlaces = await createRandomPlaces(location);
@@ -913,7 +942,8 @@ const updateUserPersonalInfo = async (personalInfo) => {
         await ensureFirebaseReady();
         const userId = await getAnonymousUserId();
         const docRef = doc(db, COLLECTIONS.USERS, userId);
-        await updateDoc(docRef, personalInfo);
+        // Remove undefined fields before storing to avoid Firestore errors
+        await updateDoc(docRef, removeUndefinedFields(personalInfo));
         return true;
     }
     catch (error) {

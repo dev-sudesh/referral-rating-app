@@ -18,12 +18,19 @@ import FirebaseStoreService from '../services/firebase/FirebaseStoreService';
 import LocationUtils from '../utils/LocationUtils';
 import PermissionController from '../controllers/permissions/PermissionController';
 import MapsController from '../controllers/maps/MapsController';
+import ApiController from '../services/api/ApiController';
 
 const SplashScreen = () => {
     const navigation = useNavigation();
     const splashTimeout = useRef();
     const navigationTimeout = useRef();
-    const { userLocation } = MapsController();
+    const userLocation = MapsController(state => state.userLocation);
+
+    const anonymousTokenMutation = ApiController.anonymousToken();
+    const nearbyPlacesMutation = ApiController.nearbyPlaces();
+    useEffect(() => {
+        anonymousTokenMutation.mutateAsync();
+    }, []);
 
     // Initialize app services
     const { firebaseReady, error, isInitializing } = useAppInitialization();
@@ -76,7 +83,7 @@ const SplashScreen = () => {
     }
 
     const getStarted = async () => {
-
+        await nearbyPlacesMutation.mutateAsync({ latitude: userLocation.latitude, longitude: userLocation.longitude });
         // Only proceed if location is ready
         if (locationStatus.canProceed) {
             // Add a small delay to ensure smooth transition
@@ -92,8 +99,8 @@ const SplashScreen = () => {
             global.userLastLocation = {
                 latitude: userLocation.latitude,
                 longitude: userLocation.longitude,
-                latitudeDelta: 0.032,
-                longitudeDelta: 0.032,
+                latitudeDelta: 0.001,
+                longitudeDelta: 0.001,
             }
             getStarted();
         }

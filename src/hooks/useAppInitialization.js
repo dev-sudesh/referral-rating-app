@@ -48,7 +48,6 @@ export const useAppInitialization = () => {
             ]);
 
             // Initialize synchronous services
-            DeviceInfo.init();
             MapUtils.init();
 
             // Handle results

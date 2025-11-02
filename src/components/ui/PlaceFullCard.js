@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, Text, TouchableOpacity, View, Alert } from 'react-native'
+import { Pressable, StyleSheet, Text, TouchableOpacity, View, Alert, Dimensions } from 'react-native'
 import React, { useState, useRef } from 'react'
 import MapsController from '../../controllers/maps/MapsController'
 import AppImage from '../common/AppImage';
@@ -12,6 +12,9 @@ import FirebaseStoreService from '../../services/firebase/FirebaseStoreService';
 import ReferralController from '../../controllers/referrals/ReferralController';
 import { useSharing } from '../../hooks/useSharing';
 import ViewShot from 'react-native-view-shot';
+import ConfettiCannon from '../animated/ConfettiCannon';
+
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 const PlaceFullCard = () => {
     const { selectedPlace, setSelectedPlace, setShowPlaceFullCard, setShowPlaceBigCard, showPlaceFullCard, places, setPlaces } = MapsController();
@@ -19,6 +22,8 @@ const PlaceFullCard = () => {
     const { setShowReferralAlert, placeReferredStatus } = ReferralController();
     const { shareReferral } = useSharing();
     const imageRef = useRef(null);
+    const [showConfetti, setShowConfetti] = useState(false);
+
     const referPlace = async (place) => {
         //     if (!place?.isReferred) {
         //         setShowReferralAlert(true);
@@ -37,13 +42,20 @@ const PlaceFullCard = () => {
         if (place.isReferred) {
             // unrefer place
             // setFilteredPlaces(filteredPlaces.map(p => p.id === place.id ? { ...p, isReferred: false } : p));
-            setPlaces(places.map(p => p.id === place.id ? { ...p, isReferred: false } : p));
+            if (places && Array.isArray(places)) {
+                setPlaces(places.map(p => p.id === place.id ? { ...p, isReferred: false } : p));
+            }
             setSelectedPlace(prev => prev.id === place.id ? { ...prev, isReferred: false } : prev);
             return;
         }
         // setFilteredPlaces(filteredPlaces.map(p => p.id === place.id ? { ...p, isReferred: true } : p));
-        setPlaces(places.map(p => p.id === place.id ? { ...p, isReferred: true } : p));
+        if (places && Array.isArray(places)) {
+            setPlaces(places.map(p => p.id === place.id ? { ...p, isReferred: true } : p));
+        }
         setSelectedPlace(prev => prev.id === place.id ? { ...prev, isReferred: true } : prev);
+
+        // Trigger confetti animation
+        setShowConfetti(true);
     };
 
     React.useEffect(() => {
@@ -51,7 +63,14 @@ const PlaceFullCard = () => {
     }, [selectedPlace]);
 
     React.useEffect(() => {
-    }, [fullSelectedPlace?.isReferred]);
+        // Reset confetti after animation completes
+        if (showConfetti) {
+            const timer = setTimeout(() => {
+                setShowConfetti(false);
+            }, 2500);
+            return () => clearTimeout(timer);
+        }
+    }, [showConfetti]);
 
     const sharePlace = async () => {
         try {
@@ -94,6 +113,10 @@ const PlaceFullCard = () => {
         }
     }
 
+    if (!fullSelectedPlace) {
+        return null;
+    }
+
     return (
         <View style={[styles.selectedPlaceFullCard, {
             transform: [{
@@ -110,6 +133,7 @@ const PlaceFullCard = () => {
                 >
                     <AppImage
                         source={fullSelectedPlace?.imageFull}
+                        placeholderSource={ImageAsset.placesPlaceholderImage}
                         style={{
                             width: '100%',
                             height: '100%',
@@ -145,7 +169,7 @@ const PlaceFullCard = () => {
                 paddingTop: theme.responsive.size(40),
             }}>
                 {/* SVG Curved Card */}
-                {fullSelectedPlace.isReferred && (
+                {fullSelectedPlace?.isReferred && (
                     <View style={styles.placeCardReferred}>
                         <View style={styles.placeCardReferredContent}>
                             <AppImage
@@ -171,7 +195,7 @@ const PlaceFullCard = () => {
                                 {fullSelectedPlace?.address}
                             </Text>
                             <View style={styles.selectedPlaceFullCardTagsContainer}>
-                                {fullSelectedPlace?.tags.map((tag, index) => (
+                                {fullSelectedPlace?.tags && Array.isArray(fullSelectedPlace.tags) && fullSelectedPlace.tags.map((tag, index) => (
                                     <View key={tag.id} style={[styles.referralCardTag, { backgroundColor: styles[tag.style].backgroundColor }]}>
                                         <Text style={[styles.referralCardTagText, { color: styles[tag.style].color }]}>{tag.title}</Text>
                                     </View>
@@ -206,8 +230,8 @@ const PlaceFullCard = () => {
 
                             <View style={styles.selectedPlaceFullCardExtraInfoOpenContainer}>
                                 <Text style={styles.selectedPlaceFullCardExtraInfoOpenTextNormal}>Currently{' '}</Text>
-                                <Text style={[styles.selectedPlaceFullCardExtraInfoOpenText, MethodUtils.currentTimeIsBetween(fullSelectedPlace?.openTime) ? styles.selectedPlaceFullCardExtraInfoOpenTextOpen : styles.selectedPlaceFullCardExtraInfoOpenTextClosed]}>
-                                    {MethodUtils.currentTimeIsBetween(fullSelectedPlace?.openTime) ? 'Open' : 'Closed'}
+                                <Text style={[styles.selectedPlaceFullCardExtraInfoOpenText, fullSelectedPlace?.openTime && MethodUtils.currentTimeIsBetween(fullSelectedPlace.openTime) ? styles.selectedPlaceFullCardExtraInfoOpenTextOpen : styles.selectedPlaceFullCardExtraInfoOpenTextClosed]}>
+                                    {fullSelectedPlace?.openTime && MethodUtils.currentTimeIsBetween(fullSelectedPlace.openTime) ? 'Open' : 'Closed'}
                                 </Text>
                             </View>
                         </View>
@@ -223,6 +247,10 @@ const PlaceFullCard = () => {
                 </Pressable>
             </View>
 
+            <ConfettiCannon
+                visible={showConfetti}
+                origin={{ x: screenWidth / 2, y: screenHeight - theme.responsive.size(80) }}
+            />
         </View>
     )
 }
@@ -303,13 +331,13 @@ const styles = StyleSheet.create({
     },
     selectedPlaceFullCardExtraInfoContainer: {
         flexDirection: 'row',
-        alignItems: 'center',
+        // alignItems: 'center',
         gap: theme.spacing.sm,
         marginTop: theme.spacing.md,
     },
     selectedPlaceFullCardExtraInfoOpenContainer: {
         flexDirection: 'row',
-        alignItems: 'center',
+        // alignItems: 'center',
     },
     selectedPlaceFullCardExtraInfoOpenSeparator: {
         ...theme.typography.bodySmall,

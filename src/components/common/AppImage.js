@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { View, StyleSheet, ActivityIndicator, Platform, ImageBackground } from 'react-native';
+import { View, StyleSheet, ActivityIndicator, Platform, ImageBackground, Image } from 'react-native';
 import {
     getCachedImage,
     isImageCached,
@@ -201,7 +201,7 @@ const AppImage = ({
             // Show placeholder if no image source is available
             if (placeholderSource) {
                 return (
-                    <FastImage
+                    <Image
                         source={placeholderSource}
                         style={[styles.image, imageStyle]}
                         resizeMode={resizeMode}

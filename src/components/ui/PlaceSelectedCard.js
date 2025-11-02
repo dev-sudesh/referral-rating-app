@@ -1,4 +1,4 @@
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { StyleSheet, Text, TouchableOpacity, View, Dimensions } from 'react-native'
 import React from 'react'
 import MapsController from '../../controllers/maps/MapsController';
 import AppImage from '../common/AppImage';
@@ -6,9 +6,14 @@ import ImageAsset from '../../assets/images/ImageAsset';
 import CurvedCard from './CurvedCard';
 import theme from '../../constants/theme';
 import FirebaseStoreService from '../../services/firebase/FirebaseStoreService';
+import IconAsset from '../../assets/icons/IconAsset';
+
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 const PlaceSelectedCard = () => {
-    const { selectedPlace, setSelectedPlace, setShowPlaceFullCard, setShowPlaceBigCard, places, setPlaces } = MapsController();
+    const { selectedPlace, setSelectedPlace, setShowPlaceFullCard, setShowPlaceBigCard, places, setPlaces, setShowConfetti } = MapsController();
+    const buttonRef = React.useRef(null);
+
     const referPlace = async () => {
         FirebaseStoreService.storeReferredPlace(selectedPlace);
         if (selectedPlace.isReferred) {
@@ -19,7 +24,17 @@ const PlaceSelectedCard = () => {
         }
         setPlaces(places.map(p => p.id === selectedPlace.id ? { ...p, isReferred: true } : p));
         setSelectedPlace({ ...selectedPlace, isReferred: true });
+
+        // Measure button position and trigger confetti at screen level
+        if (buttonRef.current) {
+            buttonRef.current.measureInWindow((x, y, width, height) => {
+                setShowConfetti(true, { x: x + width / 2, y: y + height / 2 });
+            });
+        } else {
+            setShowConfetti(true, { x: screenWidth / 2, y: screenHeight - theme.responsive.size(80) });
+        }
     };
+
     return (
         <TouchableOpacity activeOpacity={1} style={[styles.placeCardBig,]} onPress={() => {
             setShowPlaceFullCard(true);
@@ -48,7 +63,7 @@ const PlaceSelectedCard = () => {
                     <View style={styles.placeCardImageFull}>
                         <AppImage
                             source={selectedPlace?.imageFull}
-                            placeholderSource={selectedPlace?.image}
+                            placeholderSource={ImageAsset.placesPlaceholderImage}
                             resizeMode='cover'
                             style={{
                                 width: '100%',
@@ -70,7 +85,12 @@ const PlaceSelectedCard = () => {
                 </View>
             </CurvedCard>
 
-            <TouchableOpacity activeOpacity={1} style={styles.placeCardFooter} onPress={() => referPlace()}>
+            <TouchableOpacity
+                ref={buttonRef}
+                activeOpacity={1}
+                style={styles.placeCardFooter}
+                onPress={() => referPlace()}
+            >
                 <View style={[styles.placeCardFooterContent, selectedPlace.isReferred && styles.placeCardFooterContentReferred]}>
                     <AppImage
                         source={ImageAsset.logos.logoSmall}

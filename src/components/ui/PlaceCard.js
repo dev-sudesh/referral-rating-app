@@ -3,6 +3,8 @@ import React from 'react'
 import theme from '../../constants/theme';
 import AppImage from '../common/AppImage';
 import MapsController from '../../controllers/maps/MapsController';
+import ImageAsset from '../../assets/images/ImageAsset';
+import IconAsset from '../../assets/icons/IconAsset';
 
 const PlaceCard = (props) => {
     const { place } = props;
@@ -24,7 +26,7 @@ const PlaceCard = (props) => {
                 <View style={styles.placeCardImage}>
                     <AppImage
                         source={place.imageFull}
-                        placeholderSource={place.image}
+                        placeholderSource={ImageAsset.placesPlaceholderImage}
                         style={{
                             width: '100%',
                             height: '100%',

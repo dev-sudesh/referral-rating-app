@@ -173,7 +173,7 @@ const ReferralsScreen = ({ navigation }) => {
                         </View>
                         <View style={styles.referralCardInfo}>
                             <View style={styles.referralCardTags}>
-                                {referral.tags.map((tag, index) => (
+                                {referral.tags && Array.isArray(referral.tags) && referral.tags.map((tag, index) => (
                                     <View key={tag.id} style={[styles.referralCardTag, { backgroundColor: styles[tag.style].backgroundColor }]}>
                                         <Text style={[styles.referralCardTagText, { color: styles[tag.style].color }]}>{tag.title}</Text>
                                     </View>

@@ -24,14 +24,15 @@ import FirebaseStoreService from '../../../services/firebase/FirebaseStoreServic
 import ReferralController from '../../../controllers/referrals/ReferralController';
 import PlaceSelectedCard from '../../../components/ui/PlaceSelectedCard';
 import PlaceCard from '../../../components/ui/PlaceCard';
+import ConfettiCannon from '../../../components/animated/ConfettiCannon';
 
 const ListScreen = () => {
     const [selectedFilter, setSelectedFilter] = useState('all');
     const [region, setRegion] = useState({
         latitude: 37.78825,
         longitude: -122.4324,
-        latitudeDelta: 0.032,
-        longitudeDelta: 0.032,
+        latitudeDelta: 0.001,
+        longitudeDelta: 0.001,
     });
     const [placeUpdated, setPlaceUpdated] = useState(false);
     const [filteredPlaces, setFilteredPlaces] = useState([]);
@@ -43,7 +44,7 @@ const ListScreen = () => {
     const bottomSheetRef = useRef(null);
     const { isSearchFilterVisible, setIsSearchFilterVisible } = SearchFilterController();
     const placesListRef = useRef(null);
-    const { selectedViewType, setSelectedViewType, showPlaceFullCard, setShowPlaceFullCard, selectedPlace, setSelectedPlace, places, setPlaces, showPlaceBigCard, setShowPlaceBigCard } = MapsController();
+    const { selectedViewType, setSelectedViewType, showPlaceFullCard, setShowPlaceFullCard, selectedPlace, setSelectedPlace, places, setPlaces, showPlaceBigCard, setShowPlaceBigCard, showConfetti, confettiOrigin, setShowConfetti } = MapsController();
     const [isMapReady, setIsMapReady] = useState(false);
     const [isScreenFocused, setIsScreenFocused] = useState(false);
 
@@ -97,14 +98,24 @@ const ListScreen = () => {
         }
     }, [isScreenFocused]);
 
+    React.useEffect(() => {
+        // Reset confetti after animation completes
+        if (showConfetti) {
+            const timer = setTimeout(() => {
+                setShowConfetti(false, null);
+            }, 2500);
+            return () => clearTimeout(timer);
+        }
+    }, [showConfetti, setShowConfetti]);
+
 
     React.useEffect(() => {
         if (userLocation) {
             const location = {
                 latitude: userLocation.latitude,
                 longitude: userLocation.longitude,
-                latitudeDelta: 0.032,
-                longitudeDelta: 0.032,
+                latitudeDelta: 0.001,
+                longitudeDelta: 0.001,
             };
             setCenterLocation(location);
         }
@@ -139,6 +150,10 @@ const ListScreen = () => {
 
                 </View>
             </View>
+            <ConfettiCannon
+                visible={showConfetti}
+                origin={confettiOrigin}
+            />
         </View>
     );
 };

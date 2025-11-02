@@ -17,9 +17,12 @@ import { AppRegistry } from 'react-native';
 import App from './App';
 import { name as appName } from './app.json';
 import { Env } from './src/config/env';
+import DeviceInfo from './src/utils/deviceInfo/DeviceInfo';
 
 // Initialize environment configuration
 Env.init();
+
+DeviceInfo.init();
 
 // Register the main app component
 AppRegistry.registerComponent(appName, () => App);

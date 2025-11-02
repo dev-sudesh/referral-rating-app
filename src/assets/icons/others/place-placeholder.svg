@@ -1,0 +1,38 @@
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="200" height="200" rx="12" fill="#F3F4F6"/>
+  
+  <!-- Main building/base structure -->
+  <rect x="70" y="80" width="60" height="80" rx="4" fill="#D1D5DB"/>
+  <rect x="60" y="80" width="10" height="10" rx="2" fill="#BDBDBD"/>
+  <rect x="130" y="80" width="10" height="10" rx="2" fill="#BDBDBD"/>
+  
+  <!-- Roof -->
+  <polygon points="100,40 140,80 60,80" fill="#9CA3AF"/>
+  
+  <!-- Windows -->
+  <rect x="75" y="100" width="12" height="12" rx="2" fill="#FFFFFF"/>
+  <rect x="90" y="100" width="12" height="12" rx="2" fill="#FFFFFF"/>
+  <rect x="105" y="100" width="12" height="12" rx="2" fill="#FFFFFF"/>
+  <rect x="120" y="100" width="12" height="12" rx="2" fill="#FFFFFF"/>
+  
+  <rect x="75" y="115" width="12" height="12" rx="2" fill="#FFFFFF"/>
+  <rect x="90" y="115" width="12" height="12" rx="2" fill="#FFFFFF"/>
+  <rect x="105" y="115" width="12" height="12" rx="2" fill="#FFFFFF"/>
+  <rect x="120" y="115" width="12" height="12" rx="2" fill="#FFFFFF"/>
+  
+  <!-- Door -->
+  <rect x="93" y="135" width="14" height="25" rx="2" fill="#757575"/>
+  <circle cx="104" cy="147" r="1.5" fill="#424242"/>
+  
+  <!-- Location pin shadow -->
+  <circle cx="100" cy="165" r="8" fill="#E5E7EB"/>
+  <path d="M 100 185 L 100 155 C 107 155 113 149 113 142 C 113 135 107 129 100 129 C 93 129 87 135 87 142 C 87 149 93 155 100 155 Z" fill="#4798FF"/>
+  <circle cx="100" cy="142" r="3.5" fill="#FFFFFF"/>
+  
+  <!-- Decorative elements -->
+  <circle cx="40" cy="60" r="2" fill="#E5E7EB"/>
+  <circle cx="160" cy="70" r="2.5" fill="#E5E7EB"/>
+  <circle cx="50" cy="170" r="2" fill="#E5E7EB"/>
+  <circle cx="150" cy="160" r="2" fill="#E5E7EB"/>
+</svg>

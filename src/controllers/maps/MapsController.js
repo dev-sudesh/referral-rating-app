@@ -9,6 +9,8 @@ const MapsController = create((set) => ({
     places: [],
     userLocation: null,
     centerLocation: null,
+    showConfetti: false,
+    confettiOrigin: null,
     setCenterLocation: (centerLocation) => set({ centerLocation: centerLocation }),
     setUserLocation: (userLocation) => set({ userLocation: userLocation }),
     setPlaces: (places) => set({ places: places }),
@@ -16,6 +18,7 @@ const MapsController = create((set) => ({
     setShowPlaceFullCard: (show) => set({ showPlaceFullCard: show }),
     setSelectedPlace: (place) => set({ selectedPlace: place }),
     setShowPlaceBigCard: (show) => set({ showPlaceBigCard: show }),
+    setShowConfetti: (show, origin) => set({ showConfetti: show, confettiOrigin: origin }),
 }));
 
 export default MapsController;

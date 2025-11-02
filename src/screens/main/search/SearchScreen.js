@@ -12,6 +12,7 @@ import SearchBar from '../../../components/ui/SearchBar';
 import FirebaseStoreService from '../../../services/firebase/FirebaseStoreService';
 import MapsController from '../../../controllers/maps/MapsController';
 import { getPlaceDistance } from '../../../utils/DistanceUtils';
+import ApiController from '../../../services/api/ApiController';
 
 const SearchScreen = ({ navigation }) => {
     const [searchText, setSearchText] = useState('');
@@ -22,6 +23,7 @@ const SearchScreen = ({ navigation }) => {
     const { userLocation, setSelectedPlace, setShowPlaceFullCard } = MapsController();
     const [popularSearches, setPopularSearches] = useState([]);
     const [recentSearches, setRecentSearches] = useState([]);
+    const searchPlacesMutation = ApiController.searchPlaces();
 
     // Memoize the search function to prevent recreation on every render
     const handleSearch = useCallback(async (searchTerm) => {
@@ -29,7 +31,8 @@ const SearchScreen = ({ navigation }) => {
 
         setIsSearching(true);
         try {
-            const results = await FirebaseStoreService.getSearchPlaces(userLocation, searchTerm);
+            // const results = await FirebaseStoreService.getSearchPlaces(userLocation, searchTerm);
+            const results = await searchPlacesMutation.mutateAsync({ query: searchTerm, latitude: userLocation.latitude, longitude: userLocation.longitude });
             setSearchResults(results);
         } catch (error) {
             console.error('Search error:', error);

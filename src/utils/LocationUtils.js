@@ -343,8 +343,8 @@ const LocationUtils = {
                 const newRegion = {
                     latitude,
                     longitude,
-                    latitudeDelta: 0.032,
-                    longitudeDelta: 0.032,
+                    latitudeDelta: 0.001,
+                    longitudeDelta: 0.001,
                 };
                 MapsController.getState().setCenterLocation(newRegion);
             },
