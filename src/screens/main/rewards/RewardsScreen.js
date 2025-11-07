@@ -14,14 +14,16 @@ import ScreenHeader from '../../../components/ui/ScreenHeader';
 import Constants from '../../../constants/data';
 import FirebaseStoreService from '../../../services/firebase/FirebaseStoreService';
 import RewardController from '../../../controllers/rewards/RewardController';
+import NoDataAnimation from '../../../components/common/NoDataAnimation';
+import IconAsset from '../../../assets/icons/IconAsset';
 
 const { width } = Dimensions.get('window');
 
 const RewardsScreen = ({ navigation }) => {
     const [selectedTab, setSelectedTab] = useState('active');
     const { rewards, setRewards, selectedReward, setSelectedReward } = RewardController();
-    const [filteredRewards, setFilteredRewards] = useState(rewards?.filter(item => item.status == 'active'))
-
+    // const [filteredRewards, setFilteredRewards] = useState(rewards?.filter(item => item.status == 'active'))
+    const [filteredRewards, setFilteredRewards] = useState([])
     const selectedRewardPress = async (reward) => {
         let selectedReward = reward;
         selectedReward.isRedeemed = await getRewardRedeemedStatus(reward);
@@ -69,18 +71,19 @@ const RewardsScreen = ({ navigation }) => {
     }
 
     const getRewards = React.useCallback(async () => {
-        const rewards = await FirebaseStoreService.getRewards(selectedTab)
-        rewards.forEach(async (reward) => {
-            reward.validUntil = new Date(reward.validUntil)
-            reward.validUntilDate = reward.validUntil.getDate()
-            reward.validUntilMonth = reward.validUntil.getMonth()
-            reward.validUntilYear = reward.validUntil.getFullYear()
-            reward.validUntilDateString = `${reward.validUntilMonth}/${reward.validUntilDate}/${reward.validUntilYear}`
-            reward.isRedeemed = await getRewardRedeemedStatus(reward)
-            return reward
-        })
-        setRewards(rewards)
-        setFilteredRewards(rewards)
+        // const rewards = await FirebaseStoreService.getRewards(selectedTab)
+        // rewards.forEach(async (reward) => {
+        //     reward.validUntil = new Date(reward.validUntil)
+        //     reward.validUntilDate = reward.validUntil.getDate()
+        //     reward.validUntilMonth = reward.validUntil.getMonth()
+        //     reward.validUntilYear = reward.validUntil.getFullYear()
+        //     reward.validUntilDateString = `${reward.validUntilMonth}/${reward.validUntilDate}/${reward.validUntilYear}`
+        //     reward.isRedeemed = await getRewardRedeemedStatus(reward)
+        //     return reward
+        // })
+
+        setRewards([])
+        setFilteredRewards([])
     }, [selectedTab])
 
     React.useEffect(() => {
@@ -139,15 +142,24 @@ const RewardsScreen = ({ navigation }) => {
 
                 {/* Content */}
                 <View style={styles.rewardsContainer}>
+                    {filteredRewards.length > 0 ? (
+                        <FlatList
+                            showsVerticalScrollIndicator={false}
+                            data={filteredRewards}
+                            renderItem={({ item }) => renderRewardCard(item)}
+                            keyExtractor={(item) => item.id}
+                            decelerationRate="fast"
+                        />) : (
+                        <View style={styles.noDataContainer}>
+                            <NoDataAnimation
+                                message="No rewards available"
+                                subtitle="Try adjusting your filters or check back later"
+                                icon={IconAsset.emptyStateIcon}
+                                size="large"
+                            />
+                        </View>
 
-                    <FlatList
-                        showsVerticalScrollIndicator={false}
-                        data={filteredRewards}
-                        renderItem={({ item }) => renderRewardCard(item)}
-                        keyExtractor={(item) => item.id}
-                        decelerationRate="fast"
-
-                    />
+                    )}
                 </View>
             </View>
         </SafeAreaView>
@@ -243,6 +255,12 @@ const styles = StyleSheet.create({
         borderRadius: theme.borderRadius.sm,
         paddingHorizontal: theme.spacing.sm,
         paddingVertical: theme.spacing.xs,
+    },
+    noDataContainer: {
+        width: '100%',
+        height: '90%',
+        justifyContent: 'center',
+        alignItems: 'center',
     },
 });
 
