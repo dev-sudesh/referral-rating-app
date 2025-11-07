@@ -9,10 +9,10 @@ API.url = {
         anonymousToken: () => `/api/anon/sessions`,
     },
     place: {
-        nearby: ({ latitude, longitude, limit = 10, radius = 1000, enhanced = true }) => `api/places?lat=${latitude}&lng=${longitude}&radius=${radius}&limit=${limit}&enhanced=${enhanced}`,
-        search: ({ query, latitude, longitude, limit = 10, radius = 1000, enhanced = true }) => `api/places/search?query=${query}&lat=${latitude}&lng=${longitude}&limit=${limit}&radius=${radius}&enhanced=${enhanced}`,
-
-    }
+        categories: () => `/api/places/categories`,
+        nearby: ({ latitude, longitude, limit = 10, radius = 5000, enhanced = true, category }) => `api/places${!category ? '/top' : ''}?lat=${latitude}&lng=${longitude}&radius=${radius}&limit=${limit}&enhanced=${enhanced}${category ? '&category=' + category : ''}`,
+        search: ({ query, latitude, longitude, limit = 10, radius = 5000, enhanced = true }) => `api/places/search?query=${query}&lat=${latitude}&lng=${longitude}&limit=${limit}&radius=${radius}&enhanced=${enhanced}`,
+    },
 }
 
 const successStatuses = [200, 201, '200', '201', 'ok', 'OK', 'success', 'SUCCESS']
@@ -27,7 +27,7 @@ const defaultCallbacks = {
 }
 
 const defaultRetryCount = 0
-const defaultTimeout = 10000
+const defaultTimeout = 30000
 
 API.AuthType = {
     auth: 'auth',

@@ -8,6 +8,7 @@ const SearchFilterController = create((set) => ({
     showSearchBar: true,
     handleFilterCallback: null,
     initialFilters: null,
+    placeCategories: [],
     setIsSearchFilterVisible: ({
         isSearchFilterVisible,
         filterHeight,
@@ -24,6 +25,7 @@ const SearchFilterController = create((set) => ({
     setFilterHeight: (filterHeight) => set({ filterHeight }),
     setShowSearchBar: (showSearchBar) => set({ showSearchBar }),
     setHandleFilterCallback: (handleFilterCallback) => set({ handleFilterCallback }),
+    setPlaceCategories: (placeCategories) => set({ placeCategories }),
 }));
 
 export default SearchFilterController;

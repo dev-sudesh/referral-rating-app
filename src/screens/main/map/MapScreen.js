@@ -204,10 +204,10 @@ const MapScreen = ({ navigation }) => {
     }
 
     React.useEffect(() => {
-        if (centerLocation?.latitude && centerLocation?.longitude && isScreenFocused) {
+        if (centerLocation?.latitude && centerLocation?.longitude && isScreenFocused && isMapReady) {
             centerOnLocation();
         }
-    }, [centerLocation?.latitude, centerLocation?.longitude, isScreenFocused]);
+    }, [centerLocation?.latitude, centerLocation?.longitude, isScreenFocused, isMapReady, centerOnLocation]);
 
     React.useEffect(() => {
         if (userLocation && places.length === 0) {

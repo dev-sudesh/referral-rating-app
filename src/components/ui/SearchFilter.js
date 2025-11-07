@@ -12,31 +12,39 @@ import {
     StatusBar,
     Keyboard,
     KeyboardAvoidingView,
+    ActivityIndicator,
 } from 'react-native';
 import RBSheet from 'react-native-raw-bottom-sheet';
 import { theme } from '../../constants/theme';
 import IconAsset from '../../assets/icons/IconAsset';
 import SearchFilterController from '../../controllers/filters/SearchFilterController';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import Constants from '../../constants/data';
 import FirebaseStoreService from '../../services/firebase/FirebaseStoreService';
 import MapsController from '../../controllers/maps/MapsController';
+import ApiController from '../../services/api/ApiController';
 
 const SearchFilter = () => {
-
-    const [filterCategories, setFilterCategories] = useState(Constants.filters);
+    const { data: placeCategoriesResponse } = ApiController.placeCategories();
     const [filters, setFilters] = useState([]);
     const [searchFilterText, setSearchFilterText] = useState('');
     const bottomSheetRef = useRef(null);
-    const { isSearchFilterVisible, setIsSearchFilterVisible, filterHeight, showSearchBar, initialFilters, handleFilterCallback } = SearchFilterController();
+    const { isSearchFilterVisible, setIsSearchFilterVisible, filterHeight, showSearchBar, initialFilters, handleFilterCallback, placeCategories } = SearchFilterController();
+    const [filterCategories, setFilterCategories] = useState(placeCategoriesResponse ?? []);
     const { places, setPlaces, userLocation } = MapsController();
     const insets = useSafeAreaInsets();
+    const nearbyPlacesMutation = ApiController.nearbyPlaces();
+    const [isLoading, setIsLoading] = useState(false);
+
+    React.useEffect(() => {
+        if (Array.isArray(placeCategories)) {
+            setFilterCategories(placeCategories);
+        }
+    }, [placeCategories]);
 
     // Handle visibility changes
     useEffect(() => {
         if (isSearchFilterVisible) {
             bottomSheetRef.current?.open();
-            getFilters();
         } else {
             bottomSheetRef.current?.close();
         }
@@ -47,16 +55,19 @@ const SearchFilter = () => {
         return Object.values(filters).flat().length;
     };
 
-    // Toggle filter selection
+    // Toggle filter selection - only one filter can be selected at a time
     const toggleFilter = (filterId) => {
+
         setFilters(prev => {
             const currentCategory = prev || [];
             const isSelected = currentCategory.includes(filterId);
 
             if (isSelected) {
-                return currentCategory.filter(id => id !== filterId);
+                // If already selected, deselect it
+                return [];
             }
-            return [...currentCategory, filterId];
+            // If not selected, clear all and select only this one
+            return [filterId];
         });
     };
 
@@ -70,13 +81,16 @@ const SearchFilter = () => {
 
     // Apply filters and close
     const handleApplyFilters = async () => {
+        setIsLoading(true);
         if (handleFilterCallback) {
-
             handleFilterCallback(filters);
         } else {
-            const places = await FirebaseStoreService.getFilteredPlaces(userLocation, filters);
+            const places = await nearbyPlacesMutation.mutateAsync({ latitude: userLocation.latitude, longitude: userLocation.longitude, category: filters[0] });
             setPlaces(places);
+            // const places = await FirebaseStoreService.getFilteredPlaces(userLocation, filters);
+            // setPlaces(places);
         }
+        setIsLoading(false);
 
         if (onClose) {
             onClose();
@@ -111,7 +125,7 @@ const SearchFilter = () => {
                 onPress={() => toggleFilter(item.id)}
                 activeOpacity={1}
             >
-                <View style={[
+                {/* <View style={[
                     styles.filterOptionIcon,
                     isSelected && styles.filterOptionSelectedIcon
                 ]}>
@@ -120,7 +134,7 @@ const SearchFilter = () => {
                     ) : (
                         <IconAsset.plusIcon width={18} height={18} fill={theme.colors.text.primary} />
                     )}
-                </View>
+                </View> */}
                 <Text style={[
                     styles.filterOptionText,
                     isSelected && styles.filterOptionTextSelected
@@ -132,8 +146,10 @@ const SearchFilter = () => {
     };
 
     // Render filter category
-    const renderFilterCategory = ({ item: categoryKey }) => {
-        const category = filterCategories[categoryKey];
+    const renderFilterCategory = ({ item: category }) => {
+        if (!category || !category.options || !Array.isArray(category.options)) {
+            return null;
+        }
         const filteredOptions = getFilteredOptions(category.options);
 
         if (filteredOptions.length === 0) return null;
@@ -151,24 +167,6 @@ const SearchFilter = () => {
             </View>
         );
     };
-
-    const getFilters = async () => {
-        const filters = await FirebaseStoreService.getUserFilters();
-        // get all filters from filterCategories which is in filters
-        const favoriteFilters = Constants.filters.map(filter => filter.options.filter(option => filters.includes(option.id))).flat();
-        setFilterCategories([
-            {
-                id: 'favorite',
-                title: 'Favorite',
-                options: favoriteFilters,
-            },
-            ...Constants.filters
-        ]);
-    };
-
-    React.useEffect(() => {
-        getFilters();
-    }, []);
 
     React.useEffect(() => {
         if (initialFilters) {
@@ -211,7 +209,7 @@ const SearchFilter = () => {
                     </TouchableOpacity>
 
                     <Text style={styles.headerTitle}>
-                        Search filters ({getActiveFilterCount()})
+                        Search filters
                     </Text>
 
                     <TouchableOpacity
@@ -250,9 +248,9 @@ const SearchFilter = () => {
                         showsVerticalScrollIndicator={false}
                         contentContainerStyle={styles.filterContentContainer}
                     >
-                        {Object.keys(filterCategories).map((categoryKey) => (
-                            <View key={categoryKey}>
-                                {renderFilterCategory({ item: categoryKey })}
+                        {filterCategories.map((category) => (
+                            <View key={category.id || category.title}>
+                                {renderFilterCategory({ item: category })}
                             </View>
                         ))}
                     </ScrollView>
@@ -260,11 +258,16 @@ const SearchFilter = () => {
                     {/* Apply Button */}
                     <View style={styles.applyButtonContainer}>
                         <TouchableOpacity
+                            disabled={isLoading}
                             style={styles.applyButton}
                             onPress={handleApplyFilters}
                             activeOpacity={1}
                         >
-                            <Text style={styles.applyButtonText}>Show results</Text>
+                            {isLoading ? (
+                                <ActivityIndicator color={theme.colors.background.white} />
+                            ) : (
+                                <Text style={styles.applyButtonText}>Show results</Text>
+                            )}
                         </TouchableOpacity>
                     </View>
                 </KeyboardAvoidingView>
@@ -408,6 +411,7 @@ const styles = StyleSheet.create({
         paddingVertical: theme.spacing.md,
         alignItems: 'center',
         justifyContent: 'center',
+        height: theme.responsive.buttonHeight('medium'),
     },
     applyButtonText: {
         ...theme.typography.bodyLarge,

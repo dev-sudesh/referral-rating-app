@@ -1,18 +1,40 @@
 import { lazy } from 'react'
 import MapsController from '../../../controllers/maps/MapsController'
 import Api from '../Api'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { calculateDistance } from '../../../utils/DistanceUtils'
 import ImageAsset from '../../../assets/images/ImageAsset'
+import SearchFilterController from '../../../controllers/filters/SearchFilterController'
 
 const PlaceApiController = {
+    placeCategories: () => {
+        return useQuery({
+            queryKey: ['placeCategories'],
+            queryFn: async () => {
+                try {
+                    const response = await Api.get({
+                        url: Api.url.place.categories()
+                    })
+                    if (response.statusCode === 200) {
+                        const processedCategories = processedPlaceCategories(response)
+                        return processedCategories
+                    } else {
+                        return []
+                    }
+                } catch (error) {
+                    console.log('error', error)
+                    return []
+                }
+            }
+        })
+    },
     nearbyPlaces: () => {
         return useMutation({
             mutationFn: async (params) => {
-                const { latitude, longitude, limit, radius, enhanced } = params || {}
+                const { latitude, longitude, limit, radius, enhanced, category } = params || {}
                 try {
                     const response = await Api.get({
-                        url: Api.url.place.nearby({ latitude, longitude, limit, radius, enhanced })
+                        url: Api.url.place.nearby({ latitude, longitude, limit, radius, enhanced, category })
                     })
                     if (response.statusCode === 200) {
                         const processedPlaces = processedNearbyPlaces(response, { latitude, longitude })
@@ -49,6 +71,22 @@ const PlaceApiController = {
     }
 }
 
+const processedPlaceCategories = (response) => {
+    if (!response || !response.categories || !Array.isArray(response.categories)) {
+        return []
+    }
+
+    const res = [{
+        id: 'category',
+        title: 'Category',
+        options: response.categories.map(category => {
+            const label = category.label;
+            return { id: category.id, label: label }
+        })
+    }]
+    SearchFilterController.getState().setPlaceCategories(res)
+    return res
+}
 const processedNearbyPlaces = (response, userLocation) => {
     const res = response.results.slice(0, 10).map(place => {
         const coord1 = { latitude: userLocation.latitude, longitude: userLocation.longitude }

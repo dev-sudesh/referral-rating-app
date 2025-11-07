@@ -207,13 +207,13 @@ const ProfileScreen = ({ navigation }) => {
                 {renderProfileHeader()}
 
                 {/* Menu Items */}
-                <View style={styles.menuContainer}>
+                {/* <View style={styles.menuContainer}>
                     <Text style={styles.sectionTitle}>Profile</Text>
                     {menuItems.map((item, index) => {
                         let isLastItem = index === menuItems.length - 1;
                         return renderMenuItem({ item, isLastItem })
                     })}
-                </View>
+                </View> */}
 
                 {/* About Items */}
                 <View style={styles.menuContainer}>

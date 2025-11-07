@@ -111,7 +111,7 @@ android {
 
     namespace "com.referralrating"
     defaultConfig {
-        applicationId "com.referralrating"
+        applicationId "com.referralrating.demo"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

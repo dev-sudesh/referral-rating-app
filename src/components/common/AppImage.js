@@ -33,6 +33,7 @@ const AppImage = ({
     fadeDuration = 300,
     autoCache = true,
     preloadOnMount = true,
+    isSvg: forceSvg, // Manual override to force SVG detection
     ...rest
 }) => {
     const [isLoading, setIsLoading] = useState(true);
@@ -44,6 +45,48 @@ const AppImage = ({
     // iOS-specific optimizations
     const isIOS = Platform.OS === 'ios';
     const fadeDurationOptimized = isIOS ? 150 : fadeDuration; // Faster fade on iOS
+
+    // Check if source is an SVG
+    const isSvg = useMemo(() => {
+        // Manual override prop takes precedence
+        if (forceSvg !== undefined) {
+            return forceSvg;
+        }
+
+        if (!source) return false;
+
+        let url = '';
+        if (typeof source === 'string') {
+            url = source.toLowerCase();
+        } else if (source && typeof source === 'object' && source.uri) {
+            url = source.uri.toLowerCase();
+        } else {
+            return false;
+        }
+
+        // Check if URL ends with .svg or contains .svg in the path
+        if (url.includes('.svg') || url.includes('/svg')) {
+            return true;
+        }
+
+        // Check for format=svg in query parameters (e.g., placehold.co?format=svg)
+        if (url.includes('format=svg') || url.includes('format=svg+xml')) {
+            return true;
+        }
+
+        // Check for type=svg in query parameters
+        if (url.includes('type=svg') || url.includes('type=svg+xml')) {
+            return true;
+        }
+
+        // For placehold.co, check if it's likely SVG (though default is PNG)
+        // You can add format=svg to placehold.co URLs to make them SVG
+        if (url.includes('placehold.co') && (url.includes('format=svg') || url.includes('type=svg'))) {
+            return true;
+        }
+
+        return false;
+    }, [source, forceSvg]);
 
     // Memoize source processing to avoid unnecessary recalculations
     const processedSource = useMemo(() => {
@@ -83,8 +126,8 @@ const AppImage = ({
 
                 setIsCacheReady(true);
 
-                // If it's a remote URL, check if it's already cached
-                if (source && typeof source === 'string' && source.includes('http')) {
+                // If it's a remote URL, check if it's already cached (skip SVG files)
+                if (source && typeof source === 'string' && source.includes('http') && !isSvg) {
                     if (isImageCached(source)) {
                         // Image is cached, don't show loader
                         setIsLoading(false);
@@ -103,11 +146,11 @@ const AppImage = ({
         return () => {
             isMounted = false;
         };
-    }, [source]);
+    }, [source, isSvg]);
 
-    // Optimized auto-cache with debouncing
+    // Optimized auto-cache with debouncing (skip SVG files)
     const handleAutoCache = useCallback(async (url) => {
-        if (!url || isImageCached(url)) return;
+        if (!url || isSvg || isImageCached(url)) return;
 
         try {
             setIsCaching(true);
@@ -117,11 +160,11 @@ const AppImage = ({
         } finally {
             setIsCaching(false);
         }
-    }, []);
+    }, [isSvg]);
 
-    // Auto-cache remote images on mount with optimization
+    // Auto-cache remote images on mount with optimization (skip SVG files)
     useEffect(() => {
-        if (preloadOnMount && autoCache && source && typeof source === 'string' && source.includes('http') && isCacheReady) {
+        if (preloadOnMount && autoCache && source && typeof source === 'string' && source.includes('http') && isCacheReady && !isSvg) {
             // Debounce auto-cache on iOS to prevent blocking
             if (isIOS) {
                 const timer = setTimeout(() => {
@@ -132,7 +175,7 @@ const AppImage = ({
                 handleAutoCache(source);
             }
         }
-    }, [source, preloadOnMount, autoCache, isCacheReady, handleAutoCache, isIOS]);
+    }, [source, preloadOnMount, autoCache, isCacheReady, handleAutoCache, isIOS, isSvg]);
 
     // Update image source when final source changes
     useEffect(() => {
@@ -151,8 +194,8 @@ const AppImage = ({
         setIsLoading(false);
         setHasError(false);
 
-        // Cache the image if it's a remote URL and auto-cache is enabled
-        if (autoCache && source && typeof source === 'string' && source.includes('http')) {
+        // Cache the image if it's a remote URL and auto-cache is enabled (skip SVG files)
+        if (autoCache && source && typeof source === 'string' && source.includes('http') && !isSvg) {
             // Debounce caching on iOS
             if (isIOS) {
                 setTimeout(() => handleAutoCache(source), 50);
@@ -162,15 +205,15 @@ const AppImage = ({
         }
 
         onLoad?.();
-    }, [autoCache, source, handleAutoCache, onLoad, isIOS]);
+    }, [autoCache, source, handleAutoCache, onLoad, isIOS, isSvg]);
 
     const handleError = useCallback(() => {
         setIsLoading(false);
         setHasError(true);
 
         // Try fallback source if available
-        if (fallbackSource && imageSource !== fallbackSource) {
-            setImageSource(fallbackSource);
+        if (placeholderSource && imageSource !== placeholderSource) {
+            setImageSource(placeholderSource);
             setIsLoading(true);
             setHasError(false);
         } else {
@@ -185,8 +228,8 @@ const AppImage = ({
         // Show loader if we're loading or caching
         if (isLoading || isCaching) return true;
 
-        // Don't show loader if image is already cached and cache is ready
-        if (isCacheReady && source && typeof source === 'string' && source.includes('http') && isImageCached(source)) {
+        // Don't show loader if image is already cached and cache is ready (skip SVG files)
+        if (isCacheReady && source && typeof source === 'string' && source.includes('http') && !isSvg && isImageCached(source)) {
             return false;
         }
 
@@ -213,6 +256,23 @@ const AppImage = ({
             return null;
         }
 
+        // Use standard Image component for SVG files since FastImage doesn't support SVG
+        if (isSvg) {
+            return (
+                <Image
+                    source={imageSource}
+                    style={[styles.image, imageStyle]}
+                    resizeMode={resizeMode}
+                    fadeDuration={fadeDurationOptimized}
+                    defaultSource={placeholderSource}
+                    onLoad={handleLoad}
+                    onError={handleError}
+                    {...rest}
+                />
+            );
+        }
+
+        // Use FastImage for non-SVG images
         return (
             <FastImage
                 source={imageSource}
@@ -225,7 +285,7 @@ const AppImage = ({
                 {...rest}
             />
         );
-    }, [imageSource, imageStyle, resizeMode, fadeDurationOptimized, handleLoad, handleError, placeholderSource, rest]);
+    }, [imageSource, imageStyle, resizeMode, fadeDurationOptimized, handleLoad, handleError, placeholderSource, rest, isSvg]);
 
     const renderLoader = useCallback(() => {
         if (!shouldShowLoader) {
