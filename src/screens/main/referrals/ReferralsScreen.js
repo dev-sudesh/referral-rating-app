@@ -36,7 +36,7 @@ const ReferralsScreen = ({ navigation }) => {
     const [otherSelectedFilters, setOtherSelectedFilters] = useState([]);
 
     const { places, setSelectedPlace, setShowPlaceFullCard } = MapsController();
-    const { isSearchFilterVisible, setIsSearchFilterVisible } = SearchFilterController();
+    const { isSearchFilterVisible, setIsSearchFilterVisible, placeCategories } = SearchFilterController();
 
     // Show status bar when screen is focused
     useFocusEffect(
@@ -108,7 +108,7 @@ const ReferralsScreen = ({ navigation }) => {
                     onPress={() => handleFilterPress(chip.id)}
                     activeOpacity={1}
                 >
-                    {
+                    {/* {
                         chip.id != 'all' && (
                             <View style={[
                                 styles.filterOptionIcon,
@@ -125,7 +125,7 @@ const ReferralsScreen = ({ navigation }) => {
                                         ))
                                 }
                             </View>
-                        )}
+                        )} */}
                     <Text style={[
                         styles.filterOptionText,
                         chip.selected && styles.filterOptionTextSelected,
@@ -218,15 +218,15 @@ const ReferralsScreen = ({ navigation }) => {
 
     React.useEffect(() => {
         // get 2 filters from all categories of Constants.filters
-        const filtersData = Constants.filters.map(filter => {
-            return filter.options.slice(0, 3).map(option => {
+        const filtersData = placeCategories?.map(category => {
+            return category.options.slice(0, 16).map(option => {
                 return {
                     id: option.id,
                     label: option.label,
                     selected: false
                 }
             })
-        }).flat()
+        }).flat().slice(0, 16)
         setFilters([{ id: 'all', label: 'All', selected: false }, ...filtersData, { id: 'more', label: 'More Filters', selected: false }])
 
     }, [])
