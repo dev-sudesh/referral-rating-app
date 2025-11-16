@@ -19,7 +19,6 @@ import { theme } from '../../constants/theme';
 import IconAsset from '../../assets/icons/IconAsset';
 import SearchFilterController from '../../controllers/filters/SearchFilterController';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import FirebaseStoreService from '../../services/firebase/FirebaseStoreService';
 import MapsController from '../../controllers/maps/MapsController';
 import ApiController from '../../services/api/ApiController';
 
@@ -87,8 +86,6 @@ const SearchFilter = () => {
         } else {
             const places = await nearbyPlacesMutation.mutateAsync({ latitude: userLocation.latitude, longitude: userLocation.longitude, category: filters[0] });
             setPlaces(places);
-            // const places = await FirebaseStoreService.getFilteredPlaces(userLocation, filters);
-            // setPlaces(places);
         }
         setIsLoading(false);
 

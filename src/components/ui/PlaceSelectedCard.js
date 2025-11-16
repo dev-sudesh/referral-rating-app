@@ -5,17 +5,23 @@ import AppImage from '../common/AppImage';
 import ImageAsset from '../../assets/images/ImageAsset';
 import CurvedCard from './CurvedCard';
 import theme from '../../constants/theme';
-import FirebaseStoreService from '../../services/firebase/FirebaseStoreService';
-import IconAsset from '../../assets/icons/IconAsset';
+import ApiController from '../../services/api/ApiController';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 const PlaceSelectedCard = () => {
-    const { selectedPlace, setSelectedPlace, setShowPlaceFullCard, setShowPlaceBigCard, places, setPlaces, setShowConfetti } = MapsController();
+    const referPlaceMutation = ApiController.referPlace();
+    const selectedPlace = MapsController(state => state.selectedPlace);
+    const setSelectedPlace = MapsController.getState().setSelectedPlace;
+    const setShowPlaceFullCard = MapsController.getState().setShowPlaceFullCard;
+    const setShowPlaceBigCard = MapsController.getState().setShowPlaceBigCard;
+    const places = MapsController(state => state.places);
+    const setPlaces = MapsController.getState().setPlaces;
+    const setShowConfetti = MapsController.getState().setShowConfetti;
     const buttonRef = React.useRef(null);
 
     const referPlace = async () => {
-        FirebaseStoreService.storeReferredPlace(selectedPlace);
+        referPlaceMutation.mutateAsync({ place: selectedPlace, placeId: selectedPlace.id, action: selectedPlace.isReferred ? 'unrefer' : 'refer' });
         if (selectedPlace.isReferred) {
             // unrefer place
             setPlaces(places.map(p => p.id === selectedPlace.id ? { ...p, isReferred: false } : p));

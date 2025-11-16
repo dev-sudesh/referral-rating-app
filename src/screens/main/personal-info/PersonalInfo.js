@@ -14,8 +14,6 @@ import AppImage from '../../../components/common/AppImage';
 import ImageAsset from '../../../assets/images/ImageAsset';
 import IconAsset from '../../../assets/icons/IconAsset';
 import KeyboardAvoidingView from '../../../components/common/KeyboardAvoidingView';
-import FirebaseStoreService from '../../../services/firebase/FirebaseStoreService';
-import ToastUtils from '../../../utils/ToastUtils';
 import ImagePickerController from '../../../controllers/imagePicker/ImagePickerController';
 
 const PersonalInfo = ({ navigation }) => {
@@ -34,12 +32,6 @@ const PersonalInfo = ({ navigation }) => {
 
 
     const handleSave = async () => {
-        const result = await FirebaseStoreService.updateUserPersonalInfo(formData);
-        if (result) {
-            ToastUtils.success('Personal information updated successfully');
-        } else {
-            ToastUtils.error('Failed to update personal information. Please try again.');
-        }
     };
 
     const handleAvatarImageEdit = () => {
@@ -58,14 +50,7 @@ const PersonalInfo = ({ navigation }) => {
     );
 
     const getUserPersonalInfo = async () => {
-        const personalInfo = await FirebaseStoreService.getUserPersonalInfo();
-        if (personalInfo) {
-            setFormData({
-                firstName: personalInfo.firstName,
-                lastName: personalInfo.lastName,
-                email: personalInfo.email,
-            });
-        }
+
     };
 
     React.useEffect(() => {

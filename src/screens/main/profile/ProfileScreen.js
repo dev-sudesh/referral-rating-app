@@ -14,7 +14,6 @@ import ImageAsset from '../../../assets/images/ImageAsset';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AppImage from '../../../components/common/AppImage';
 import Constants from '../../../constants/data';
-import FirebaseStoreService from '../../../services/firebase/FirebaseStoreService';
 import WebViewController from '../../../controllers/webview/WebViewController';
 import ScreenHeader from '../../../components/ui/ScreenHeader';
 import ShareModal from '../../../components/common/ShareModal';
@@ -33,10 +32,6 @@ const ProfileScreen = ({ navigation }) => {
     });
 
     const getUserPersonalInfo = async () => {
-        const personalInfo = await FirebaseStoreService.getUserPersonalInfo();
-        if (personalInfo) {
-            setUserPersonalInfo(personalInfo);
-        }
     };
 
     // Show status bar when screen is focused

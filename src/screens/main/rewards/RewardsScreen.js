@@ -12,7 +12,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import AppImage from '../../../components/common/AppImage';
 import ScreenHeader from '../../../components/ui/ScreenHeader';
 import Constants from '../../../constants/data';
-import FirebaseStoreService from '../../../services/firebase/FirebaseStoreService';
 import RewardController from '../../../controllers/rewards/RewardController';
 import NoDataAnimation from '../../../components/common/NoDataAnimation';
 import IconAsset from '../../../assets/icons/IconAsset';
@@ -67,11 +66,9 @@ const RewardsScreen = ({ navigation }) => {
     };
 
     const getRewardRedeemedStatus = async (reward) => {
-        return await FirebaseStoreService.isRewardRedeemed(reward.id)
     }
 
     const getRewards = React.useCallback(async () => {
-        // const rewards = await FirebaseStoreService.getRewards(selectedTab)
         // rewards.forEach(async (reward) => {
         //     reward.validUntil = new Date(reward.validUntil)
         //     reward.validUntilDate = reward.validUntil.getDate()

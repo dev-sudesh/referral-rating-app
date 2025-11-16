@@ -12,7 +12,6 @@ import PermissionError from './src/components/ui/PermissionError';
 import PermissionController from './src/controllers/permissions/PermissionController';
 import LocationUtils from './src/utils/LocationUtils';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import DeviceInfo from './src/utils/deviceInfo/DeviceInfo';
 LocationUtils.init();
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -27,8 +26,8 @@ const queryClient = new QueryClient({
   },
 })
 const App = () => {
-  const { showPlaceFullCard } = MapsController();
-  const { showPermissionError, } = PermissionController();
+  const showPlaceFullCard = MapsController(state => state.showPlaceFullCard);
+  const showPermissionError = PermissionController(state => state.showPermissionError);
   return (
     <QueryClientProvider client={queryClient}>
       <SafeAreaProvider>

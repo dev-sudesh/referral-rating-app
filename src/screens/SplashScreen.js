@@ -11,10 +11,8 @@ import Constants from '../constants/data';
 import AsyncStoreUtils from '../utils/AsyncStoreUtils';
 
 import { useAppInitialization } from '../hooks/useAppInitialization';
-import { useDataRecovery } from '../hooks/useDataRecovery';
 import useLocationCheck from '../hooks/useLocationCheck';
 import NativeModuleUtils from '../utils/nativeModules/NativeModuleUtils';
-import FirebaseStoreService from '../services/firebase/FirebaseStoreService';
 import LocationUtils from '../utils/LocationUtils';
 import PermissionController from '../controllers/permissions/PermissionController';
 import MapsController from '../controllers/maps/MapsController';
@@ -35,8 +33,6 @@ const SplashScreen = () => {
     // Initialize app services
     const { firebaseReady, error, isInitializing } = useAppInitialization();
 
-    // Initialize data recovery
-    const { wasRecovered } = useDataRecovery();
 
     // Initialize location checking
     const {
@@ -45,18 +41,6 @@ const SplashScreen = () => {
         checkLocationStatus
     } = useLocationCheck();
 
-    // Show recovery notification
-    useEffect(() => {
-        if (wasRecovered) {
-            // Toast.show({
-            //     type: 'success',
-            //     text1: 'Welcome Back!',
-            //     text2: 'Your previous data has been recovered.',
-            //     position: 'top',
-            //     visibilityTime: 4000,
-            // });
-        }
-    }, [wasRecovered]);
 
     const checkLoginStatus = async () => {
         try {
@@ -128,13 +112,7 @@ const SplashScreen = () => {
         };
     }, []);
 
-    // Navigate when initialization is complete
-    useEffect(() => {
-        if (!isInitializing && firebaseReady) {
-            FirebaseStoreService.storeRandomRewards();
 
-        }
-    }, [isInitializing, firebaseReady]);
 
     return (
         <ScreenContainer {...ScreenContainer.presets.full} safeArea={false}>

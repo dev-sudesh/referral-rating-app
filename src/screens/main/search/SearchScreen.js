@@ -9,7 +9,6 @@ import {
 import { theme } from '../../../constants/theme';
 import ScreenContainer from '../../../components/common/ScreenContainer';
 import SearchBar from '../../../components/ui/SearchBar';
-import FirebaseStoreService from '../../../services/firebase/FirebaseStoreService';
 import MapsController from '../../../controllers/maps/MapsController';
 import { getPlaceDistance } from '../../../utils/DistanceUtils';
 import ApiController from '../../../services/api/ApiController';
@@ -31,7 +30,6 @@ const SearchScreen = ({ navigation }) => {
 
         setIsSearching(true);
         try {
-            // const results = await FirebaseStoreService.getSearchPlaces(userLocation, searchTerm);
             const results = await searchPlacesMutation.mutateAsync({ query: searchTerm, latitude: userLocation.latitude, longitude: userLocation.longitude });
             setSearchResults(results);
         } catch (error) {
@@ -63,17 +61,13 @@ const SearchScreen = ({ navigation }) => {
     // Create a search callback that SearchBar can call directly
     const handleSearchCallback = useCallback((searchTerm) => {
         if (searchTerm.trim()) {
-            setSearchText(searchTerm);
             handleSearch(searchTerm);
         } else {
-            setSearchText('');
             setSearchResults([]);
         }
     }, [handleSearch]);
 
     const showPlaceDetails = useCallback((place) => {
-        FirebaseStoreService.storeSearchKeyword(place.category);
-        initData();
         setSelectedPlace(place);
         setShowPlaceFullCard(true);
     }, [setSelectedPlace, setShowPlaceFullCard]);
@@ -153,24 +147,8 @@ const SearchScreen = ({ navigation }) => {
         return null;
     }, [searchText, showPlaceDetails]);
 
-    const loadPopularSearches = useCallback(async () => {
-        const popularSearches = await FirebaseStoreService.getPopularSearchKeywords();
-        setPopularSearches(popularSearches);
-    }, []);
-
-    const loadRecentSearches = useCallback(async () => {
-        const recentSearches = await FirebaseStoreService.getSearchSuggestions();
-        setRecentSearches(recentSearches);
-    }, []);
-
-    const initData = useCallback(async () => {
-        await loadRecentSearches();
-        await loadPopularSearches();
-    }, [loadRecentSearches, loadPopularSearches]);
-
     useEffect(() => {
-        initData();
-    }, [initData]);
+    }, []);
 
     return (
         <ScreenContainer {...ScreenContainer.presets.full}
@@ -181,6 +159,7 @@ const SearchScreen = ({ navigation }) => {
             <SearchBar
                 handleBackPress={handleBackPress}
                 searchText={searchText}
+                onChangeText={setSearchText}
                 onSearch={handleSearchCallback}
                 onFilterPress={handleFilterPress}
                 activeFilterCount={activeFilterCount}
@@ -192,19 +171,12 @@ const SearchScreen = ({ navigation }) => {
                 contentContainerStyle={styles.contentContainer}
             >
                 {!searchText.trim() && (
-                    <>
-                        <SearchSection
-                            title="Recent search"
-                            items={recentSearches}
-                            showTime={true}
-                        />
-
-                        <SearchSection
-                            title="Popular"
-                            items={popularSearches}
-                            showTime={false}
-                        />
-                    </>
+                    //  create a section for enter search message
+                    <View style={styles.section}>
+                        {/* create a appropriate message for enter search message */}
+                        <Text style={styles.sectionTitle}>Start your search</Text>
+                        <Text style={styles.sectionMessage}>You can search for places, businesses, and more</Text>
+                    </View>
                 )}
                 <SearchResultsSection
                     results={searchResults}
@@ -231,8 +203,6 @@ const styles = StyleSheet.create({
         color: theme.colors.text.primary,
         paddingVertical: theme.spacing.md,
         paddingHorizontal: theme.spacing.screenPadding,
-        borderBottomWidth: 1,
-        borderBottomColor: theme.colors.border.light,
         textTransform: 'capitalize',
     },
     searchItem: {

@@ -14,18 +14,19 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import AppImage from '../../../components/common/AppImage';
 import IconAsset from '../../../assets/icons/IconAsset';
 import MapsController from '../../../controllers/maps/MapsController';
-import FirebaseStoreService from '../../../services/firebase/FirebaseStoreService';
 import ScreenHeader from '../../../components/ui/ScreenHeader';
 import SearchFilterController from '../../../controllers/filters/SearchFilterController';
 import NoDataAnimation from '../../../components/common/NoDataAnimation';
-import Constants from '../../../constants/data';
+import ReferralController from '../../../controllers/referrals/ReferralController';
+import ApiController from '../../../services/api/ApiController';
+import ImageAsset from '../../../assets/images/ImageAsset';
 
 const { width } = Dimensions.get('window');
 
 
 const ReferralsScreen = ({ navigation }) => {
-
     const [referrals, setReferrals] = useState([]);
+    const profileMutation = ApiController.profile();
     const [filteredReferrals, setFilteredReferrals] = useState([]);
     const [filters, setFilters] = useState([{ id: 'all', label: 'All', selected: false }, { id: 'more', label: 'More Filters', selected: false }]);
     const [selectedFilters, setSelectedFilters] = useState([]);
@@ -34,13 +35,14 @@ const ReferralsScreen = ({ navigation }) => {
         line2: [],
     });
     const [otherSelectedFilters, setOtherSelectedFilters] = useState([]);
-
+    const { referredPlaces } = ReferralController();
     const { places, setSelectedPlace, setShowPlaceFullCard } = MapsController();
     const { isSearchFilterVisible, setIsSearchFilterVisible, placeCategories } = SearchFilterController();
 
     // Show status bar when screen is focused
     useFocusEffect(
         React.useCallback(() => {
+            profileMutation.mutateAsync();
             setSelectedPlace(null);
             setShowPlaceFullCard(false);
             getReferredPlaces()
@@ -163,7 +165,7 @@ const ReferralsScreen = ({ navigation }) => {
                         <View style={styles.referralCardImage}>
                             <AppImage
                                 source={referral.imageFull}
-                                placeholderSource={referral.image}
+                                placeholderSource={ImageAsset.placesPlaceholderImage}
                                 style={{
                                     width: '100%',
                                     height: '100%',
@@ -189,15 +191,14 @@ const ReferralsScreen = ({ navigation }) => {
     };
 
     const getReferredPlaces = async () => {
-        const referredPlaces = await FirebaseStoreService.getReferredPlaces()
-        setReferrals(referredPlaces)
-        setFilteredReferrals(referredPlaces)
+        setReferrals(referredPlaces || [])
+        setFilteredReferrals(referredPlaces || [])
 
     }
 
     React.useEffect(() => {
         getReferredPlaces()
-    }, [places])
+    }, [places, referredPlaces])
 
     React.useEffect(() => {
         setFilterToShow({
@@ -344,8 +345,8 @@ const styles = StyleSheet.create({
         gap: theme.spacing.md,
     },
     referralCardImage: {
-        width: theme.responsive.size(90),
-        height: theme.responsive.size(90),
+        width: theme.responsive.size(70),
+        height: theme.responsive.size(70),
         borderRadius: theme.borderRadius.sm,
         overflow: 'hidden',
     },

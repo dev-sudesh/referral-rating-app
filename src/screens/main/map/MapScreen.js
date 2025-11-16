@@ -1,38 +1,33 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import {
     View,
     Text,
     StyleSheet,
     TouchableOpacity,
-    Alert,
     FlatList,
     Pressable,
-    Platform,
 } from 'react-native';
-import { useFocusEffect, useIsFocused } from '@react-navigation/native';
-import MapView, { Animated as AnimatedMap, AnimatedRegion, Marker, AnimatedMapView } from 'react-native-maps';
-import Geolocation from '@react-native-community/geolocation';
-import { request, PERMISSIONS, RESULTS, check } from 'react-native-permissions';
+import { useFocusEffect } from '@react-navigation/native';
+import MapView, { Marker } from 'react-native-maps';
 import { theme } from '../../../constants/theme';
 import IconAsset from '../../../assets/icons/IconAsset';
-import AppImage from '../../../components/common/AppImage';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import ImageAsset from '../../../assets/images/ImageAsset';
 import SearchFilterController from '../../../controllers/filters/SearchFilterController';
-import CurvedCard from '../../../components/ui/CurvedCard';
 import CurrentLocationMarker from '../../../components/ui/CurrentLocationMarker';
-import ToastUtils from '../../../utils/ToastUtils';
 import MapUtils from '../../../utils/MapUtils';
 import ListScreen from './ListScreen';
 import MapsController from '../../../controllers/maps/MapsController';
-import FirebaseStoreService from '../../../services/firebase/FirebaseStoreService';
 import ReferralController from '../../../controllers/referrals/ReferralController';
 import PlaceCard from '../../../components/ui/PlaceCard';
 import PlaceSelectedCard from '../../../components/ui/PlaceSelectedCard';
 import AsyncStoreUtils from '../../../utils/AsyncStoreUtils';
 import ConfettiCannon from '../../../components/animated/ConfettiCannon';
+import ApiController from '../../../services/api/ApiController';
 
 const MapScreen = ({ navigation }) => {
+    const profileMutation = ApiController.profile();
+    const referralsMutation = ApiController.referrals();
+    const referPlaceMutation = ApiController.referPlace();
     const [selectedFilter, setSelectedFilter] = useState('all');
     const [region, setRegion] = useState(global.userLastLocation || {
         latitude: 37.78825,
@@ -40,22 +35,16 @@ const MapScreen = ({ navigation }) => {
         latitudeDelta: 0.001,
         longitudeDelta: 0.001,
     });
-    const [placeUpdated, setPlaceUpdated] = useState(false);
     const [filteredPlaces, setFilteredPlaces] = useState([]);
-    const [locationPermissionGranted, setLocationPermissionGranted] = useState(false);
-    const [isLoadingLocation, setIsLoadingLocation] = useState(false);
     const mapRef = useRef(null);
-    const bottomSheetRef = useRef(null);
-    const { isSearchFilterVisible, setIsSearchFilterVisible } = SearchFilterController();
+    const setIsSearchFilterVisible = SearchFilterController.getState().setIsSearchFilterVisible;
     const placesListRef = useRef(null);
     const [isMapReady, setIsMapReady] = useState(false);
     const animationTimeoutRef = useRef(null);
     const [isScreenFocused, setIsScreenFocused] = useState(false);
-    const [focusedPlaceIndex, setFocusedPlaceIndex] = useState(0);
-    const isFocused = useIsFocused();
+    const markerPressRef = useRef(false);
 
-
-    const { setShowReferralAlert, placeReferredStatus } = ReferralController();
+    const placeReferredStatus = ReferralController(state => state.placeReferredStatus);
 
     const timeoutRef = useRef(null);
 
@@ -71,37 +60,21 @@ const MapScreen = ({ navigation }) => {
 
     const places = MapsController(state => state.places);
 
-    const { selectedViewType, setSelectedViewType, showPlaceFullCard, setShowPlaceFullCard, selectedPlace, setSelectedPlace, setPlaces, userLocation, setUserLocation, showPlaceBigCard, setShowPlaceBigCard, centerLocation, setCenterLocation, showConfetti, confettiOrigin, setShowConfetti } = MapsController();
+    const selectedViewType = MapsController(state => state.selectedViewType);
+    const setSelectedViewType = MapsController.getState().setSelectedViewType;
+    const showPlaceFullCard = MapsController(state => state.showPlaceFullCard);
+    const setShowPlaceFullCard = MapsController.getState().setShowPlaceFullCard;
+    const selectedPlace = MapsController(state => state.selectedPlace);
+    const setSelectedPlace = MapsController.getState().setSelectedPlace;
+    const setPlaces = MapsController.getState().setPlaces;
+    const userLocation = MapsController(state => state.userLocation);
+    const setShowPlaceBigCard = MapsController.getState().setShowPlaceBigCard;
+    const centerLocation = MapsController(state => state.centerLocation);
+    const setCenterLocation = MapsController.getState().setCenterLocation;
+    const showConfetti = MapsController(state => state.showConfetti);
+    const confettiOrigin = MapsController(state => state.confettiOrigin);
+    const setShowConfetti = MapsController.getState().setShowConfetti;
 
-
-    const filters = [
-        { id: 'all', label: 'All' },
-        { id: 'restaurants', label: 'Restaurants' },
-        { id: 'shops', label: 'Shops' },
-        { id: 'services', label: 'Services' },
-    ];
-
-
-    const renderFilterButton = (filter) => (
-        <TouchableOpacity
-            key={filter.id}
-            style={[
-                styles.filterButton,
-                selectedFilter === filter.id && styles.filterButtonActive,
-            ]}
-            onPress={() => setSelectedFilter(filter.id)}
-            activeOpacity={1}
-        >
-            <Text
-                style={[
-                    styles.filterButtonText,
-                    selectedFilter === filter.id && styles.filterButtonTextActive,
-                ]}
-            >
-                {filter.label}
-            </Text>
-        </TouchableOpacity>
-    );
 
     React.useEffect(() => {
         const filterData = selectedFilter === 'all'
@@ -111,23 +84,17 @@ const MapScreen = ({ navigation }) => {
     }, [places, selectedFilter]);
 
     const handleMapPress = () => {
+        // Don't deselect if a marker was just pressed (prevents deselection when clicking markers)
+        if (markerPressRef.current) {
+            markerPressRef.current = false;
+            return;
+        }
         // Deselect place when map is tapped to return to dynamic view
         if (selectedPlace) {
             setSelectedPlace(null);
             setShowPlaceBigCard(false);
             setShowPlaceFullCard(false);
         }
-    };
-
-    const handleMarkerPress = (place) => {
-        Alert.alert(
-            place.name,
-            `${place.category} • ${place.distance} • ⭐ ${place.rating}`,
-            [
-                { text: 'Cancel', style: 'cancel' },
-                { text: 'Directions', onPress: () => { } },
-            ]
-        );
     };
 
     const centerOnLocation = React.useCallback(() => {
@@ -154,7 +121,7 @@ const MapScreen = ({ navigation }) => {
     }, [centerLocation, isMapReady, isScreenFocused]);
 
     const referPlace = async (place) => {
-        FirebaseStoreService.storeReferredPlace(place);
+        referPlaceMutation.mutateAsync({ place: place, placeId: place.id, action: place.isReferred ? 'unrefer' : 'refer' });
         if (place.isReferred) {
             // unrefer place
             const updatedPlaces = places.map(p => p.id === place.id ? { ...p, isReferred: false } : p);
@@ -178,8 +145,21 @@ const MapScreen = ({ navigation }) => {
     }, [isScreenFocused]);
 
     const showPlaceCard = ({ place, scroll }) => {
+        // Set flag to prevent map's onPress from deselecting when marker is pressed
+        markerPressRef.current = true;
+
         // Find the updated place from places array to get the latest isReferred status
         const updatedPlace = places.find(p => p.id === place.id) || place;
+
+        // If clicking the same marker that's already selected, keep it selected (don't do anything)
+        if (selectedPlace?.id === updatedPlace.id) {
+            // Reset the flag after a short delay to allow map press to work normally
+            setTimeout(() => {
+                markerPressRef.current = false;
+            }, 100);
+            return;
+        }
+
         setSelectedPlace(updatedPlace);
         setShowPlaceBigCard(true);
         // When showing a specific place card, zoom to that place with fixed delta
@@ -190,12 +170,34 @@ const MapScreen = ({ navigation }) => {
             longitudeDelta: 0.001,
         };
         setCenterLocation(location);
-        try {
-            if (scroll) {
-                placesListRef.current.scrollToIndex({ index: updatedPlace.rank - 1, viewPosition: 0.5 });
+        if (scroll && placesListRef.current) {
+            // Find the index of the place in filteredPlaces array
+            const placeIndex = filteredPlaces.findIndex(p => p.id === updatedPlace.id);
+            if (placeIndex !== -1) {
+                // Use setTimeout to ensure the FlatList is ready and rendered
+                setTimeout(() => {
+                    try {
+                        placesListRef.current.scrollToIndex({
+                            index: placeIndex,
+                            viewPosition: 0.5,
+                            animated: true
+                        });
+                    } catch (error) {
+                        // Fallback to scrollToOffset if scrollToIndex fails
+                        const itemWidth = theme.responsive.screen().width;
+                        placesListRef.current.scrollToOffset({
+                            offset: placeIndex * itemWidth,
+                            animated: true
+                        });
+                    }
+                }, 100);
             }
-        } catch (error) {
         }
+
+        // Reset the flag after a short delay to allow map press to work normally
+        setTimeout(() => {
+            markerPressRef.current = false;
+        }, 100);
     };
     const updateUserLastLocation = (userLocation) => {
         if (userLocation) {
@@ -205,6 +207,7 @@ const MapScreen = ({ navigation }) => {
 
     React.useEffect(() => {
         if (centerLocation?.latitude && centerLocation?.longitude && isScreenFocused && isMapReady) {
+            referralsMutation.mutateAsync({ latitude: centerLocation.latitude, longitude: centerLocation.longitude });
             centerOnLocation();
         }
     }, [centerLocation?.latitude, centerLocation?.longitude, isScreenFocused, isMapReady, centerOnLocation]);
@@ -219,11 +222,6 @@ const MapScreen = ({ navigation }) => {
                 longitudeDelta: 0.001,
             };
             setCenterLocation(location);
-
-            FirebaseStoreService.getPlacesOfCurrentLocation(userLocation).then(places => {
-                setPlaces(places);
-                setPlaceUpdated(true);
-            });
         }
     }, [userLocation, places.length]);
 
@@ -246,6 +244,7 @@ const MapScreen = ({ navigation }) => {
 
     // Cleanup animation timeout on unmount
     React.useEffect(() => {
+        profileMutation.mutateAsync();
         return () => {
             if (animationTimeoutRef.current) {
                 clearTimeout(animationTimeoutRef.current);
@@ -382,11 +381,15 @@ const MapScreen = ({ navigation }) => {
                                     pagingEnabled={true}
                                     scrollEnabled={true}
                                     contentContainerStyle={styles.placeCardContainer}
+                                    getItemLayout={(data, index) => ({
+                                        length: theme.responsive.screen().width,
+                                        offset: theme.responsive.screen().width * index,
+                                        index,
+                                    })}
                                     onScroll={(event) => {
                                         const contentOffset = event.nativeEvent.contentOffset.x;
                                         const itemWidth = theme.responsive.screen().width;
                                         const focusedIndex = Math.round(contentOffset / itemWidth);
-                                        setFocusedPlaceIndex(Math.max(0, Math.min(focusedIndex, filteredPlaces.length - 1)));
                                     }}
                                     scrollEventThrottle={16}
                                 />
@@ -462,7 +465,7 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
     },
     map: {
-        position: 'absolute', top: 0, left: 0, right: 0, bottom: -25
+        position: 'absolute', top: 0, left: 0, right: 0, bottom: -60
     },
     filterButton: {
         width: theme.responsive.size(55),

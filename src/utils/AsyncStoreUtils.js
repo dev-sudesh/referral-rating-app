@@ -368,14 +368,14 @@ const AsyncStoreUtils = {
         try {
             const accessTokenSet = await AsyncStoreUtils.setSecureItem(
                 AsyncStoreUtils.SecureKeys.ACCESS_TOKEN,
-                accessToken
+                JSON.stringify(accessToken)
             );
 
             let refreshTokenSet = true;
             if (refreshToken) {
                 refreshTokenSet = await AsyncStoreUtils.setSecureItem(
                     AsyncStoreUtils.SecureKeys.REFRESH_TOKEN,
-                    refreshToken
+                    JSON.stringify(refreshToken)
                 );
             }
 
@@ -399,13 +399,16 @@ const AsyncStoreUtils = {
                 AsyncStoreUtils.SecureKeys.REFRESH_TOKEN
             );
 
-            if (accessToken) {
-                return {
-                    accessToken,
-                    refreshToken,
-                };
+            let tokenData = {}
+            if (accessToken && typeof accessToken === 'string') {
+                tokenData = { ...tokenData, ...JSON.parse(accessToken) }
             }
-            return null;
+
+            if (refreshToken && typeof refreshToken === 'string') {
+                tokenData = { ...tokenData, ...JSON.parse(refreshToken) }
+            }
+
+            return tokenData;
         } catch (error) {
             console.error('AsyncStore: Error getting auth tokens:', error);
             return null;

@@ -8,21 +8,33 @@ import theme from '../../constants/theme';
 import ImageAsset from '../../assets/images/ImageAsset';
 import CurvedCard from './CurvedCard';
 import MethodUtils from '../../utils/MethodUtils';
-import FirebaseStoreService from '../../services/firebase/FirebaseStoreService';
-import ReferralController from '../../controllers/referrals/ReferralController';
 import { useSharing } from '../../hooks/useSharing';
 import ViewShot from 'react-native-view-shot';
 import ConfettiCannon from '../animated/ConfettiCannon';
+import ApiController from '../../services/api/ApiController';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 const PlaceFullCard = () => {
-    const { selectedPlace, setSelectedPlace, setShowPlaceFullCard, setShowPlaceBigCard, showPlaceFullCard, places, setPlaces } = MapsController();
+    const referPlaceMutation = ApiController.referPlace();
+    const placeDetailsMutation = ApiController.placeDetails();
+    const selectedPlace = MapsController(state => state.selectedPlace);
+    const setSelectedPlace = MapsController.getState().setSelectedPlace;
+    const setShowPlaceFullCard = MapsController.getState().setShowPlaceFullCard;
+    const setShowPlaceBigCard = MapsController.getState().setShowPlaceBigCard;
+    const showPlaceFullCard = MapsController(state => state.showPlaceFullCard);
+    const places = MapsController(state => state.places);
+    const setPlaces = MapsController.getState().setPlaces;
     const [fullSelectedPlace, setFullSelectedPlace] = useState(selectedPlace);
-    const { setShowReferralAlert, placeReferredStatus } = ReferralController();
     const { shareReferral } = useSharing();
     const imageRef = useRef(null);
     const [showConfetti, setShowConfetti] = useState(false);
+
+    React.useEffect(() => {
+        if (selectedPlace) {
+            placeDetailsMutation.mutateAsync({ place: selectedPlace });
+        }
+    }, []);
 
     const referPlace = async (place) => {
         //     if (!place?.isReferred) {
@@ -38,7 +50,7 @@ const PlaceFullCard = () => {
 
         // const referPlaceSubmit = async (place) => { 
 
-        await FirebaseStoreService.storeReferredPlace(place);
+        referPlaceMutation.mutateAsync({ place: place, placeId: place.id, action: place.isReferred ? 'unrefer' : 'refer' });
         if (place.isReferred) {
             // unrefer place
             // setFilteredPlaces(filteredPlaces.map(p => p.id === place.id ? { ...p, isReferred: false } : p));

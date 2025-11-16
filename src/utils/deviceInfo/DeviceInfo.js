@@ -27,7 +27,6 @@ const DeviceInfo = {
         this.isEmulator = RNDeviceInfo.isEmulator();
         this.deviceId = RNDeviceInfo.getDeviceId();
         RNDeviceInfo.getUniqueId().then((uniqueId) => {
-            console.log('uniqueId', uniqueId)
             this.deviceUniqueId = uniqueId;
         });
     },

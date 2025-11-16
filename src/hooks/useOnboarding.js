@@ -1,6 +1,5 @@
 import { useState, useCallback } from 'react';
 import { Alert } from 'react-native';
-import FirebaseAuthService from '../services/firebase/FirebaseAuthService';
 import AsyncStoreUtils from '../utils/AsyncStoreUtils';
 import Constants from '../constants/data';
 
@@ -12,18 +11,11 @@ export const useOnboarding = (navigation) => {
 
         setIsLoading(true);
         try {
-            const result = await FirebaseAuthService.signInAnonymously();
-            if (result.success) {
-                // Batch async storage operations for better performance
-                await Promise.all([
-                    AsyncStoreUtils.setItem(AsyncStoreUtils.Keys.IS_LOGIN, 'true'),
-                    AsyncStoreUtils.setItem(AsyncStoreUtils.Keys.USER_DETAILS, result.user),
-                    AsyncStoreUtils.setItem(AsyncStoreUtils.Keys.IS_ONBOARDING_COMPLETED, 'true'),
-                ]);
-                navigation.replace(Constants.Screen.Stack.Main);
-            } else {
-                navigation.replace(Constants.Screen.Stack.Auth);
-            }
+            await Promise.all([
+                AsyncStoreUtils.setItem(AsyncStoreUtils.Keys.IS_LOGIN, 'true'),
+                AsyncStoreUtils.setItem(AsyncStoreUtils.Keys.IS_ONBOARDING_COMPLETED, 'true'),
+            ]);
+            navigation.replace(Constants.Screen.Stack.Main);
         } catch (error) {
             console.error('Onboarding authentication error:', error);
             Alert.alert(

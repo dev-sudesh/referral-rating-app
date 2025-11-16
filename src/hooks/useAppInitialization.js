@@ -1,9 +1,6 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
-import DeviceInfo from '../utils/deviceInfo/DeviceInfo';
 import FirebaseInitializer from '../utils/FirebaseInitializer';
 import MapUtils from '../utils/MapUtils';
-import NativeModuleUtils from '../utils/nativeModules/NativeModuleUtils';
-import { useFirebaseStore } from './useFirebaseStore';
 
 /**
  * Custom hook for handling app initialization with optimized performance
@@ -17,22 +14,6 @@ export const useAppInitialization = () => {
         initializationStep: 'starting'
     });
 
-    // Initialize Firebase store with memoization
-    const { initializeAnonymousUser } = useFirebaseStore();
-
-    // Memoize the user initialization function to prevent unnecessary re-renders
-    const initializeUser = useCallback(async () => {
-        try {
-            await initializeAnonymousUser({
-                appVersion: '1.0.0',
-                platform: 'react-native',
-            });
-            return { success: true };
-        } catch (error) {
-            console.warn('Failed to initialize anonymous user:', error);
-            return { success: false, error };
-        }
-    }, [initializeAnonymousUser]);
 
     // Optimized initialization function with parallel execution
     const initializeApp = useCallback(async () => {
@@ -42,24 +23,16 @@ export const useAppInitialization = () => {
             setState(prev => ({ ...prev, initializationStep: 'initializing_services' }));
 
             // Initialize core services in parallel for better performance
-            const [firebaseResult, userResult] = await Promise.allSettled([
-                FirebaseInitializer.initialize(),
-                initializeUser()
-            ]);
+            const firebaseResult = await FirebaseInitializer.initialize();
 
             // Initialize synchronous services
             MapUtils.init();
 
             // Handle results
             const hasFirebaseError = firebaseResult.status === 'rejected';
-            const hasUserError = userResult.status === 'rejected';
 
             if (hasFirebaseError) {
                 console.error('Firebase initialization failed:', firebaseResult.reason);
-            }
-
-            if (hasUserError) {
-                console.warn('User initialization failed:', userResult.reason);
             }
 
             // Update state once with all results
@@ -79,7 +52,7 @@ export const useAppInitialization = () => {
                 initializationStep: 'error'
             });
         }
-    }, [initializeUser]);
+    }, []);
 
     // Memoize the return object to prevent unnecessary re-renders
     const result = useMemo(() => ({

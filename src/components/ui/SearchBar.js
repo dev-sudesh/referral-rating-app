@@ -1,12 +1,11 @@
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
-import React, { useCallback, useState, useRef, useEffect } from 'react'
+import React, { useCallback, useRef, useEffect, memo } from 'react'
 import { theme } from '../../constants/theme';
 import { responsiveSize } from '../../utils/responsive/ResponsiveUi';
 import IconAsset from '../../assets/icons/IconAsset';
 
-const SearchBar = ({ handleBackPress, searchText = '', onSearch, onFilterPress, activeFilterCount = 0 }) => {
+const SearchBar = ({ handleBackPress, searchText = '', onSearch, onChangeText, onFilterPress, activeFilterCount = 0 }) => {
 
-    const [searchInput, setSearchInput] = useState(searchText);
     const timeoutRef = useRef(null);
 
     // Properly memoized debounce function that calls search callback
@@ -21,15 +20,17 @@ const SearchBar = ({ handleBackPress, searchText = '', onSearch, onFilterPress, 
     }, [onSearch]);
 
     const handleClearSearch = () => {
-        onSearch(''); // Call search callback to clear
-        setSearchInput('');
+        // Update parent input immediately and trigger debounced search clear
+        onChangeText && onChangeText('');
+        onSearch('');
         if (timeoutRef.current) {
             clearTimeout(timeoutRef.current);
         }
     };
 
     const handleInputChange = (text) => {
-        setSearchInput(text);
+        // Reflect text immediately in parent-controlled state
+        onChangeText && onChangeText(text);
         debouncedSearch(text);
     };
 
@@ -57,12 +58,17 @@ const SearchBar = ({ handleBackPress, searchText = '', onSearch, onFilterPress, 
                     style={styles.searchInput}
                     placeholder="Search now..."
                     placeholderTextColor={theme.colors.text.black}
-                    value={searchInput}
+                    value={searchText}
                     onChangeText={handleInputChange}
                     returnKeyType="search"
+                    autoCorrect={false}
+                    autoCapitalize="none"
+                    autoComplete="off"
+                    importantForAutofill="no"
+                    blurOnSubmit={false}
                 />
 
-                {searchInput.length > 0 && (
+                {searchText.length > 0 && (
                     <TouchableOpacity
                         style={styles.clearButton}
                         onPress={handleClearSearch}
@@ -76,7 +82,7 @@ const SearchBar = ({ handleBackPress, searchText = '', onSearch, onFilterPress, 
     )
 };
 
-export default SearchBar
+export default memo(SearchBar)
 
 const styles = StyleSheet.create({
 
@@ -92,7 +98,7 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: theme.colors.border.light,
         paddingHorizontal: theme.spacing.sm,
-        minHeight: 48,
+        minHeight: responsiveSize(48),
     },
     backButton: {
         padding: theme.spacing.sm,
@@ -102,7 +108,7 @@ const styles = StyleSheet.create({
         flex: 1,
         ...theme.typography.bodyMedium,
         color: theme.colors.text.primary,
-        lineHeight: null,
+        lineHeight: responsiveSize(30),
     },
     filterButton: {
         padding: theme.spacing.sm,

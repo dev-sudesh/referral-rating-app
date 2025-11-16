@@ -10,17 +10,10 @@ import {
     Platform,
 } from 'react-native';
 import { useFocusEffect, useIsFocused } from '@react-navigation/native';
-import Geolocation from '@react-native-community/geolocation';
-import { request, PERMISSIONS, RESULTS, check } from 'react-native-permissions';
 import { theme } from '../../../constants/theme';
 import IconAsset from '../../../assets/icons/IconAsset';
-import AppImage from '../../../components/common/AppImage';
-import ImageAsset from '../../../assets/images/ImageAsset';
 import SearchFilterController from '../../../controllers/filters/SearchFilterController';
-import CurvedCard from '../../../components/ui/CurvedCard';
-import ToastUtils from '../../../utils/ToastUtils';
 import MapsController from '../../../controllers/maps/MapsController';
-import FirebaseStoreService from '../../../services/firebase/FirebaseStoreService';
 import ReferralController from '../../../controllers/referrals/ReferralController';
 import PlaceSelectedCard from '../../../components/ui/PlaceSelectedCard';
 import PlaceCard from '../../../components/ui/PlaceCard';
@@ -34,18 +27,11 @@ const ListScreen = () => {
         latitudeDelta: 0.001,
         longitudeDelta: 0.001,
     });
-    const [placeUpdated, setPlaceUpdated] = useState(false);
     const [filteredPlaces, setFilteredPlaces] = useState([]);
     const [userLocation, setUserLocation] = useState(null);
     const [centerLocation, setCenterLocation] = useState(null);
-    const [locationPermissionGranted, setLocationPermissionGranted] = useState(false);
-    const [isLoadingLocation, setIsLoadingLocation] = useState(false);
-    const mapRef = useRef(null);
-    const bottomSheetRef = useRef(null);
-    const { isSearchFilterVisible, setIsSearchFilterVisible } = SearchFilterController();
     const placesListRef = useRef(null);
     const { selectedViewType, setSelectedViewType, showPlaceFullCard, setShowPlaceFullCard, selectedPlace, setSelectedPlace, places, setPlaces, showPlaceBigCard, setShowPlaceBigCard, showConfetti, confettiOrigin, setShowConfetti } = MapsController();
-    const [isMapReady, setIsMapReady] = useState(false);
     const [isScreenFocused, setIsScreenFocused] = useState(false);
 
     const { setShowReferralAlert, placeReferredStatus } = ReferralController();
@@ -71,7 +57,6 @@ const ListScreen = () => {
     }, [places, selectedFilter]);
 
     const referPlace = async (place) => {
-        FirebaseStoreService.storeReferredPlace(place);
         if (place.isReferred) {
             // unrefer place
             const updatedPlaces = places.map(p => p.id === place.id ? { ...p, isReferred: false } : p);

@@ -4,11 +4,12 @@ import theme from '../../constants/theme';
 import AppImage from '../common/AppImage';
 import MapsController from '../../controllers/maps/MapsController';
 import ImageAsset from '../../assets/images/ImageAsset';
-import IconAsset from '../../assets/icons/IconAsset';
 
 const PlaceCard = (props) => {
     const { place } = props;
-    const { setSelectedPlace, setShowPlaceBigCard, places } = MapsController();
+    const setSelectedPlace = MapsController.getState().setSelectedPlace;
+    const setShowPlaceBigCard = MapsController.getState().setShowPlaceBigCard;
+    const places = MapsController(state => state.places);
     const showPlaceCard = ({ place, scroll }) => {
         // Find the updated place from places array to get the latest isReferred status
         const updatedPlace = places.find(p => p.id === place.id) || place;

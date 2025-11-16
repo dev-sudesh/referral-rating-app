@@ -14,7 +14,6 @@ import ScreenHeader from '../../../components/ui/ScreenHeader';
 import Button from '../../../components/ui/Button';
 import HtmlWrapper from '../../../constants/data/HtmlWrapper';
 import RNRenderHtml from 'react-native-render-html';
-import FirebaseStoreService from '../../../services/firebase/FirebaseStoreService';
 import RewardController from '../../../controllers/rewards/RewardController';
 import Clipboard from '@react-native-clipboard/clipboard';
 import ToastUtils from '../../../utils/ToastUtils';
@@ -65,15 +64,11 @@ const RewardDetailScreen = () => {
             ToastUtils.error('Reward expired');
             return;
         }
-        FirebaseStoreService.storeRewardRedeemed(reward.id);
         setIsRedeemed(true);
         setRewards(rewards.map(reward => reward.id === reward.id ? { ...reward, isRedeemed: true } : reward));
     }
 
     const getRewardRedeemedStatus = () => {
-        FirebaseStoreService.isRewardRedeemed(reward.id).then((isRedeemed) => {
-            // setIsRedeemed(isRedeemed);
-        });
     }
 
     React.useEffect(() => {

@@ -11,7 +11,6 @@ import IconAsset from '../../../assets/icons/IconAsset';
 import ScreenContainer from '../../../components/common/ScreenContainer';
 import ScreenHeader from '../../../components/ui/ScreenHeader';
 import Constants from '../../../constants/data';
-import FirebaseStoreService from '../../../services/firebase/FirebaseStoreService';
 import ToastUtils from '../../../utils/ToastUtils';
 
 const FavoriteFilters = ({ navigation }) => {
@@ -40,13 +39,9 @@ const FavoriteFilters = ({ navigation }) => {
 
     const saveFilters = async () => {
 
-        await FirebaseStoreService.storeUserFilters(filters.filter(filter => filter.length > 0));
-        ToastUtils.success('Filters saved successfully');
     };
 
     const getFilters = async () => {
-        const filters = await FirebaseStoreService.getUserFilters();
-        setFilters(filters);
     };
 
 

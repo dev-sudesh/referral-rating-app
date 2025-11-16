@@ -1,24 +1,38 @@
 import axios from 'axios'
 import Env from '../../config/env'
 import AsyncStoreUtils from '../../utils/AsyncStoreUtils'
+import DeviceInfo from '../../utils/deviceInfo/DeviceInfo'
 
 const API = {}
 
 API.url = {
     auth: {
         anonymousToken: () => `/api/anon/sessions`,
+        profile: () => `/api/anon/profile`,
     },
     place: {
         categories: () => `/api/places/categories`,
         nearby: ({ latitude, longitude, limit = 10, radius = 5000, enhanced = true, category }) => `api/places${!category ? '/top' : ''}?lat=${latitude}&lng=${longitude}&radius=${radius}&limit=${limit}&enhanced=${enhanced}${category ? '&category=' + category : ''}`,
         search: ({ query, latitude, longitude, limit = 10, radius = 5000, enhanced = true }) => `api/places/search?query=${query}&lat=${latitude}&lng=${longitude}&limit=${limit}&radius=${radius}&enhanced=${enhanced}`,
+        details: ({ placeId }) => `/api/places/details/enhanced?provider=google&place_id=${placeId}`,
     },
+    referral: {
+        refer: () => `/api/places/refer`,
+    },
+    user: {
+        profile: () => `/api/anon/profile`,
+        referrals: ({ latitude, longitude, radius = 5000 }) => `/api/user/referrals?lat=${latitude}&lng=${longitude}&radius=${radius}`,
+    }
 }
 
 const successStatuses = [200, 201, '200', '201', 'ok', 'OK', 'success', 'SUCCESS']
 
 API.isSuccess = (response) => {
-    return successStatuses.includes(response?.statusCode) || successStatuses.includes(response?.status) || successStatuses.includes(response?.statusText) || successStatuses.includes(response?.data.statusCode)
+    let responseData = response
+    if (response && typeof response === 'string') {
+        responseData = JSON.parse(response)
+    }
+    return successStatuses.includes(responseData?.statusCode) || successStatuses.includes(responseData?.status) || successStatuses.includes(responseData?.statusText) || successStatuses.includes(responseData?.data?.statusCode)
 }
 
 const defaultCallbacks = {
@@ -58,6 +72,41 @@ API.instance = axios.create({
 let isRefreshing = false;
 let failedQueue = [];
 
+// Request interceptor to automatically add auth tokens
+API.instance.interceptors.request.use(
+    async (config) => {
+        // If Authorization header is already set, use it
+        if (config.headers?.Authorization) {
+            return config;
+        }
+
+        // Check if this request needs authentication
+        // We'll check for authType in the config metadata or check the URL pattern
+        const needsAuth = config.headers?.['X-Requires-Auth'] === 'true' ||
+            config.headers?.['authType'] === API.AuthType.auth;
+
+        if (needsAuth) {
+            try {
+                const tokenData = await AsyncStoreUtils.getAuthTokens();
+                if (tokenData?.token) {
+                    config.headers.Authorization = `Bearer ${tokenData.token}`;
+                }
+                // Add device hash if not already present
+                if (!config.headers['X-Device-Hash']) {
+                    config.headers['X-Device-Hash'] = DeviceInfo.deviceUniqueId;
+                }
+            } catch (error) {
+                console.error('Error adding auth token to request:', error);
+            }
+        }
+
+        return config;
+    },
+    (error) => {
+        return Promise.reject(error);
+    }
+);
+
 const processQueue = (error, token = null) => {
     failedQueue.forEach(prom => {
         if (error) {
@@ -71,32 +120,38 @@ const processQueue = (error, token = null) => {
 
 const handleTokenRefresh = async (failedRequest) => {
     try {
-        const tokenData = await AsyncStoreUtils.getItem(AsyncStoreUtils.Keys.ACCESS_TOKEN);
-        if (!tokenData?.refreshToken) {
-            throw new Error('No refresh token available');
-        }
-
-        const response = await API.get({
-            url: API.url.auth.refreshToken(),
-            headerConfig: { authType: API.AuthType.auth, token: tokenData.refreshToken }
+        const response = await API.post({
+            url: API.url.auth.anonymousToken(),
+            headerConfig: {
+                'X-Device-Hash': DeviceInfo.deviceUniqueId
+            }
         });
 
-        const responseData = response?.content || response;
-
-        if (responseData?.token) {
-            const newTokenData = {
-                token: responseData.token,
-                refreshToken: responseData.refreshToken ?? tokenData.refreshToken,
-                tokenExpireAt: responseData.tokenExpireAt ?? tokenData.tokenExpireAt,
+        if (API.isSuccess(response)) {
+            const responseData = response?.content || response;
+            const accessToken = {
+                token: responseData.session_token,
+                expiresAt: responseData.expires_at,
             };
-            await AsyncStore.setItem(AsyncStore.keys.tokenData, JSON.stringify(newTokenData));
+            await AsyncStoreUtils.setAuthTokens(accessToken);
 
-            if (failedRequest?.response?.config) {
-                const newConfig = { ...failedRequest.response.config };
-                newConfig.headers = API.headers({
-                    authType: API.AuthType.auth,
-                    token: responseData.token
-                });
+            if (failedRequest?.response?.config || failedRequest?.config) {
+                const originalConfig = failedRequest?.response?.config || failedRequest?.config;
+                const newConfig = { ...originalConfig };
+
+                // Update headers with new token
+                newConfig.headers = {
+                    ...newConfig.headers,
+                    ...API.headers({
+                        authType: API.AuthType.auth,
+                        token: accessToken.token
+                    }),
+                    'X-Device-Hash': DeviceInfo.deviceUniqueId
+                };
+
+                // Remove retry flag to allow retry
+                delete newConfig._retry;
+
                 return newConfig;
             }
             throw new Error('Invalid request configuration');
@@ -105,7 +160,7 @@ const handleTokenRefresh = async (failedRequest) => {
     } catch (error) {
         // If we get 401 during refresh token, clear token data
         if (axios.isAxiosError(error) && error.response?.status === 401) {
-            await AsyncStore.removeItem(AsyncStore.keys.tokenData);
+            await AsyncStoreUtils.clearAuthTokens();
         }
         throw error;
     }
@@ -122,8 +177,8 @@ API.instance.interceptors.response.use(
 
         const originalRequest = error.config;
         // check token passed in header
-        console.log('originalRequest.headers', originalRequest.headers)
-        console.error("api calling error on url ", originalRequest.url, ' with status code ', error.response?.status)
+        // console.log('originalRequest.headers', originalRequest.headers)
+        // console.error("api calling error on url ", originalRequest.url, ' with status code ', error.response?.status)
         if (!originalRequest) {
             return Promise.reject(error);
         }
@@ -131,13 +186,18 @@ API.instance.interceptors.response.use(
         const statusCode = error.response?.status;
 
         // If it's 401 on refresh token request, reject immediately
-        if (statusCode === 401 && originalRequest.url.includes('/refresh-token')) {
-            await AsyncStore.removeItem(AsyncStore.keys.tokenData);
+        if (statusCode === 401 && originalRequest.url.includes(API.url.auth.anonymousToken())) {
+            await AsyncStoreUtils.clearAuthTokens();
             return Promise.reject(error);
         }
 
         // Handle 423 (token expired) or 401 (unauthorized) that's not from refresh token
-        if (statusCode == 423) {
+        if (statusCode === 423 || statusCode === 401) {
+            // Don't retry if this request was already retried
+            if (originalRequest._retry) {
+                return Promise.reject(error);
+            }
+
             if (isRefreshing) {
                 return new Promise((resolve, reject) => {
                     failedQueue.push({ resolve, reject });
@@ -197,8 +257,8 @@ API.processError = (error, url) => {
         case 401:
             errorResponse.status = 'unauthorized';
             // Clear token data on 401 from refresh token
-            if (url === API.url.auth.refreshToken()) {
-                AsyncStore.removeItem(AsyncStore.keys.tokenData);
+            if (url === API.url.auth.anonymousToken()) {
+                AsyncStoreUtils.clearAuthTokens();
             } else {
 
             }
@@ -217,17 +277,17 @@ API.processError = (error, url) => {
             break;
         case 423:
             errorResponse.status = 'tokenExpired';
-            if (url === API.url.auth.refreshToken()) {
+            if (url === API.url.auth.anonymousToken()) {
                 errorResponse.status = 'refreshTokenFailed';
                 errorResponse.statusCode = 424;
                 errorResponse.message = 'Unable to re-generate token';
-                AsyncStore.removeItem(AsyncStore.keys.tokenData);
+                AsyncStoreUtils.clearAuthTokens();
             }
             break;
         case 424:
             errorResponse.status = 'refreshTokenFailed';
             errorResponse.message = 'Unable to re-generate token';
-            AsyncStore.removeItem(AsyncStore.keys.tokenData);
+            AsyncStoreUtils.clearAuthTokens();
             break;
         case 500:
             errorResponse.status = 'server';
@@ -251,10 +311,10 @@ const measureApiPerformance = async (apiCall) => {
         const endTime = performance.now();
         const duration = endTime - startTime;
 
-        // Log performance metrics
-        console.log(`API Performance - URL: ${response?.url || 'unknown'}`);
-        console.log(`Response Time: ${duration.toFixed(2)}ms`);
-        console.log(`Status Code: ${response?.statusCode || 'unknown'}`);
+        // // Log performance metrics
+        // console.log(`API Performance - URL: ${response?.url || 'unknown'}`);
+        // console.log(`Response Time: ${duration.toFixed(2)}ms`);
+        // console.log(`Status Code: ${response?.statusCode || 'unknown'}`);
 
         return response;
     } catch (error) {
@@ -262,9 +322,9 @@ const measureApiPerformance = async (apiCall) => {
         const duration = endTime - startTime;
 
         // Log performance metrics for failed requests
-        console.log(`API Performance - Failed Request`);
-        console.log(`Response Time: ${duration.toFixed(2)}ms`);
-        console.log(`Error: ${error?.message || 'unknown error'}`);
+        // console.log(`API Performance - Failed Request`);
+        // console.log(`Response Time: ${duration.toFixed(2)}ms`);
+        // console.log(`Error: ${error?.message || 'unknown error'}`);
 
         throw error;
     }
@@ -273,7 +333,24 @@ const measureApiPerformance = async (apiCall) => {
 API.get = async ({ url, params, headerConfig = {}, callbacks = defaultCallbacks, retryCount = defaultRetryCount }) => {
     return measureApiPerformance(async () => {
         try {
-            const response = await API.instance.get(url, { params, headers: API.headers(headerConfig) })
+            // Prepare headers
+            const headers = { ...headerConfig };
+
+            if (headerConfig.authType === API.AuthType.auth) {
+                // Get token and extract the token string
+                const tokenData = await AsyncStoreUtils.getAuthTokens();
+                if (tokenData?.token) {
+                    headers.token = tokenData.token;
+                    headers.authType = API.AuthType.auth;
+                }
+                headers['X-Device-Hash'] = DeviceInfo.deviceUniqueId;
+                headers['X-Requires-Auth'] = 'true';
+            }
+
+            const response = await API.instance.get(url, {
+                params,
+                headers: API.headers(headers)
+            })
             callbacks.onSuccess(response.data)
             if (API.isSuccess(response)) {
                 return API.processResponse(response, url)
@@ -295,8 +372,21 @@ API.get = async ({ url, params, headerConfig = {}, callbacks = defaultCallbacks,
 API.post = async ({ url, data, headerConfig = {}, callbacks = defaultCallbacks, retryCount = defaultRetryCount }) => {
     return measureApiPerformance(async () => {
         try {
-            const response = await API.instance.post(url, data, { headers: API.headers(headerConfig) })
-            console.log('response --- ', response)
+            // Prepare headers
+            const headers = { ...headerConfig };
+
+            if (headerConfig.authType === API.AuthType.auth) {
+                // Get token and extract the token string
+                const tokenData = await AsyncStoreUtils.getAuthTokens();
+                if (tokenData?.token) {
+                    headers.token = tokenData.token;
+                    headers.authType = API.AuthType.auth;
+                }
+                headers['X-Device-Hash'] = DeviceInfo.deviceUniqueId;
+                headers['X-Requires-Auth'] = 'true';
+            }
+
+            const response = await API.instance.post(url, data, { headers: API.headers(headers) })
             callbacks.onSuccess(response.data)
             if (API.isSuccess(response)) {
                 return API.processResponse(response, url)
@@ -307,6 +397,42 @@ API.post = async ({ url, data, headerConfig = {}, callbacks = defaultCallbacks, 
             if ((error.code === 'ECONNABORTED' || error.message.includes('Network Error')) && retryCount > 1) {
                 if (retryCount < 3) {
                     return API.post({ url, data, headerConfig, callbacks, retryCount: retryCount - 1 })
+                }
+            }
+            callbacks.onError(error)
+            return API.processError(error, url);
+        }
+    });
+}
+
+API.delete = async ({ url, data, headerConfig = {}, callbacks = defaultCallbacks, retryCount = defaultRetryCount }) => {
+    return measureApiPerformance(async () => {
+        try {
+            // Prepare headers
+            const headers = { ...headerConfig };
+
+            if (headerConfig.authType === API.AuthType.auth) {
+                // Get token and extract the token string
+                const tokenData = await AsyncStoreUtils.getAuthTokens();
+                if (tokenData?.token) {
+                    headers.token = tokenData.token;
+                    headers.authType = API.AuthType.auth;
+                }
+                headers['X-Device-Hash'] = DeviceInfo.deviceUniqueId;
+                headers['X-Requires-Auth'] = 'true';
+            }
+
+            const response = await API.instance.delete(url, { data, headers: API.headers(headers) })
+            callbacks.onSuccess(response.data)
+            if (API.isSuccess(response)) {
+                return API.processResponse(response, url)
+            } else {
+                return API.processError(response.data, url)
+            }
+        } catch (error) {
+            if ((error.code === 'ECONNABORTED' || error.message.includes('Network Error')) && retryCount > 1) {
+                if (retryCount < 3) {
+                    return API.delete({ url, data, headerConfig, callbacks, retryCount: retryCount - 1 })
                 }
             }
             callbacks.onError(error)
