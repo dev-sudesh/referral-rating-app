@@ -1,7 +1,5 @@
 import Api from '../Api'
 import { useMutation } from '@tanstack/react-query'
-import DeviceInfo from '../../../utils/deviceInfo/DeviceInfo'
-import AsyncStoreUtils from '../../../utils/AsyncStoreUtils'
 import ReferralController from '../../../controllers/referrals/ReferralController'
 
 const ReferralApiController = {
@@ -9,9 +7,7 @@ const ReferralApiController = {
         return useMutation({
             mutationFn: async ({ place, placeId, action = 'refer' }) => {
                 try {
-                    const accessToken = await AsyncStoreUtils.getAuthTokens();
-                    const deviceUniqueId = DeviceInfo.deviceUniqueId;
-                    const headerConfig = buildHeaderConfig({ accessToken, deviceUniqueId });
+                    const headerConfig = buildHeaderConfig();
 
                     const normalizedAction = action?.toLowerCase();
                     let data;
@@ -55,14 +51,10 @@ const ReferralApiController = {
         return useMutation({
             mutationFn: async ({ latitude, longitude }) => {
                 try {
-                    const accessToken = await AsyncStoreUtils.getAuthTokens();
-                    const deviceUniqueId = DeviceInfo.deviceUniqueId
                     const response = await Api.get({
                         url: Api.url.user.referrals({ latitude, longitude }),
                         headerConfig: {
-                            authType: Api.AuthType.auth,
-                            token: accessToken?.token,
-                            'X-Device-Hash': deviceUniqueId
+                            authType: Api.AuthType.auth
                         }
                     })
                     if (Api.isSuccess(response)) {
@@ -124,15 +116,10 @@ const buildUnreferPlacePayload = ({ placeId }) => {
     }
 }
 
-const buildHeaderConfig = ({ accessToken, deviceUniqueId }) => {
-    const headerConfig = {
-        authType: Api.AuthType.auth,
-        token: accessToken?.token,
+const buildHeaderConfig = () => {
+    return {
+        authType: Api.AuthType.auth
     };
-    if (deviceUniqueId) {
-        headerConfig['X-Device-Hash'] = deviceUniqueId;
-    }
-    return headerConfig;
 }
 
 const processedReferPlaceData = (response) => {

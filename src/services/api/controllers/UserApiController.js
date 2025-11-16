@@ -1,7 +1,5 @@
 import Api from '../Api'
 import { useMutation } from '@tanstack/react-query'
-import DeviceInfo from '../../../utils/deviceInfo/DeviceInfo'
-import AsyncStoreUtils from '../../../utils/AsyncStoreUtils'
 import ReferralController from '../../../controllers/referrals/ReferralController'
 
 const UserApiController = {
@@ -9,14 +7,10 @@ const UserApiController = {
         return useMutation({
             mutationFn: async () => {
                 try {
-                    const accessToken = await AsyncStoreUtils.getAuthTokens();
-                    const deviceUniqueId = DeviceInfo.deviceUniqueId
                     const response = await Api.get({
                         url: Api.url.user.profile(),
                         headerConfig: {
-                            authType: Api.AuthType.auth,
-                            token: accessToken?.token,
-                            'X-Device-Hash': deviceUniqueId
+                            authType: Api.AuthType.auth
                         }
                     })
                     if (Api.isSuccess(response)) {

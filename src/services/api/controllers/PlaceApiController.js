@@ -5,8 +5,6 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import { calculateDistance } from '../../../utils/DistanceUtils'
 import ImageAsset from '../../../assets/images/ImageAsset'
 import SearchFilterController from '../../../controllers/filters/SearchFilterController'
-import AsyncStoreUtils from '../../../utils/AsyncStoreUtils'
-import DeviceInfo from '../../../utils/deviceInfo/DeviceInfo'
 
 const PlaceApiController = {
     placeCategories: () => {
@@ -14,14 +12,10 @@ const PlaceApiController = {
             queryKey: ['placeCategories'],
             queryFn: async () => {
                 try {
-                    const accessToken = await AsyncStoreUtils.getAuthTokens();
-                    const deviceUniqueId = DeviceInfo.deviceUniqueId;
                     const response = await Api.get({
                         url: Api.url.place.categories(),
                         headerConfig: {
-                            authType: Api.AuthType.auth,
-                            token: accessToken?.token,
-                            'X-Device-Hash': deviceUniqueId
+                            authType: Api.AuthType.auth
                         }
                     })
                     if (response.statusCode === 200) {
@@ -42,23 +36,17 @@ const PlaceApiController = {
             mutationFn: async (params) => {
                 const { latitude, longitude, limit, radius, enhanced, category } = params || {}
                 try {
-                    const accessToken = await AsyncStoreUtils.getAuthTokens();
-                    const deviceUniqueId = DeviceInfo.deviceUniqueId;
                     const [placesResponse, referralsResponse] = await Promise.all([
                         Api.get({
                             url: Api.url.place.nearby({ latitude, longitude, limit, radius, enhanced, category }),
                             headerConfig: {
-                                authType: Api.AuthType.auth,
-                                token: accessToken?.token,
-                                'X-Device-Hash': deviceUniqueId
+                                authType: Api.AuthType.auth
                             }
                         }),
                         Api.get({
                             url: Api.url.user.referrals({ latitude, longitude, radius }),
                             headerConfig: {
-                                authType: Api.AuthType.auth,
-                                token: accessToken?.token,
-                                'X-Device-Hash': deviceUniqueId
+                                authType: Api.AuthType.auth
                             }
                         })
                     ])
@@ -79,23 +67,17 @@ const PlaceApiController = {
             mutationFn: async (params) => {
                 const { query, latitude, longitude, limit = 10, radius = 1000, enhanced = true } = params || {}
                 try {
-                    const accessToken = await AsyncStoreUtils.getAuthTokens();
-                    const deviceUniqueId = DeviceInfo.deviceUniqueId;
                     const [placesResponse, referralsResponse] = await Promise.all([
                         Api.get({
                             url: Api.url.place.search({ query, latitude, longitude, limit, radius, enhanced }),
                             headerConfig: {
-                                authType: Api.AuthType.auth,
-                                token: accessToken?.token,
-                                'X-Device-Hash': deviceUniqueId
+                                authType: Api.AuthType.auth
                             }
                         }),
                         Api.get({
                             url: Api.url.user.referrals({ latitude, longitude, radius }),
                             headerConfig: {
-                                authType: Api.AuthType.auth,
-                                token: accessToken?.token,
-                                'X-Device-Hash': deviceUniqueId
+                                authType: Api.AuthType.auth
                             }
                         })
                     ])
@@ -116,14 +98,10 @@ const PlaceApiController = {
             mutationFn: async (params) => {
                 const { place } = params || {}
                 try {
-                    const accessToken = await AsyncStoreUtils.getAuthTokens();
-                    const deviceUniqueId = DeviceInfo.deviceUniqueId;
                     const response = await Api.get({
                         url: Api.url.place.details({ placeId: place.id }),
                         headerConfig: {
-                            authType: Api.AuthType.auth,
-                            token: accessToken?.token,
-                            'X-Device-Hash': deviceUniqueId
+                            authType: Api.AuthType.auth
                         }
                     })
                     if (response.statusCode === 200) {
