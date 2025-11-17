@@ -1,6 +1,5 @@
 import { Platform } from 'react-native';
 import { getApps, getApp } from '@react-native-firebase/app';
-import { getFirestore, collection, limit, getDocs, query } from '@react-native-firebase/firestore';
 
 /**
  * Firebase Initializer - Ensures Firebase is properly set up before use
@@ -32,67 +31,12 @@ class FirebaseInitializer {
                 throw new Error('Firebase not initialized. Check your config files.');
             }
 
-            // Test Firestore connectivity
-            try {
-                const db = getFirestore();
-                // Try a simple operation to test connectivity
-                await getDocs(query(collection(db, '_test_connection'), limit(1)));
-            } catch (firestoreError) {
-                console.warn('Firestore connectivity test failed, but continuing:', firestoreError.message);
-                // Don't throw error, just warn - Firestore might be temporarily unavailable
-            }
-
             this.isInitialized = true;
             return true;
         } catch (error) {
             console.error('Firebase initialization error:', error);
             throw error;
         }
-    }
-
-    static async waitForFirebase(maxRetries = 10, retryDelay = 100) {
-        for (let i = 0; i < maxRetries; i++) {
-            try {
-                await this.initialize();
-
-                // Additional check for Firestore availability
-                try {
-                    const db = getFirestore();
-                    await getDocs(query(collection(db, '_test_connection'), limit(1)));
-                    return true;
-                } catch (firestoreError) {
-                    if (i === maxRetries - 1) {
-                        console.warn('Firestore not available after retries, but continuing');
-                        return true; // Continue anyway
-                    }
-                    // Wait and retry
-                    await new Promise(resolve => setTimeout(resolve, retryDelay));
-                }
-            } catch (error) {
-                if (i === maxRetries - 1) {
-                    throw error;
-                }
-                await new Promise(resolve => setTimeout(resolve, retryDelay));
-            }
-        }
-        return false;
-    }
-
-    static async waitForFirestore(maxRetries = 15, retryDelay = 200) {
-        for (let i = 0; i < maxRetries; i++) {
-            try {
-                const db = getFirestore();
-                await getDocs(query(collection(db, '_test_connection'), limit(1)));
-                return true;
-            } catch (error) {
-                if (i === maxRetries - 1) {
-                    console.warn('Firestore not available after retries');
-                    return false;
-                }
-                await new Promise(resolve => setTimeout(resolve, retryDelay));
-            }
-        }
-        return false;
     }
 }
 

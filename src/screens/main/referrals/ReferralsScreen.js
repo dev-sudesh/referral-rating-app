@@ -20,6 +20,7 @@ import NoDataAnimation from '../../../components/common/NoDataAnimation';
 import ReferralController from '../../../controllers/referrals/ReferralController';
 import ApiController from '../../../services/api/ApiController';
 import ImageAsset from '../../../assets/images/ImageAsset';
+import ShimmerLoader from '../../../components/ui/ShimmerLoader';
 
 const { width } = Dimensions.get('window');
 
@@ -35,6 +36,7 @@ const ReferralsScreen = ({ navigation }) => {
         line2: [],
     });
     const [otherSelectedFilters, setOtherSelectedFilters] = useState([]);
+    const [isInitialLoading, setIsInitialLoading] = useState(true);
     const { referredPlaces } = ReferralController();
     const { places, setSelectedPlace, setShowPlaceFullCard } = MapsController();
     const { isSearchFilterVisible, setIsSearchFilterVisible, placeCategories } = SearchFilterController();
@@ -42,7 +44,10 @@ const ReferralsScreen = ({ navigation }) => {
     // Show status bar when screen is focused
     useFocusEffect(
         React.useCallback(() => {
-            profileMutation.mutateAsync();
+            setIsInitialLoading(true);
+            profileMutation.mutateAsync().finally(() => {
+                setIsInitialLoading(false);
+            });
             setSelectedPlace(null);
             setShowPlaceFullCard(false);
             getReferredPlaces()
@@ -288,7 +293,9 @@ const ReferralsScreen = ({ navigation }) => {
 
                 {/* Content */}
                 <View style={styles.referralsContainer}>
-                    {filteredReferrals.length === 0 ? (
+                    {isInitialLoading || profileMutation.isPending ? (
+                        <ShimmerLoader count={5} />
+                    ) : filteredReferrals.length === 0 ? (
                         <NoDataAnimation
                             message="No referrals available"
                             subtitle="Try adjusting your filters or check back later"

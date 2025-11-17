@@ -81,10 +81,10 @@ const PlaceSelectedCard = () => {
                 </View>
                 <View style={styles.placeCardInfo}>
                     <View style={styles.placeInfoFull}>
-                        <Text style={styles.placeNameFull}>
+                        <Text numberOfLines={1} ellipsizeMode='tail' style={styles.placeNameFull}>
                             {selectedPlace?.name}
                         </Text>
-                        <Text style={styles.placeCategory}>
+                        <Text numberOfLines={2} ellipsizeMode='tail' style={styles.placeCategory}>
                             {selectedPlace?.address}
                         </Text>
                     </View>
@@ -172,12 +172,12 @@ const styles = StyleSheet.create({
         gap: theme.spacing.xxs,
     },
     placeNameFull: {
-        ...theme.typography.h4,
+        ...theme.typography.bodyMedium,
         color: theme.colors.text.primary,
         fontWeight: '700',
     },
     placeCategory: {
-        ...theme.typography.bodyMedium,
+        ...theme.typography.bodySmall,
         color: theme.colors.text.secondary,
         textTransform: 'capitalize',
         fontWeight: '600',

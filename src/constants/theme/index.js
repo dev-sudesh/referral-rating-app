@@ -144,7 +144,7 @@ export const typography = {
     bodyMedium: {
         fontFamily: fontFamily.primary.regular,
         fontSize: ResponsiveUI.fontSize(fontSize.body.medium),
-        lineHeight: ResponsiveUI.fontSize(lineHeight.body.medium),
+        lineHeight: ResponsiveUI.fontSize(lineHeight.body.small),
         fontWeight: fontWeight.regular,
     },
     bodySmall: {

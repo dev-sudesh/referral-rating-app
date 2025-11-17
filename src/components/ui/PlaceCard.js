@@ -36,8 +36,8 @@ const PlaceCard = (props) => {
                     />
                 </View>
                 <View style={styles.placeInfo}>
-                    <Text style={styles.placeName}>{place.name}</Text>
-                    <Text style={styles.placeCategory}>{place.address}</Text>
+                    <Text numberOfLines={2} ellipsizeMode='tail' style={styles.placeName}>{place.name}</Text>
+                    <Text numberOfLines={3} ellipsizeMode='tail' style={styles.placeCategory}>{place.address}</Text>
                 </View>
             </View>
         </TouchableOpacity>
@@ -80,12 +80,12 @@ const styles = StyleSheet.create({
         gap: theme.spacing.xxs,
     },
     placeName: {
-        ...theme.typography.bodyLarge,
+        ...theme.typography.bodyMedium,
         color: theme.colors.text.primary,
         fontWeight: '700',
     },
     placeCategory: {
-        ...theme.typography.bodyMedium,
+        ...theme.typography.bodySmall,
         color: theme.colors.text.secondary,
         textTransform: 'capitalize',
         fontWeight: '600',
