@@ -31,7 +31,11 @@ const SearchBar = ({ handleBackPress, searchText = '', onSearch, onChangeText, o
     const handleInputChange = (text) => {
         // Reflect text immediately in parent-controlled state
         onChangeText && onChangeText(text);
-        debouncedSearch(text);
+        // debouncedSearch(text);
+    };
+
+    const handleSearch = () => {
+        debouncedSearch(searchText);
     };
 
     // Cleanup timeout on unmount
@@ -59,15 +63,16 @@ const SearchBar = ({ handleBackPress, searchText = '', onSearch, onChangeText, o
                     placeholder="Search now..."
                     placeholderTextColor={theme.colors.text.black}
                     value={searchText}
+                    multiline={false}
+                    numberOfLines={1}
                     onChangeText={handleInputChange}
                     returnKeyType="search"
                     autoCorrect={false}
                     autoCapitalize="none"
                     autoComplete="off"
                     importantForAutofill="no"
-                    blurOnSubmit={false}
+                    lineHeight={theme.responsive.size(34)}
                 />
-
                 {searchText.length > 0 && (
                     <TouchableOpacity
                         style={styles.clearButton}
@@ -75,6 +80,18 @@ const SearchBar = ({ handleBackPress, searchText = '', onSearch, onChangeText, o
                         activeOpacity={1}
                     >
                         <Text style={styles.clearButtonText}>✕</Text>
+                    </TouchableOpacity>
+                )}
+                {searchText.length > 0 && (
+                    <TouchableOpacity
+                        style={styles.clearButton}
+                        onPress={handleSearch}
+                        activeOpacity={1}
+                    >
+                        <IconAsset.searchIcon
+                            width={24}
+                            height={24}
+                        />
                     </TouchableOpacity>
                 )}
             </View>
@@ -98,7 +115,7 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: theme.colors.border.light,
         paddingHorizontal: theme.spacing.sm,
-        minHeight: responsiveSize(48),
+        height: theme.responsive.size(52),
     },
     backButton: {
         padding: theme.spacing.sm,
@@ -108,7 +125,8 @@ const styles = StyleSheet.create({
         flex: 1,
         ...theme.typography.bodyMedium,
         color: theme.colors.text.primary,
-        lineHeight: responsiveSize(30),
+        lineHeight: theme.responsive.size(34),
+        height: theme.responsive.size(50),
     },
     filterButton: {
         padding: theme.spacing.sm,

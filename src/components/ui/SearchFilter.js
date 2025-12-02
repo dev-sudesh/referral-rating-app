@@ -73,6 +73,7 @@ const SearchFilter = () => {
     // Clear all filters
     const clearAllFilters = () => {
         setFilters([]);
+        setSearchFilterText('');
     };
     const onClose = () => {
         setIsSearchFilterVisible({ isSearchFilterVisible: false });
@@ -255,15 +256,21 @@ const SearchFilter = () => {
                     {/* Apply Button */}
                     <View style={styles.applyButtonContainer}>
                         <TouchableOpacity
-                            disabled={isLoading}
-                            style={styles.applyButton}
+                            disabled={isLoading || filters.length === 0}
+                            style={[
+                                styles.applyButton,
+                                (isLoading || filters.length === 0) && styles.applyButtonDisabled
+                            ]}
                             onPress={handleApplyFilters}
                             activeOpacity={1}
                         >
                             {isLoading ? (
                                 <ActivityIndicator color={theme.colors.background.white} />
                             ) : (
-                                <Text style={styles.applyButtonText}>Show results</Text>
+                                <Text style={[
+                                    styles.applyButtonText,
+                                    (filters.length === 0) && styles.applyButtonTextDisabled
+                                ]}>Show results</Text>
                             )}
                         </TouchableOpacity>
                     </View>
@@ -410,10 +417,16 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         height: theme.responsive.buttonHeight('medium'),
     },
+    applyButtonDisabled: {
+        backgroundColor: theme.colors.neutral[300],
+    },
     applyButtonText: {
         ...theme.typography.bodyLarge,
         color: theme.colors.background.white,
         fontWeight: theme.fontWeight.bold,
+    },
+    applyButtonTextDisabled: {
+        color: theme.colors.text.disabled,
     },
     iconText: {
         fontSize: 16,

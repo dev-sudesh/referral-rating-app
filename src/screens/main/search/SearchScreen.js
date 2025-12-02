@@ -118,7 +118,7 @@ const SearchScreen = ({ navigation }) => {
         if (results.length > 0) {
             return (
                 <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Search Results: {searchText} </Text>
+                    <Text style={styles.sectionTitle}>Search Results </Text>
                     {results.map((place, index) => (
                         <TouchableOpacity
                             key={place.id}
@@ -204,6 +204,11 @@ const styles = StyleSheet.create({
         paddingVertical: theme.spacing.md,
         paddingHorizontal: theme.spacing.screenPadding,
         textTransform: 'capitalize',
+    },
+    sectionMessage: {
+        ...theme.typography.bodyMedium,
+        color: theme.colors.text.secondary,
+        paddingHorizontal: theme.spacing.screenPadding,
     },
     searchItem: {
         flexDirection: 'row',
