@@ -23,17 +23,46 @@ import PlaceSelectedCard from '../../../components/ui/PlaceSelectedCard';
 import AsyncStoreUtils from '../../../utils/AsyncStoreUtils';
 import ConfettiCannon from '../../../components/animated/ConfettiCannon';
 import ApiController from '../../../services/api/ApiController';
+import LocationUtils from '../../../utils/LocationUtils';
 
+const customMapStyle = [
+    {
+        featureType: 'poi',
+        elementType: 'labels',
+        stylers: [{ visibility: 'off' }]
+    },
+    {
+        featureType: 'poi.business',
+        stylers: [{ visibility: 'off' }]
+    },
+    {
+        featureType: 'poi.attraction',
+        stylers: [{ visibility: 'off' }]
+    },
+    {
+        featureType: 'poi.place_of_worship',
+        stylers: [{ visibility: 'off' }]
+    },
+    {
+        featureType: 'poi.school',
+        stylers: [{ visibility: 'off' }]
+    },
+    {
+        featureType: 'poi.sports_complex',
+        stylers: [{ visibility: 'off' }]
+    }
+];
 const MapScreen = ({ navigation }) => {
     const profileMutation = ApiController.profile();
     const referralsMutation = ApiController.referrals();
     const referPlaceMutation = ApiController.referPlace();
+    const nearbyPlacesMutation = ApiController.nearbyPlaces();
     const [selectedFilter, setSelectedFilter] = useState('all');
     const [region, setRegion] = useState(global.userLastLocation || {
         latitude: 37.78825,
         longitude: -122.4324,
-        latitudeDelta: 0.001,
-        longitudeDelta: 0.001,
+        latitudeDelta: 0.03,
+        longitudeDelta: 0.03,
     });
     const [filteredPlaces, setFilteredPlaces] = useState([]);
     const mapRef = useRef(null);
@@ -43,6 +72,7 @@ const MapScreen = ({ navigation }) => {
     const animationTimeoutRef = useRef(null);
     const [isScreenFocused, setIsScreenFocused] = useState(false);
     const markerPressRef = useRef(false);
+    const shouldFetchPlacesRef = useRef(false);
 
     const placeReferredStatus = ReferralController(state => state.placeReferredStatus);
 
@@ -166,8 +196,8 @@ const MapScreen = ({ navigation }) => {
         const location = {
             latitude: updatedPlace.latitude,
             longitude: updatedPlace.longitude,
-            latitudeDelta: 0.001,
-            longitudeDelta: 0.001,
+            latitudeDelta: 0.03,
+            longitudeDelta: 0.03,
         };
         setCenterLocation(location);
         if (scroll && placesListRef.current) {
@@ -218,12 +248,23 @@ const MapScreen = ({ navigation }) => {
             const location = {
                 latitude: userLocation.latitude,
                 longitude: userLocation.longitude,
-                latitudeDelta: 0.001,
-                longitudeDelta: 0.001,
+                latitudeDelta: 0.03,
+                longitudeDelta: 0.03,
             };
             setCenterLocation(location);
         }
     }, [userLocation, places.length]);
+
+    // Fetch places when userLocation changes after button press
+    React.useEffect(() => {
+        if (userLocation && shouldFetchPlacesRef.current) {
+            shouldFetchPlacesRef.current = false;
+            nearbyPlacesMutation.mutateAsync({
+                latitude: userLocation.latitude,
+                longitude: userLocation.longitude
+            });
+        }
+    }, [userLocation]);
 
     // Update region when filteredPlaces change to fit all places
     React.useEffect(() => {
@@ -241,6 +282,26 @@ const MapScreen = ({ navigation }) => {
             referPlace(selectedPlace);
         }
     }, [placeReferredStatus, selectedPlace]);
+
+    // Load stored location from AsyncStorage on mount if not already set
+    React.useEffect(() => {
+        const loadStoredLocation = async () => {
+            if (!userLocation) {
+                const storedLocation = await AsyncStoreUtils.getItem(AsyncStoreUtils.Keys.USER_LAST_LOCATION);
+                if (storedLocation && storedLocation.latitude && storedLocation.longitude) {
+                    MapsController.getState().setUserLocation(storedLocation);
+                    const location = {
+                        latitude: storedLocation.latitude,
+                        longitude: storedLocation.longitude,
+                        latitudeDelta: 0.03,
+                        longitudeDelta: 0.03,
+                    };
+                    setCenterLocation(location);
+                }
+            }
+        };
+        loadStoredLocation();
+    }, []);
 
     // Cleanup animation timeout on unmount
     React.useEffect(() => {
@@ -261,6 +322,12 @@ const MapScreen = ({ navigation }) => {
             return () => clearTimeout(timer);
         }
     }, [showConfetti, setShowConfetti]);
+
+    const handleLocationButtonPress = async () => {
+        // Always fetch current location when user clicks the button
+        shouldFetchPlacesRef.current = true;
+        LocationUtils.getCurrentLocation();
+    }
 
     return (
         <SafeAreaView style={{ flex: 1 }} edges={[]}>
@@ -284,6 +351,9 @@ const MapScreen = ({ navigation }) => {
                         showsIndoors={true}
                         mapType="standard"
                         userInterfaceStyle="light"
+                        pointsOfInterestEnabled={false}
+
+                        customMapStyle={customMapStyle}
                     >
                         {selectedViewType === 'map' && filteredPlaces.length > 0 && filteredPlaces.map((place, index) => (
                             <Marker
@@ -310,16 +380,30 @@ const MapScreen = ({ navigation }) => {
                                         justifyContent: 'center',
                                         alignItems: 'center',
                                     }}>
-                                        {selectedPlace?.id === place.id ? (
-                                            <IconAsset.markerIconSvgSelected
-                                                width={50}
-                                                height={50}
-                                            />
+                                        {place.isReferred ? (
+                                            selectedPlace?.id === place.id ? (
+                                                <IconAsset.markerIconReferredSelected
+                                                    width={50}
+                                                    height={50}
+                                                />
+                                            ) : (
+                                                <IconAsset.markerIconReferred
+                                                    width={50}
+                                                    height={50}
+                                                />
+                                            )
                                         ) : (
-                                            <IconAsset.markerIconSvg
-                                                width={50}
-                                                height={50}
-                                            />
+                                            selectedPlace?.id === place.id ? (
+                                                <IconAsset.markerIconSvgSelected
+                                                    width={50}
+                                                    height={50}
+                                                />
+                                            ) : (
+                                                <IconAsset.markerIconSvg
+                                                    width={50}
+                                                    height={50}
+                                                />
+                                            )
                                         )}
                                     </View>
                                     <View style={{
@@ -411,6 +495,12 @@ const MapScreen = ({ navigation }) => {
 
                 {/* Header */}
                 <View style={styles.header}>
+                    <TouchableOpacity activeOpacity={1} style={styles.locationButton} onPress={handleLocationButtonPress}>
+                        <IconAsset.locationIcon
+                            width={30}
+                            height={30}
+                        />
+                    </TouchableOpacity>
                     {/* Search input */}
                     <TouchableOpacity activeOpacity={1} style={styles.searchContainer} onPress={() => navigation.navigate('Search')}  >
                         {/* Search icon */}
@@ -454,7 +544,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: theme.spacing.lg,
         paddingTop: theme.responsive.isSmall() ? theme.spacing.xxl : theme.spacing.xxxl,
         paddingBottom: theme.spacing.md,
-        gap: theme.spacing.md,
+        gap: theme.spacing.sm,
     },
     mapContainer: {
         position: 'absolute',
@@ -466,6 +556,19 @@ const styles = StyleSheet.create({
     },
     map: {
         position: 'absolute', top: 0, left: 0, right: 0, bottom: -60
+    },
+    locationButton: {
+        width: theme.responsive.size(55),
+        height: theme.responsive.size(55),
+        borderRadius: theme.borderRadius.lg,
+        backgroundColor: theme.colors.background.primary,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    locationButtonText: {
+        ...theme.typography.captionMedium,
+        color: theme.colors.text.primary,
+        fontWeight: '700',
     },
     filterButton: {
         width: theme.responsive.size(55),

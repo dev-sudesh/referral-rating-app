@@ -36,12 +36,12 @@ const styles = StyleSheet.create({
     },
     contentContainer: {
         width: theme.responsive.screen().width,
-        height: theme.responsive.height(theme.responsive.screen().height * 0.14),
+        height: theme.responsive.screen().height * 0.14,
         minHeight: theme.responsive.height(100),
         alignItems: 'center',
         justifyContent: 'center',
         backgroundColor: theme.colors.background.white,
-        paddingHorizontal: theme.responsive.width(theme.responsive.screen().width * 0.2),
+        paddingVertical: theme.spacing.md,
     },
     title: {
         ...theme.typography.h3,

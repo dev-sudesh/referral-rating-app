@@ -5,21 +5,21 @@ const Constants = {
     onboarding: [
         {
             id: '1',
-            title: 'Recognise the business that you like',
+            title: 'Recognise the business\nthat you like',
             subtitle: '',
             description: '',
             icon: ImageAsset.intro.intro1,
         },
         {
             id: '2',
-            title: 'Refer them to increase their rating',
+            title: 'Refer them\nto increase their rating',
             subtitle: '',
             description: '',
             icon: ImageAsset.intro.intro2,
         },
         {
             id: '3',
-            title: 'Be rewarded from them for your loyalty',
+            title: 'Be rewarded\nfrom them for your loyalty',
             subtitle: '',
             description: '',
             icon: ImageAsset.intro.intro3,

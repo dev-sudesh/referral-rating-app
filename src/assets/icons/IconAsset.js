@@ -11,6 +11,8 @@ import ReferralsIconSelected from '../../assets/icons/bottomTabs/referrals-icon-
 import ProfileIconSelected from '../../assets/icons/bottomTabs/profile-icon-selected.svg';
 import MarkerIcon from '../../assets/icons/markers/marker-icon.svg';
 import MarkerIconSelected from '../../assets/icons/markers/marker-icon-selected.svg';
+import MarkerIconReferred from '../../assets/icons/markers/marker-icon-referred.svg';
+import MarkerIconReferredSelected from '../../assets/icons/markers/marker-icon-referred-selected.svg';
 import SearchIcon from '../../assets/icons/others/search-icon.svg';
 import FilterIcon from '../../assets/icons/others/filter-icon.svg';
 import NewProfileIcon from '../../assets/icons/others/new-profile-icon.svg';
@@ -28,6 +30,7 @@ import CheckSquareIcon from '../../assets/icons/others/check-square.svg';
 import MoreIcon from '../../assets/icons/others/more-icon.svg';
 import EmptyStateIcon from '../../assets/icons/others/empty-state-icon.svg';
 import PlacePlaceholderIcon from '../../assets/icons/others/place-placeholder.svg';
+import LocationIcon from '../../assets/icons/others/location-icon.svg';
 
 const IconAsset = {
     eyeOn: EyeOn,
@@ -50,6 +53,8 @@ const IconAsset = {
     markerIcon: require('../../assets/icons/others/marker-icon.svg'),
     markerIconSvg: MarkerIcon,
     markerIconSvgSelected: MarkerIconSelected,
+    markerIconReferred: MarkerIconReferred,
+    markerIconReferredSelected: MarkerIconReferredSelected,
     searchIcon: SearchIcon,
     filterIcon: FilterIcon,
     newProfileIcon: NewProfileIcon,
@@ -67,6 +72,7 @@ const IconAsset = {
     moreIcon: MoreIcon,
     emptyStateIcon: EmptyStateIcon,
     placePlaceholderIcon: PlacePlaceholderIcon,
+    locationIcon: LocationIcon,
 }
 
 export default IconAsset;

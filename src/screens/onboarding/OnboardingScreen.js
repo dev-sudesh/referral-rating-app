@@ -223,9 +223,9 @@ const styles = StyleSheet.create({
     nextButton: {
         backgroundColor: theme.colors.primary[500],
         borderRadius: theme.borderRadius.xl,
-        paddingVertical: theme.spacing.lg,
+        justifyContent: 'center',
         alignItems: 'center',
-        minHeight: theme.responsive.buttonHeight('large'),
+        height: theme.responsive.height(58),
         ...theme.shadows.small,
     },
     nextButtonText: {

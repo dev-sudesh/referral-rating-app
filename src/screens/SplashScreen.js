@@ -63,7 +63,36 @@ const SplashScreen = () => {
     }
 
     const getLastLocation = async () => {
-        LocationUtils.getCurrentLocation();
+        // Check if location exists in AsyncStorage first
+        const storedLocation = await AsyncStoreUtils.getItem(AsyncStoreUtils.Keys.USER_LAST_LOCATION);
+
+        if (storedLocation && storedLocation.latitude && storedLocation.longitude) {
+            // Use stored location - no need to fetch
+            const location = {
+                latitude: storedLocation.latitude,
+                longitude: storedLocation.longitude,
+            };
+            MapsController.getState().setUserLocation(location);
+
+            // Set center location for map centering
+            const centerRegion = {
+                latitude: storedLocation.latitude,
+                longitude: storedLocation.longitude,
+                latitudeDelta: 0.01,
+                longitudeDelta: 0.01,
+            };
+            MapsController.getState().setCenterLocation(centerRegion);
+
+            global.userLastLocation = {
+                latitude: storedLocation.latitude,
+                longitude: storedLocation.longitude,
+                latitudeDelta: 0.01,
+                longitudeDelta: 0.01,
+            };
+        } else {
+            // Only fetch if not in storage
+            LocationUtils.getCurrentLocation();
+        }
     }
 
     const getStarted = async () => {
