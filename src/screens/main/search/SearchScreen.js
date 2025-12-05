@@ -19,6 +19,7 @@ const SearchScreen = ({ navigation }) => {
     const [activeFilters, setActiveFilters] = useState({});
     const [searchResults, setSearchResults] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
+    const [hasSearched, setHasSearched] = useState(false);
     const { userLocation, setSelectedPlace, setShowPlaceFullCard } = MapsController();
     const [popularSearches, setPopularSearches] = useState([]);
     const [recentSearches, setRecentSearches] = useState([]);
@@ -46,6 +47,7 @@ const SearchScreen = ({ navigation }) => {
 
     const handleSearchItemPress = useCallback((keyword) => {
         setSearchText(keyword);
+        setHasSearched(true);
         handleSearch(keyword);
     }, [handleSearch]);
 
@@ -61,9 +63,11 @@ const SearchScreen = ({ navigation }) => {
     // Create a search callback that SearchBar can call directly
     const handleSearchCallback = useCallback((searchTerm) => {
         if (searchTerm.trim()) {
+            setHasSearched(true);
             handleSearch(searchTerm);
         } else {
             setSearchResults([]);
+            setHasSearched(false);
         }
     }, [handleSearch]);
 
@@ -92,7 +96,7 @@ const SearchScreen = ({ navigation }) => {
     ), [handleSearchItemPress]);
 
     // Memoize the SearchResultsSection component
-    const SearchResultsSection = useCallback(({ results, isLoading }) => {
+    const SearchResultsSection = useCallback(({ results, isLoading, searchText }) => {
         if (isLoading) {
             return (
                 <View style={styles.section}>
@@ -104,7 +108,19 @@ const SearchScreen = ({ navigation }) => {
             );
         }
 
-        if (results.length === 0 && searchText.trim()) {
+        // Show message when user is typing but hasn't searched yet
+        if (searchText.trim() && !hasSearched) {
+            return (
+                <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>Ready to search</Text>
+                    <View style={styles.loadingContainer}>
+                        <Text style={styles.loadingText}>Click the search button to find places</Text>
+                    </View>
+                </View>
+            );
+        }
+
+        if (results.length === 0 && hasSearched) {
             return (
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>No results found</Text>
@@ -145,7 +161,7 @@ const SearchScreen = ({ navigation }) => {
         }
 
         return null;
-    }, [searchText, showPlaceDetails]);
+    }, [hasSearched, showPlaceDetails, userLocation]);
 
     useEffect(() => {
     }, []);
@@ -181,6 +197,7 @@ const SearchScreen = ({ navigation }) => {
                 <SearchResultsSection
                     results={searchResults}
                     isLoading={isSearching}
+                    searchText={searchText}
                 />
             </ScrollView>
         </ScreenContainer>
