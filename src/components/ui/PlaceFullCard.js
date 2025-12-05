@@ -217,7 +217,7 @@ const PlaceFullCard = () => {
                             <Text style={styles.selectedPlaceFullCardInfoItemDescription}>
                                 {fullSelectedPlace?.description}
                             </Text>
-                            <View style={styles.selectedPlaceFullCardExtraInfoContainer}>
+                            {fullSelectedPlace?.website && <View style={styles.selectedPlaceFullCardExtraInfoContainer}>
                                 <IconAsset.websiteIcon
                                     width={18}
                                     height={18}
@@ -225,8 +225,8 @@ const PlaceFullCard = () => {
                                 <Text style={styles.selectedPlaceFullCardExtraInfoText}>
                                     {fullSelectedPlace?.website}
                                 </Text>
-                            </View>
-                            <View style={styles.selectedPlaceFullCardExtraInfoContainer}>
+                            </View>}
+                            {fullSelectedPlace?.openTime && <View style={styles.selectedPlaceFullCardExtraInfoContainer}>
                                 <IconAsset.clockIcon
                                     width={18}
                                     height={18}
@@ -238,14 +238,7 @@ const PlaceFullCard = () => {
                                         {fullSelectedPlace?.openTime}
                                     </Text>
                                 </View>
-                            </View>
-
-                            <View style={styles.selectedPlaceFullCardExtraInfoOpenContainer}>
-                                <Text style={styles.selectedPlaceFullCardExtraInfoOpenTextNormal}>Currently{' '}</Text>
-                                <Text style={[styles.selectedPlaceFullCardExtraInfoOpenText, fullSelectedPlace?.openTime && MethodUtils.currentTimeIsBetween(fullSelectedPlace.openTime) ? styles.selectedPlaceFullCardExtraInfoOpenTextOpen : styles.selectedPlaceFullCardExtraInfoOpenTextClosed]}>
-                                    {fullSelectedPlace?.openTime && MethodUtils.currentTimeIsBetween(fullSelectedPlace.openTime) ? 'Open' : 'Closed'}
-                                </Text>
-                            </View>
+                            </View>}
                         </View>
                     </View>
                 </CurvedCard>
