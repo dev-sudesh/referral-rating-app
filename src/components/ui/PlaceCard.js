@@ -36,8 +36,8 @@ const PlaceCard = (props) => {
                     />
                 </View>
                 <View style={styles.placeInfo}>
-                    <Text numberOfLines={2} ellipsizeMode='tail' style={styles.placeName}>{place.name}</Text>
-                    <Text numberOfLines={3} ellipsizeMode='tail' style={styles.placeCategory}>{place.address}</Text>
+                    <Text numberOfLines={2} ellipsizeMode='tail' allowFontScaling={false} style={styles.placeName}>{place.name}</Text>
+                    <Text numberOfLines={3} ellipsizeMode='tail' allowFontScaling={false} style={styles.placeCategory}>{place.address}</Text>
                 </View>
             </View>
         </TouchableOpacity>
@@ -67,8 +67,8 @@ const styles = StyleSheet.create({
         ...theme.shadows.medium,
     },
     placeCardImage: {
-        width: theme.responsive.size(96),
-        height: theme.responsive.height(100),
+        width: theme.responsive.size(80),
+        height: theme.responsive.height(80),
         borderRadius: theme.borderRadius.sm,
         overflow: 'hidden',
     },
@@ -80,12 +80,12 @@ const styles = StyleSheet.create({
         gap: theme.spacing.xxs,
     },
     placeName: {
-        ...theme.typography.bodyMedium,
+        ...theme.typography.bodyXSmall,
         color: theme.colors.text.primary,
         fontWeight: '700',
     },
     placeCategory: {
-        ...theme.typography.bodySmall,
+        ...theme.typography.captionMedium,
         color: theme.colors.text.secondary,
         textTransform: 'capitalize',
         fontWeight: '600',

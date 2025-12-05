@@ -26,16 +26,22 @@ export const responsiveHeight = (size) => {
 /**
  * Responsive Font Size
  * Scales font size with pixel ratio consideration for better text rendering
+ * Accounts for platform differences to ensure visual consistency
  */
 export const responsiveFontSize = (size) => {
     const scale = Math.min(SCREEN_WIDTH / BASE_WIDTH, SCREEN_HEIGHT / BASE_HEIGHT);
-    const newSize = size * scale;
-
-    if (Platform.OS === 'ios') {
-        return Math.round(PixelRatio.roundToNearestPixel(newSize));
-    } else {
-        return Math.round(PixelRatio.roundToNearestPixel(newSize)) - 2;
+    let newSize = size * scale;
+    
+    // Account for platform rendering differences
+    // Android renders fonts smaller than iOS for the same point size
+    // We need to increase Android font sizes to match iOS visual appearance
+    if (Platform.OS === 'android') {
+        // Increase by ~7% to match iOS visual appearance
+        // This accounts for Android's different font rendering engine
+        newSize = newSize * 1.07;
     }
+    
+    return Math.round(PixelRatio.roundToNearestPixel(newSize));
 };
 
 /**

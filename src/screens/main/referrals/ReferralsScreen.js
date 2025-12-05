@@ -174,13 +174,13 @@ const ReferralsScreen = ({ navigation }) => {
                             <View style={styles.referralCardTags}>
                                 {referral.tags.map((tag, index) => (
                                     <View key={tag.id} style={[styles.referralCardTag, { backgroundColor: styles[tag.style].backgroundColor }]}>
-                                        <Text style={[styles.referralCardTagText, { color: styles[tag.style].color }]}>{tag.title}</Text>
+                                        <Text allowFontScaling={false} style={[styles.referralCardTagText, { color: styles[tag.style].color }]}>{tag.title}</Text>
                                     </View>
                                 ))}
                             </View>
                         )}
-                        <Text numberOfLines={2} ellipsizeMode="tail" style={styles.referralCardTitle}>{referral.name}</Text>
-                        <Text numberOfLines={3} ellipsizeMode="tail" style={styles.referralCardCategory}>{referral.address}</Text>
+                        <Text numberOfLines={2} ellipsizeMode="tail" allowFontScaling={false} style={styles.referralCardTitle}>{referral.name}</Text>
+                        <Text numberOfLines={3} ellipsizeMode="tail" allowFontScaling={false} style={styles.referralCardCategory}>{referral.address}</Text>
                     </View>
                 </View>
             </TouchableOpacity>
@@ -341,8 +341,8 @@ const styles = StyleSheet.create({
         ...theme.shadows.medium,
     },
     referralCardImage: {
-        width: theme.responsive.size(96),
-        height: theme.responsive.height(100),
+        width: theme.responsive.size(80),
+        height: theme.responsive.height(80),
         borderRadius: theme.borderRadius.sm,
         overflow: 'hidden',
     },
@@ -354,12 +354,12 @@ const styles = StyleSheet.create({
         gap: theme.spacing.xxs,
     },
     referralCardTitle: {
-        ...theme.typography.bodyMedium,
+        ...theme.typography.bodyXSmall,
         color: theme.colors.text.primary,
         fontWeight: '700',
     },
     referralCardCategory: {
-        ...theme.typography.bodySmall,
+        ...theme.typography.captionMedium,
         color: theme.colors.text.secondary,
         textTransform: 'capitalize',
         fontWeight: '600',
