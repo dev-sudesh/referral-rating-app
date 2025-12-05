@@ -102,13 +102,125 @@ const SearchFilter = () => {
         }
     };
 
-    // Filter options based on search text
+    // Calculate string similarity using Levenshtein distance
+    const calculateSimilarity = (str1, str2) => {
+        const s1 = str1.toLowerCase();
+        const s2 = str2.toLowerCase();
+
+        // If strings are identical, return 1
+        if (s1 === s2) return 1;
+
+        // If one string contains the other, return high similarity
+        if (s1.includes(s2) || s2.includes(s1)) return 0.8;
+
+        // Calculate Levenshtein distance
+        const len1 = s1.length;
+        const len2 = s2.length;
+
+        if (len1 === 0) return len2 === 0 ? 1 : 0;
+        if (len2 === 0) return 0;
+
+        const matrix = [];
+        for (let i = 0; i <= len2; i++) {
+            matrix[i] = [i];
+        }
+        for (let j = 0; j <= len1; j++) {
+            matrix[0][j] = j;
+        }
+
+        for (let i = 1; i <= len2; i++) {
+            for (let j = 1; j <= len1; j++) {
+                if (s2.charAt(i - 1) === s1.charAt(j - 1)) {
+                    matrix[i][j] = matrix[i - 1][j - 1];
+                } else {
+                    matrix[i][j] = Math.min(
+                        matrix[i - 1][j - 1] + 1, // substitution
+                        matrix[i][j - 1] + 1,     // insertion
+                        matrix[i - 1][j] + 1       // deletion
+                    );
+                }
+            }
+        }
+
+        const distance = matrix[len2][len1];
+        const maxLen = Math.max(len1, len2);
+        return 1 - (distance / maxLen);
+    };
+
+    // Filter options based on search text (with fuzzy matching)
     const getFilteredOptions = (options) => {
         if (!searchFilterText.trim()) return options;
-        return options.filter(option =>
-            option.label.toLowerCase().includes(searchFilterText.toLowerCase())
-        );
+        const searchLower = searchFilterText.toLowerCase();
+
+        return options.filter(option => {
+            const labelLower = option.label.toLowerCase();
+            // Exact match or contains match
+            if (labelLower.includes(searchLower)) return true;
+
+            // Fuzzy match for typos (similarity > 50%)
+            const similarity = calculateSimilarity(searchLower, labelLower);
+            return similarity > 0.5;
+        });
     };
+
+    // Check if there are any filtered categories
+    const hasFilteredCategories = useMemo(() => {
+        if (!searchFilterText.trim()) return true; // Show all if no search
+        return filterCategories.some(category => {
+            if (!category || !category.options || !Array.isArray(category.options)) {
+                return false;
+            }
+            const filteredOptions = getFilteredOptions(category.options);
+            return filteredOptions.length > 0;
+        });
+    }, [filterCategories, searchFilterText]);
+
+    // Get similar word suggestions based on search text (for typos and similar words)
+    const getSimilarSuggestions = useMemo(() => {
+        if (!searchFilterText.trim()) return [];
+
+        const searchLower = searchFilterText.toLowerCase().trim();
+        const allOptions = [];
+
+        // Collect all options from all categories
+        filterCategories.forEach(category => {
+            if (category && category.options && Array.isArray(category.options)) {
+                category.options.forEach(option => {
+                    if (option && option.label) {
+                        allOptions.push(option.label);
+                    }
+                });
+            }
+        });
+
+        // Calculate similarity scores for each option
+        const scoredOptions = allOptions.map(label => ({
+            label,
+            similarity: calculateSimilarity(searchLower, label.toLowerCase())
+        }))
+            .filter(item => item.similarity > 0.3) // Only include options with similarity > 30%
+            .sort((a, b) => b.similarity - a.similarity) // Sort by similarity (highest first)
+            .slice(0, 6) // Get top 6 matches
+            .map(item => item.label);
+
+        return scoredOptions;
+    }, [filterCategories, searchFilterText]);
+
+    // Get popular filter suggestions (fallback when no search text)
+    const getPopularSuggestions = useMemo(() => {
+        const suggestions = [];
+        filterCategories.forEach(category => {
+            if (category && category.options && Array.isArray(category.options)) {
+                // Get first few options from each category as suggestions
+                category.options.slice(0, 3).forEach(option => {
+                    if (option && option.label && suggestions.length < 6) {
+                        suggestions.push(option.label);
+                    }
+                });
+            }
+        });
+        return suggestions.slice(0, 6); // Limit to 6 suggestions
+    }, [filterCategories]);
 
     // Render filter option
     const renderFilterOption = ({ item }) => {
@@ -246,11 +358,66 @@ const SearchFilter = () => {
                         showsVerticalScrollIndicator={false}
                         contentContainerStyle={styles.filterContentContainer}
                     >
-                        {filterCategories.map((category) => (
-                            <View key={category.id || category.title}>
-                                {renderFilterCategory({ item: category })}
+                        {hasFilteredCategories ? (
+                            filterCategories.map((category) => (
+                                <View key={category.id || category.title}>
+                                    {renderFilterCategory({ item: category })}
+                                </View>
+                            ))
+                        ) : (
+                            <View style={styles.emptyStateContainer}>
+                                <View style={styles.emptyStateIconContainer}>
+                                    <IconAsset.searchIcon width={48} height={48} fill={theme.colors.text.secondary} />
+                                </View>
+                                <Text style={styles.emptyStateTitle}>
+                                    No results found
+                                </Text>
+                                <Text style={styles.emptyStateText}>
+                                    We couldn't find any filters matching "{searchFilterText}"
+                                </Text>
+                                {searchFilterText.trim() && getSimilarSuggestions.length > 0 ? (
+                                    <View style={styles.suggestionsContainer}>
+                                        <Text style={styles.suggestionsTitle}>
+                                            Did you mean:
+                                        </Text>
+                                        <View style={styles.suggestionsList}>
+                                            {getSimilarSuggestions.map((suggestion, index) => (
+                                                <TouchableOpacity
+                                                    key={index}
+                                                    style={styles.suggestionChip}
+                                                    onPress={() => setSearchFilterText(suggestion)}
+                                                    activeOpacity={0.7}
+                                                >
+                                                    <Text style={styles.suggestionText}>
+                                                        {suggestion}
+                                                    </Text>
+                                                </TouchableOpacity>
+                                            ))}
+                                        </View>
+                                    </View>
+                                ) : getPopularSuggestions.length > 0 ? (
+                                    <View style={styles.suggestionsContainer}>
+                                        <Text style={styles.suggestionsTitle}>
+                                            Try searching for:
+                                        </Text>
+                                        <View style={styles.suggestionsList}>
+                                            {getPopularSuggestions.map((suggestion, index) => (
+                                                <TouchableOpacity
+                                                    key={index}
+                                                    style={styles.suggestionChip}
+                                                    onPress={() => setSearchFilterText(suggestion)}
+                                                    activeOpacity={0.7}
+                                                >
+                                                    <Text style={styles.suggestionText}>
+                                                        {suggestion}
+                                                    </Text>
+                                                </TouchableOpacity>
+                                            ))}
+                                        </View>
+                                    </View>
+                                ) : null}
                             </View>
-                        ))}
+                        )}
                     </ScrollView>
 
                     {/* Apply Button */}
@@ -446,6 +613,60 @@ const styles = StyleSheet.create({
     },
     filterOptionSelectedIcon: {
         backgroundColor: theme.colors.tertiary[500],
+    },
+    emptyStateContainer: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: theme.spacing.xl * 2,
+        paddingHorizontal: theme.spacing.screenPadding,
+    },
+    emptyStateIconContainer: {
+        marginBottom: theme.spacing.lg,
+        opacity: 0.5,
+    },
+    emptyStateTitle: {
+        ...theme.typography.h4,
+        fontWeight: theme.fontWeight.bold,
+        color: theme.colors.text.primary,
+        textAlign: 'center',
+        marginBottom: theme.spacing.sm,
+    },
+    emptyStateText: {
+        ...theme.typography.bodyMedium,
+        color: theme.colors.text.secondary,
+        textAlign: 'center',
+        marginBottom: theme.spacing.xl,
+        lineHeight: 22,
+    },
+    suggestionsContainer: {
+        width: '100%',
+        marginTop: theme.spacing.md,
+    },
+    suggestionsTitle: {
+        ...theme.typography.bodyMedium,
+        fontWeight: theme.fontWeight.medium,
+        color: theme.colors.text.primary,
+        marginBottom: theme.spacing.md,
+        textAlign: 'center',
+    },
+    suggestionsList: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'center',
+        gap: theme.spacing.sm,
+    },
+    suggestionChip: {
+        backgroundColor: theme.colors.background.primary,
+        borderWidth: 1,
+        borderColor: theme.colors.border.light,
+        borderRadius: theme.borderRadius.full,
+        paddingHorizontal: theme.spacing.md,
+        paddingVertical: theme.spacing.sm,
+    },
+    suggestionText: {
+        ...theme.typography.bodyMedium,
+        color: theme.colors.text.primary,
     },
 });
 
