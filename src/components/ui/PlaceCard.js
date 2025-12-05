@@ -57,7 +57,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'flex-start',
         gap: theme.spacing.md,
-        height: theme.responsive.size(124),
+        minHeight: theme.responsive.height(100),
         backgroundColor: theme.colors.background.primary,
         borderRadius: theme.borderRadius.md,
         padding: theme.spacing.sm,
@@ -68,7 +68,7 @@ const styles = StyleSheet.create({
     },
     placeCardImage: {
         width: theme.responsive.size(96),
-        height: theme.responsive.size(104),
+        height: theme.responsive.height(100),
         borderRadius: theme.borderRadius.sm,
         overflow: 'hidden',
     },

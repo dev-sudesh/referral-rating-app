@@ -147,51 +147,43 @@ const ReferralsScreen = ({ navigation }) => {
     };
 
     const renderReferralCard = (referral) => {
-        // date format 03/25/2021
-        let validUntil = new Date(referral.validUntil)
-        let validUntilDate = validUntil.getDate()
-        let validUntilMonth = validUntil.getMonth()
-        let validUntilYear = validUntil.getFullYear()
-        let validUntilDateString = `${validUntilMonth}/${validUntilDate}/${validUntilYear}`
-
         return (
-            <>
-                <TouchableOpacity
-                    key={referral.id}
-                    style={[styles.referralCard, { filter: referral.status == 'past' ? 'grayscale(100%) brightness(120%) contrast(70%)' : 'none' }]}
-                    activeOpacity={1}
-                    onPress={() => {
-                        setSelectedPlace(referral);
-                        setShowPlaceFullCard(true);
-                    }}
-
-                >
-                    <View style={styles.referralCardHeader}>
-                        <View style={styles.referralCardImage}>
-                            <AppImage
-                                source={referral.imageFull}
-                                placeholderSource={ImageAsset.placesPlaceholderImage}
-                                style={{
-                                    width: '100%',
-                                    height: '100%',
-                                    borderRadius: theme.borderRadius.sm,
-                                }}
-                            />
-                        </View>
-                        <View style={styles.referralCardInfo}>
+            <TouchableOpacity
+                key={referral.id}
+                style={styles.referralCard}
+                activeOpacity={1}
+                onPress={() => {
+                    setSelectedPlace(referral);
+                    setShowPlaceFullCard(true);
+                }}
+            >
+                <View style={styles.referralCardInner}>
+                    <View style={styles.referralCardImage}>
+                        <AppImage
+                            source={referral.imageFull}
+                            placeholderSource={ImageAsset.placesPlaceholderImage}
+                            style={{
+                                width: '100%',
+                                height: '100%',
+                                borderRadius: theme.borderRadius.sm,
+                            }}
+                        />
+                    </View>
+                    <View style={styles.referralCardInfo}>
+                        {referral.tags && Array.isArray(referral.tags) && referral.tags.length > 0 && (
                             <View style={styles.referralCardTags}>
-                                {referral.tags && Array.isArray(referral.tags) && referral.tags.map((tag, index) => (
+                                {referral.tags.map((tag, index) => (
                                     <View key={tag.id} style={[styles.referralCardTag, { backgroundColor: styles[tag.style].backgroundColor }]}>
                                         <Text style={[styles.referralCardTagText, { color: styles[tag.style].color }]}>{tag.title}</Text>
                                     </View>
                                 ))}
                             </View>
-                            <Text numberOfLines={1} ellipsizeMode="tail" style={styles.referralCardTitle}>{referral.name}</Text>
-                            <Text numberOfLines={1} ellipsizeMode="tail" style={styles.referralCardValidText}>{referral.address}</Text>
-                        </View>
+                        )}
+                        <Text numberOfLines={2} ellipsizeMode="tail" style={styles.referralCardTitle}>{referral.name}</Text>
+                        <Text numberOfLines={3} ellipsizeMode="tail" style={styles.referralCardCategory}>{referral.address}</Text>
                     </View>
-                </TouchableOpacity>
-            </>
+                </View>
+            </TouchableOpacity>
         )
     };
 
@@ -331,48 +323,46 @@ const styles = StyleSheet.create({
         marginBottom: theme.spacing.xl,
     },
     referralCard: {
-        backgroundColor: theme.colors.background.primary,
-        borderRadius: theme.borderRadius.md,
-        padding: theme.spacing.sm,
-        marginBottom: theme.spacing.md,
-        marginHorizontal: theme.spacing.lg,
-        borderWidth: 1,
-        borderColor: theme.colors.border.light,
-        ...theme.shadows.custom({
-            color: theme.colors.neutral[500],
-            offset: { width: 0, height: 1 },
-            opacity: 0.05,
-            radius: 0.4,
-        }),
+        width: theme.responsive.screen().width,
+        paddingHorizontal: theme.spacing.lg,
     },
-    referralCardHeader: {
+    referralCardInner: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'flex-start',
         gap: theme.spacing.md,
+        minHeight: theme.responsive.height(100),
+        backgroundColor: theme.colors.background.primary,
+        borderRadius: theme.borderRadius.md,
+        padding: theme.spacing.sm,
+        marginBottom: theme.spacing.md,
+        borderWidth: 1,
+        borderColor: theme.colors.border.light,
+        ...theme.shadows.medium,
     },
     referralCardImage: {
-        width: theme.responsive.size(70),
-        height: theme.responsive.size(70),
+        width: theme.responsive.size(96),
+        height: theme.responsive.height(100),
         borderRadius: theme.borderRadius.sm,
         overflow: 'hidden',
     },
     referralCardInfo: {
         flex: 1,
+        alignSelf: 'stretch',
         justifyContent: 'center',
         alignItems: 'flex-start',
-        gap: theme.spacing.sm,
+        gap: theme.spacing.xxs,
     },
     referralCardTitle: {
-        ...theme.typography.bodySmall,
-        fontWeight: theme.fontWeight.bold,
+        ...theme.typography.bodyMedium,
         color: theme.colors.text.primary,
+        fontWeight: '700',
     },
-    referralCardValidText: {
-        ...theme.typography.custom({
-            fontSize: theme.fontSize.caption.medium,
-        }),
+    referralCardCategory: {
+        ...theme.typography.bodySmall,
         color: theme.colors.text.secondary,
+        textTransform: 'capitalize',
+        fontWeight: '600',
     },
     referralCardTags: {
         flexDirection: 'row',
@@ -391,7 +381,7 @@ const styles = StyleSheet.create({
         }),
     },
     referralCardTagText: {
-        fontSize: theme.responsive.size(12),
+        fontSize: theme.responsive.fontSize(12),
         color: theme.colors.text.white,
         fontWeight: theme.fontWeight.semiBold,
         textTransform: 'capitalize',
