@@ -225,15 +225,15 @@ const ReferralsScreen = ({ navigation }) => {
     React.useEffect(() => {
         // get 2 filters from all categories of Constants.filters
         const filtersData = placeCategories?.map(category => {
-            return category.options.slice(0, 16).map(option => {
+            return category.options.map(option => {
                 return {
                     id: option.id,
                     label: option.label,
                     selected: false
                 }
             })
-        }).flat().slice(0, 16)
-        setFilters([{ id: 'all', label: 'All', selected: false }, ...filtersData, { id: 'more', label: 'More Filters', selected: false }])
+        }).flat()
+        setFilters([{ id: 'all', label: 'All', selected: false }, ...filtersData])
 
     }, [])
 
