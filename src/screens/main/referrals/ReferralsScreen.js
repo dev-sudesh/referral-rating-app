@@ -38,12 +38,15 @@ const ReferralsScreen = ({ navigation }) => {
     const [otherSelectedFilters, setOtherSelectedFilters] = useState([]);
     const [isInitialLoading, setIsInitialLoading] = useState(true);
     const { referredPlaces } = ReferralController();
-    const { places, setSelectedPlace, setShowPlaceFullCard } = MapsController();
+    const { places, setSelectedPlace, setShowPlaceFullCard, showPlaceFullCard } = MapsController();
     const { isSearchFilterVisible, setIsSearchFilterVisible, placeCategories } = SearchFilterController();
 
     // Show status bar when screen is focused
     useFocusEffect(
         React.useCallback(() => {
+            if (showPlaceFullCard) {
+                return;
+            }
             setIsInitialLoading(true);
             profileMutation.mutateAsync().finally(() => {
                 setIsInitialLoading(false);
@@ -52,7 +55,7 @@ const ReferralsScreen = ({ navigation }) => {
             setShowPlaceFullCard(false);
             getReferredPlaces()
             return () => { };
-        }, [])
+        }, [showPlaceFullCard])
     );
 
     const handleFilterCallback = (filters) => {
@@ -153,7 +156,11 @@ const ReferralsScreen = ({ navigation }) => {
                 style={styles.referralCard}
                 activeOpacity={1}
                 onPress={() => {
-                    setSelectedPlace(referral);
+                    const updatedReferral = {
+                        ...referral,
+                        isReferred: true,
+                    }
+                    setSelectedPlace(updatedReferral);
                     setShowPlaceFullCard(true);
                 }}
             >
@@ -161,7 +168,7 @@ const ReferralsScreen = ({ navigation }) => {
                     <View style={styles.referralCardImage}>
                         <AppImage
                             source={referral.imageFull}
-                            placeholderSource={ImageAsset.placesPlaceholderImage}
+                            placeholderSource={ImageAsset.logos.logoIcon}
                             style={{
                                 width: '100%',
                                 height: '100%',

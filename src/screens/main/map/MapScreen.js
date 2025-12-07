@@ -52,18 +52,42 @@ const customMapStyle = [
         stylers: [{ visibility: 'off' }]
     }
 ];
+
+// Helper function to ensure location coordinates are numbers
+const normalizeLocation = (location) => {
+    if (!location) return null;
+    return {
+        latitude: typeof location.latitude === 'string' ? parseFloat(location.latitude) : Number(location.latitude),
+        longitude: typeof location.longitude === 'string' ? parseFloat(location.longitude) : Number(location.longitude),
+        latitudeDelta: typeof location.latitudeDelta === 'string' ? parseFloat(location.latitudeDelta) : Number(location.latitudeDelta || 0.01),
+        longitudeDelta: typeof location.longitudeDelta === 'string' ? parseFloat(location.longitudeDelta) : Number(location.longitudeDelta || 0.01),
+    };
+};
+
 const MapScreen = ({ navigation }) => {
     const profileMutation = ApiController.profile();
     const referralsMutation = ApiController.referrals();
     const referPlaceMutation = ApiController.referPlace();
     const nearbyPlacesMutation = ApiController.nearbyPlaces();
     const [selectedFilter, setSelectedFilter] = useState('all');
-    const [region, setRegion] = useState(global.userLastLocation || {
-        latitude: 37.78825,
-        longitude: -122.4324,
-        latitudeDelta: 0.03,
-        longitudeDelta: 0.03,
-    });
+    const getInitialRegion = () => {
+        if (global.userLastLocation) {
+            // Ensure coordinates are numbers
+            return {
+                latitude: typeof global.userLastLocation.latitude === 'string' ? parseFloat(global.userLastLocation.latitude) : Number(global.userLastLocation.latitude),
+                longitude: typeof global.userLastLocation.longitude === 'string' ? parseFloat(global.userLastLocation.longitude) : Number(global.userLastLocation.longitude),
+                latitudeDelta: typeof global.userLastLocation.latitudeDelta === 'string' ? parseFloat(global.userLastLocation.latitudeDelta) : Number(global.userLastLocation.latitudeDelta || 0.03),
+                longitudeDelta: typeof global.userLastLocation.longitudeDelta === 'string' ? parseFloat(global.userLastLocation.longitudeDelta) : Number(global.userLastLocation.longitudeDelta || 0.03),
+            };
+        }
+        return {
+            latitude: 37.78825,
+            longitude: -122.4324,
+            latitudeDelta: 0.03,
+            longitudeDelta: 0.03,
+        };
+    };
+    const [region, setRegion] = useState(getInitialRegion());
     const [filteredPlaces, setFilteredPlaces] = useState([]);
     const mapRef = useRef(null);
     const setIsSearchFilterVisible = SearchFilterController.getState().setIsSearchFilterVisible;
@@ -133,19 +157,26 @@ const MapScreen = ({ navigation }) => {
             return;
         }
 
+        // Ensure all coordinates are numbers (may be strings from AsyncStorage)
+        const normalizedRegion = normalizeLocation(centerLocation);
+        if (!normalizedRegion) {
+            console.warn('Invalid centerLocation, cannot normalize');
+            return;
+        }
+
         try {
-            mapRef.current.animateToRegion(centerLocation, 1000);
+            mapRef.current.animateToRegion(normalizedRegion, 1000);
         } catch (error) {
             console.error('Error animating map region:', error);
             // Fallback to setRegion if animation fails
             try {
-                mapRef.current.setRegion(centerLocation);
+                mapRef.current.setRegion(normalizedRegion);
             } catch (fallbackError) {
                 console.error('Fallback setRegion also failed:', fallbackError);
             }
         } finally {
             timeoutRef.current = setTimeout(() => {
-                setRegion(centerLocation);
+                setRegion(normalizedRegion);
             }, 1000);
         }
     }, [centerLocation, isMapReady, isScreenFocused]);
@@ -193,12 +224,12 @@ const MapScreen = ({ navigation }) => {
         setSelectedPlace(updatedPlace);
         setShowPlaceBigCard(true);
         // When showing a specific place card, zoom to that place with fixed delta
-        const location = {
+        const location = normalizeLocation({
             latitude: updatedPlace.latitude,
             longitude: updatedPlace.longitude,
             latitudeDelta: 0.03,
             longitudeDelta: 0.03,
-        };
+        });
         setCenterLocation(location);
         if (scroll && placesListRef.current) {
             // Find the index of the place in filteredPlaces array
@@ -245,12 +276,12 @@ const MapScreen = ({ navigation }) => {
     React.useEffect(() => {
         if (userLocation && places.length === 0) {
             updateUserLastLocation(userLocation);
-            const location = {
+            const location = normalizeLocation({
                 latitude: userLocation.latitude,
                 longitude: userLocation.longitude,
                 latitudeDelta: 0.03,
                 longitudeDelta: 0.03,
-            };
+            });
             setCenterLocation(location);
         }
     }, [userLocation, places.length]);
@@ -261,7 +292,8 @@ const MapScreen = ({ navigation }) => {
             shouldFetchPlacesRef.current = false;
             nearbyPlacesMutation.mutateAsync({
                 latitude: userLocation.latitude,
-                longitude: userLocation.longitude
+                longitude: userLocation.longitude,
+                radius: 10000
             });
         }
     }, [userLocation]);
@@ -272,7 +304,8 @@ const MapScreen = ({ navigation }) => {
             const calculatedRegion = MapUtils.getRegionForPlaces(filteredPlaces);
             if (calculatedRegion) {
                 // Only update if the region is significantly different to avoid unnecessary re-renders
-                setCenterLocation(calculatedRegion);
+                const normalizedRegion = normalizeLocation(calculatedRegion);
+                setCenterLocation(normalizedRegion);
             }
         }
     }, [filteredPlaces, selectedPlace, isScreenFocused, isMapReady]);
@@ -290,12 +323,12 @@ const MapScreen = ({ navigation }) => {
                 const storedLocation = await AsyncStoreUtils.getItem(AsyncStoreUtils.Keys.USER_LAST_LOCATION);
                 if (storedLocation && storedLocation.latitude && storedLocation.longitude) {
                     MapsController.getState().setUserLocation(storedLocation);
-                    const location = {
+                    const location = normalizeLocation({
                         latitude: storedLocation.latitude,
                         longitude: storedLocation.longitude,
                         latitudeDelta: 0.03,
                         longitudeDelta: 0.03,
-                    };
+                    });
                     setCenterLocation(location);
                 }
             }

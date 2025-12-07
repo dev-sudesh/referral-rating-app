@@ -69,7 +69,7 @@ const PlaceSelectedCard = () => {
                     <View style={styles.placeCardImageFull}>
                         <AppImage
                             source={selectedPlace?.imageFull}
-                            placeholderSource={ImageAsset.placesPlaceholderImage}
+                            placeholderSource={ImageAsset.logos.logoIcon}
                             resizeMode='cover'
                             style={{
                                 width: '100%',

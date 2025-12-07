@@ -22,6 +22,7 @@ API.url = {
     user: {
         profile: () => `/api/anon/profile`,
         referrals: ({ latitude, longitude, radius = 5000 }) => `/api/user/referrals?lat=${latitude}&lng=${longitude}&radius=${radius}`,
+        saveLocation: () => `/api/user/location`,
     }
 }
 

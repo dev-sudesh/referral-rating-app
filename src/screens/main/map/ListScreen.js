@@ -24,8 +24,8 @@ const ListScreen = () => {
     const [region, setRegion] = useState({
         latitude: 37.78825,
         longitude: -122.4324,
-        latitudeDelta: 0.001,
-        longitudeDelta: 0.001,
+        latitudeDelta: 0.03,
+        longitudeDelta: 0.03,
     });
     const [filteredPlaces, setFilteredPlaces] = useState([]);
     const [userLocation, setUserLocation] = useState(null);
@@ -99,8 +99,8 @@ const ListScreen = () => {
             const location = {
                 latitude: userLocation.latitude,
                 longitude: userLocation.longitude,
-                latitudeDelta: 0.001,
-                longitudeDelta: 0.001,
+                latitudeDelta: 0.03,
+                longitudeDelta: 0.03,
             };
             setCenterLocation(location);
         }

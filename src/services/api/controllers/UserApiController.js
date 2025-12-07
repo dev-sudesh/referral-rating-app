@@ -2,6 +2,30 @@ import Api from '../Api'
 import { useMutation } from '@tanstack/react-query'
 import ReferralController from '../../../controllers/referrals/ReferralController'
 
+// Standalone function that can be called from anywhere (components or utilities)
+const saveUserLocation = async ({ latitude, longitude }) => {
+    try {
+        const response = await Api.post({
+            url: Api.url.user.saveLocation(),
+            data: {
+                lat: latitude,
+                lng: longitude,
+            },
+            headerConfig: {
+                authType: Api.AuthType.auth
+            }
+        })
+        if (Api.isSuccess(response)) {
+            return response
+        } else {
+            return null
+        }
+    } catch (error) {
+        console.log('error', error)
+        throw error
+    }
+}
+
 const UserApiController = {
     profile: () => {
         return useMutation({
@@ -25,7 +49,13 @@ const UserApiController = {
             }
         })
     },
-
+    saveLocation: () => {
+        return useMutation({
+            mutationFn: saveUserLocation
+        })
+    },
+    // Expose the standalone function for use in utilities
+    saveLocationDirect: saveUserLocation,
 }
 
 const processedProfileData = (response) => {
@@ -39,6 +69,7 @@ const processedProfileData = (response) => {
         category: referral.primary_type,
     }))
     ReferralController.getState().setReferredPlaces(referrals)
+    const settings = response.settings || {}
     return response
 }
 

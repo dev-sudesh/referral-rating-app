@@ -7,6 +7,7 @@ import MapsController from '../controllers/maps/MapsController';
 import ToastUtils from './ToastUtils';
 import AsyncStoreUtils from './AsyncStoreUtils';
 import DeviceInfo from 'react-native-device-info';
+import UserApiController from '../services/api/controllers/UserApiController';
 import {
     isLocationEnabled as checkLocationEnabledNative,
     promptForEnableLocationIfNeeded
@@ -332,7 +333,7 @@ const LocationUtils = {
     },
     getCurrentLocation: async () => {
         Geolocation.getCurrentPosition(
-            (position) => {
+            async (position) => {
                 const { latitude, longitude } = position.coords;
                 const newUserLocation = { latitude, longitude };
 
@@ -347,6 +348,15 @@ const LocationUtils = {
                     longitudeDelta: 0.001,
                 };
                 MapsController.getState().setCenterLocation(newRegion);
+
+                // Save user location to API
+                try {
+                    await UserApiController.saveLocationDirect({ latitude, longitude });
+                } catch (error) {
+                    // Silently fail - location saving to API is not critical
+                    // The location is already saved to AsyncStorage
+                    console.log('Failed to save location to API:', error);
+                }
             },
             (error) => {
                 MapsController.getState().setUserLocation(null);

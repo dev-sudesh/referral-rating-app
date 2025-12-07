@@ -6,6 +6,7 @@ const ImageAsset = {
     logos: {
         logoFull: require('../../assets/images/logos/logo-full.png'),
         logoSmall: require('../../assets/images/logos/logo-small.png'),
+        logoIcon: require('../../assets/images/logos/logo-icon.png'),
     },
     intro: {
         intro1: Intro1,

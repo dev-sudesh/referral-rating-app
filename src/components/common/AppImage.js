@@ -39,6 +39,10 @@ const AppImage = ({
     const [isLoading, setIsLoading] = useState(true);
     const [hasError, setHasError] = useState(false);
     const [imageSource, setImageSource] = useState(null);
+    const [imageResizeMode, setImageResizeMode] = useState(resizeMode || 'cover');
+    useEffect(() => {
+        setImageResizeMode(resizeMode || 'cover');
+    }, [resizeMode]);
     const [isCaching, setIsCaching] = useState(false);
     const [isCacheReady, setIsCacheReady] = useState(false);
 
@@ -214,6 +218,7 @@ const AppImage = ({
         // Try fallback source if available
         if (placeholderSource && imageSource !== placeholderSource) {
             setImageSource(placeholderSource);
+            setImageResizeMode('center');
             setIsLoading(true);
             setHasError(false);
         } else {
@@ -243,11 +248,12 @@ const AppImage = ({
         if (!imageSource) {
             // Show placeholder if no image source is available
             if (placeholderSource) {
+
                 return (
                     <Image
                         source={placeholderSource}
                         style={[styles.image, imageStyle]}
-                        resizeMode={resizeMode}
+                        resizeMode={'center'}
                         fadeDuration={fadeDurationOptimized}
                         {...rest}
                     />
@@ -277,7 +283,7 @@ const AppImage = ({
             <FastImage
                 source={imageSource}
                 style={[styles.image, imageStyle]}
-                resizeMode={resizeMode}
+                resizeMode={imageResizeMode}
                 fadeDuration={fadeDurationOptimized}
                 defaultSource={placeholderSource}
                 onLoad={handleLoad}

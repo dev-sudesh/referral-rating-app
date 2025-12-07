@@ -145,7 +145,7 @@ const PlaceFullCard = () => {
                 >
                     <AppImage
                         source={fullSelectedPlace?.imageFull}
-                        placeholderSource={ImageAsset.placesPlaceholderImage}
+                        placeholderSource={ImageAsset.logos.logoIcon}
                         style={{
                             width: '100%',
                             height: '100%',

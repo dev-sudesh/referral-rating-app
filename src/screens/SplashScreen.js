@@ -25,10 +25,11 @@ const SplashScreen = () => {
     const userLocation = MapsController(state => state.userLocation);
 
     const anonymousTokenMutation = ApiController.anonymousToken();
+    const profileMutation = ApiController.profile();
     const nearbyPlacesMutation = ApiController.nearbyPlaces();
-    useEffect(() => {
-        anonymousTokenMutation.mutateAsync();
-    }, []);
+    const getAnonymousToken = async () => {
+        return await anonymousTokenMutation.mutateAsync();
+    }
 
     // Initialize app services
     const { firebaseReady, error, isInitializing } = useAppInitialization();
@@ -62,33 +63,60 @@ const SplashScreen = () => {
         }
     }
 
+    const getLastSavedLocation = async () => {
+        const profileData = await profileMutation.mutateAsync();
+        if (profileData?.settings?.last_lat && profileData?.settings?.last_lng) {
+            updateUserLocations({ lat: profileData.settings.last_lat, lng: profileData.settings.last_lng });
+            return true;
+        }
+        return false;
+    }
+
+    const updateUserLocations = ({ lat, lng }) => {
+        // Ensure coordinates are numbers
+        const latitude = typeof lat === 'string' ? parseFloat(lat) : Number(lat);
+        const longitude = typeof lng === 'string' ? parseFloat(lng) : Number(lng);
+
+        const location = {
+            latitude,
+            longitude,
+        };
+        MapsController.getState().setUserLocation(location);
+
+        // Set center location for map centering
+        const centerRegion = {
+            latitude,
+            longitude,
+            latitudeDelta: 0.03,
+            longitudeDelta: 0.03,
+        };
+        MapsController.getState().setCenterLocation(centerRegion);
+
+        global.userLastLocation = {
+            latitude,
+            longitude,
+            latitudeDelta: 0.03,
+            longitudeDelta: 0.03,
+        };
+    }
+
     const getLastLocation = async () => {
+        const anonymousToken = await getAnonymousToken();
+        if (anonymousToken?.token) {
+            const hasLastSavedLocation = await getLastSavedLocation();
+            if (hasLastSavedLocation) {
+                return;
+            }
+        }
         // Check if location exists in AsyncStorage first
         const storedLocation = await AsyncStoreUtils.getItem(AsyncStoreUtils.Keys.USER_LAST_LOCATION);
 
         if (storedLocation && storedLocation.latitude && storedLocation.longitude) {
             // Use stored location - no need to fetch
-            const location = {
-                latitude: storedLocation.latitude,
-                longitude: storedLocation.longitude,
-            };
-            MapsController.getState().setUserLocation(location);
-
-            // Set center location for map centering
-            const centerRegion = {
-                latitude: storedLocation.latitude,
-                longitude: storedLocation.longitude,
-                latitudeDelta: 0.01,
-                longitudeDelta: 0.01,
-            };
-            MapsController.getState().setCenterLocation(centerRegion);
-
-            global.userLastLocation = {
-                latitude: storedLocation.latitude,
-                longitude: storedLocation.longitude,
-                latitudeDelta: 0.01,
-                longitudeDelta: 0.01,
-            };
+            // Ensure coordinates are numbers (AsyncStorage may return strings)
+            const lat = typeof storedLocation.latitude === 'string' ? parseFloat(storedLocation.latitude) : Number(storedLocation.latitude);
+            const lng = typeof storedLocation.longitude === 'string' ? parseFloat(storedLocation.longitude) : Number(storedLocation.longitude);
+            updateUserLocations({ lat, lng });
         } else {
             // Only fetch if not in storage
             LocationUtils.getCurrentLocation();
@@ -112,8 +140,8 @@ const SplashScreen = () => {
             global.userLastLocation = {
                 latitude: userLocation.latitude,
                 longitude: userLocation.longitude,
-                latitudeDelta: 0.001,
-                longitudeDelta: 0.001,
+                latitudeDelta: 0.03,
+                longitudeDelta: 0.03,
             }
             getStarted();
         }
