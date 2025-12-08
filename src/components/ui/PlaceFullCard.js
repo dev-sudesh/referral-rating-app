@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, Text, TouchableOpacity, View, Alert, Dimensions } from 'react-native'
+import { Pressable, StyleSheet, Text, TouchableOpacity, View, Alert, Dimensions, Linking } from 'react-native'
 import React, { useState, useRef } from 'react'
 import MapsController from '../../controllers/maps/MapsController'
 import AppImage from '../common/AppImage';
@@ -83,6 +83,14 @@ const PlaceFullCard = () => {
             return () => clearTimeout(timer);
         }
     }, [showConfetti]);
+
+    // Cleanup on unmount to prevent state updates after component unmounts
+    React.useEffect(() => {
+        return () => {
+            // Reset confetti state when component unmounts
+            setShowConfetti(false);
+        };
+    }, []);
 
     const sharePlace = async () => {
         try {
@@ -219,17 +227,19 @@ const PlaceFullCard = () => {
                             </Text>
                             {fullSelectedPlace?.website && <View style={styles.selectedPlaceFullCardExtraInfoContainer}>
                                 <IconAsset.websiteIcon
-                                    width={18}
-                                    height={18}
+                                    width={20}
+                                    height={22}
                                 />
-                                <Text style={styles.selectedPlaceFullCardExtraInfoText}>
-                                    {fullSelectedPlace?.website}
-                                </Text>
+                                <Pressable onPress={() => Linking.openURL(fullSelectedPlace?.website)}>
+                                    <Text style={[styles.selectedPlaceFullCardExtraInfoTextLink,]}>
+                                        {fullSelectedPlace?.website}
+                                    </Text>
+                                </Pressable>
                             </View>}
                             {fullSelectedPlace?.openTime && <View style={styles.selectedPlaceFullCardExtraInfoContainer}>
                                 <IconAsset.clockIcon
-                                    width={18}
-                                    height={18}
+                                    width={20}
+                                    height={22}
                                 />
                                 <View style={styles.selectedPlaceFullCardExtraInfoOpenContainer}>
                                     <Text style={[styles.selectedPlaceFullCardExtraInfoOpenText, styles.selectedPlaceFullCardExtraInfoOpenTextOpen]}>Open</Text>
@@ -347,6 +357,12 @@ const styles = StyleSheet.create({
     selectedPlaceFullCardExtraInfoOpenSeparator: {
         ...theme.typography.bodySmall,
         fontWeight: '800',
+    },
+    selectedPlaceFullCardExtraInfoTextLink: {
+        ...theme.typography.bodySmall,
+        color: theme.colors.text.tagStyle2,
+        fontWeight: '700',
+        textDecorationLine: 'underline',
     },
     selectedPlaceFullCardExtraInfoText: {
         ...theme.typography.bodySmall,

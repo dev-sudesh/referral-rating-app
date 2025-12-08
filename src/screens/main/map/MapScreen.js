@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import {
     View,
     Text,
@@ -99,8 +99,12 @@ const MapScreen = ({ navigation }) => {
     const shouldFetchPlacesRef = useRef(false);
 
     const placeReferredStatus = ReferralController(state => state.placeReferredStatus);
+    const setPlaceReferredStatus = ReferralController(state => state.setPlaceReferredStatus);
 
     const timeoutRef = useRef(null);
+    const isProcessingRef = useRef(false);
+    const lastProcessedStatusRef = useRef(false);
+    const lastProcessedPlaceIdRef = useRef(null);
 
     // Hide status bar when screen is focused
     useFocusEffect(
@@ -181,29 +185,61 @@ const MapScreen = ({ navigation }) => {
         }
     }, [centerLocation, isMapReady, isScreenFocused]);
 
-    const referPlace = async (place) => {
-        referPlaceMutation.mutateAsync({ place: place, placeId: place.id, action: place.isReferred ? 'unrefer' : 'refer' });
-        if (place.isReferred) {
-            // unrefer place
-            const updatedPlaces = places.map(p => p.id === place.id ? { ...p, isReferred: false } : p);
-            setPlaces(updatedPlaces);
-            setSelectedPlace(prev => prev.id === place.id ? { ...prev, isReferred: false } : prev);
+    const referPlace = useCallback(async (place) => {
+        if (!place || isProcessingRef.current) {
             return;
         }
-        // refer place
-        const updatedPlaces = places.map(p => p.id === place.id ? { ...p, isReferred: true } : p);
-        setPlaces(updatedPlaces);
-        setSelectedPlace(prev => prev.id === place.id ? { ...prev, isReferred: true } : prev);
-    };
+
+        isProcessingRef.current = true;
+
+        try {
+            referPlaceMutation.mutateAsync({ place: place, placeId: place.id, action: place.isReferred ? 'unrefer' : 'refer' });
+            if (place.isReferred) {
+                // unrefer place
+                const updatedPlaces = places.map(p => p.id === place.id ? { ...p, isReferred: false } : p);
+                setPlaces(updatedPlaces);
+                setSelectedPlace(prev => prev?.id === place.id ? { ...prev, isReferred: false } : prev);
+            } else {
+                // refer place
+                const updatedPlaces = places.map(p => p.id === place.id ? { ...p, isReferred: true } : p);
+                setPlaces(updatedPlaces);
+                setSelectedPlace(prev => prev?.id === place.id ? { ...prev, isReferred: true } : prev);
+            }
+        } finally {
+            // Reset the flag after a short delay to allow state updates to complete
+            setTimeout(() => {
+                isProcessingRef.current = false;
+            }, 100);
+        }
+    }, [places, setPlaces, setSelectedPlace, referPlaceMutation]);
 
     React.useEffect(() => {
         if (timeoutRef.current) {
             clearTimeout(timeoutRef.current);
         }
         if (!isScreenFocused) {
-            setSelectedPlace(null)
+            setSelectedPlace(null);
+            // Reset processing flag when screen loses focus to prevent stuck state
+            isProcessingRef.current = false;
+            lastProcessedStatusRef.current = false;
+            lastProcessedPlaceIdRef.current = null;
         }
-    }, [isScreenFocused]);
+    }, [isScreenFocused, setSelectedPlace]);
+
+    // Cleanup on unmount
+    React.useEffect(() => {
+        return () => {
+            if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current);
+            }
+            if (animationTimeoutRef.current) {
+                clearTimeout(animationTimeoutRef.current);
+            }
+            isProcessingRef.current = false;
+            lastProcessedStatusRef.current = false;
+            lastProcessedPlaceIdRef.current = null;
+        };
+    }, []);
 
     const showPlaceCard = ({ place, scroll }) => {
         // Set flag to prevent map's onPress from deselecting when marker is pressed
@@ -311,10 +347,36 @@ const MapScreen = ({ navigation }) => {
     }, [filteredPlaces, selectedPlace, isScreenFocused, isMapReady]);
 
     React.useEffect(() => {
-        if (placeReferredStatus && selectedPlace) {
-            referPlace(selectedPlace);
+        // Reset processed flags if selectedPlace changed to a different place
+        if (selectedPlace && lastProcessedPlaceIdRef.current !== null && lastProcessedPlaceIdRef.current !== selectedPlace.id) {
+            lastProcessedStatusRef.current = false;
+            lastProcessedPlaceIdRef.current = null;
         }
-    }, [placeReferredStatus, selectedPlace]);
+
+        // Only process if:
+        // 1. placeReferredStatus is true
+        // 2. We have a selectedPlace
+        // 3. We're not already processing
+        // 4. We haven't already processed this status for this place
+        const shouldProcess = placeReferredStatus &&
+            selectedPlace &&
+            !isProcessingRef.current &&
+            (lastProcessedPlaceIdRef.current !== selectedPlace.id || !lastProcessedStatusRef.current);
+
+        if (shouldProcess) {
+            // Mark as processed immediately to prevent re-processing
+            lastProcessedStatusRef.current = true;
+            lastProcessedPlaceIdRef.current = selectedPlace.id;
+            // Reset status BEFORE calling referPlace to prevent re-triggering
+            setPlaceReferredStatus(false);
+            // Call referPlace
+            referPlace(selectedPlace);
+        } else if (!placeReferredStatus) {
+            // Reset the processed flags when status goes back to false
+            lastProcessedStatusRef.current = false;
+            lastProcessedPlaceIdRef.current = null;
+        }
+    }, [placeReferredStatus, selectedPlace, referPlace, setPlaceReferredStatus]);
 
     // Load stored location from AsyncStorage on mount if not already set
     React.useEffect(() => {
