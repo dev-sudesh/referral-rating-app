@@ -659,6 +659,7 @@ const styles = StyleSheet.create({
         backgroundColor: theme.colors.background.primary,
         justifyContent: 'center',
         alignItems: 'center',
+        ...theme.shadows.large,
     },
     locationButtonText: {
         ...theme.typography.captionMedium,
