@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
         gap: theme.spacing.xxs,
     },
     placeName: {
-        ...theme.typography.bodyXSmall,
+        ...theme.typography.bodyMedium,
         color: theme.colors.text.primary,
         fontWeight: '700',
     },

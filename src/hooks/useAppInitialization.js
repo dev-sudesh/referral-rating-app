@@ -29,7 +29,7 @@ export const useAppInitialization = () => {
             MapUtils.init();
 
             // Handle results
-            const hasFirebaseError = firebaseResult.status === 'rejected';
+            const hasFirebaseError = firebaseResult?.status === 'rejected';
 
             if (hasFirebaseError) {
                 console.error('Firebase initialization failed:', firebaseResult.reason);
