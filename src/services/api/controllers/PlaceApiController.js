@@ -140,6 +140,7 @@ const processedNearbyPlaces = (response, referralsResponse, userLocation) => {
         const coord2 = { latitude: place.location.Lat, longitude: place.location.Lng }
         const distance = calculateDistance(coord1, coord2)
         const image = place.photo_uris?.length > 0 ? place.photo_uris[0] : null
+        const imageList = place.photo_uris?.length > 0 ? place.photo_uris : null
         const isReferred = referralsResponse?.results?.find(referral => referral.id === place.id) ? true : false
         return {
             id: place.id,
@@ -151,6 +152,7 @@ const processedNearbyPlaces = (response, referralsResponse, userLocation) => {
             category: place.primary_type,
             image,
             imageFull: image,
+            imageList: imageList,
             isReferred: isReferred,
             openTime: place.weekday_descriptions?.join('\n') || '',
             website: place.website_uri,
@@ -172,6 +174,7 @@ const processedPlaceDetails = (response, place) => {
         const coord2 = { latitude: resData.location.Lat, longitude: resData.location.Lng }
         const distance = calculateDistance(coord1, coord2)
         const image = resData.photo_uris?.length > 0 ? resData.photo_uris[0] : null
+        const imageList = resData.photo_uris?.length > 0 ? resData.photo_uris : null
         const isReferred = place.isReferred
         placeDetails = {
             id: resData.id,
@@ -183,6 +186,7 @@ const processedPlaceDetails = (response, place) => {
             category: resData.primary_type,
             image,
             imageFull: image,
+            imageList: imageList,
             isReferred: isReferred,
             openTime: resData.weekday_descriptions?.join('\n') || '',
             website: resData.website_uri,
@@ -202,6 +206,7 @@ const processedSearchPlaces = (response, referralsResponse, userLocation) => {
         const coord2 = { latitude: place.location.Lat, longitude: place.location.Lng }
         const distance = calculateDistance(coord1, coord2)
         const image = place.photo_uris?.length > 0 ? place.photo_uris[0] : null
+        const imageList = place.photo_uris?.length > 0 ? place.photo_uris : null
         const isReferred = referralsResponse?.results?.find(referral => referral.id === place.id) ? true : false
         return {
             id: place.id,
@@ -213,6 +218,7 @@ const processedSearchPlaces = (response, referralsResponse, userLocation) => {
             category: place.primary_type,
             image,
             imageFull: image,
+            imageList: imageList,
             isReferred: isReferred,
             openTime: place.weekday_descriptions?.join('\n') || '',
             website: place.website_uri,

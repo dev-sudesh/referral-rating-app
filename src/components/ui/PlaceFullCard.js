@@ -1,5 +1,5 @@
-import { Pressable, StyleSheet, Text, TouchableOpacity, View, Alert, Dimensions, Linking } from 'react-native'
-import React, { useState, useRef } from 'react'
+import { Pressable, StyleSheet, Text, TouchableOpacity, View, Alert, Dimensions, Linking, FlatList } from 'react-native'
+import React, { useState, useRef, useCallback } from 'react'
 import MapsController from '../../controllers/maps/MapsController'
 import AppImage from '../common/AppImage';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -29,6 +29,8 @@ const PlaceFullCard = () => {
     const { shareReferral } = useSharing();
     const imageRef = useRef(null);
     const [showConfetti, setShowConfetti] = useState(false);
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    const flatListRef = useRef(null);
 
     React.useEffect(() => {
         if (selectedPlace) {
@@ -72,6 +74,7 @@ const PlaceFullCard = () => {
 
     React.useEffect(() => {
         setFullSelectedPlace(selectedPlace);
+        setCurrentImageIndex(0);
     }, [selectedPlace]);
 
     React.useEffect(() => {
@@ -97,7 +100,8 @@ const PlaceFullCard = () => {
             let imagePath = null;
 
             // Take screenshot of the image if imageRef is available
-            if (imageRef.current && fullSelectedPlace?.imageFull) {
+            const currentImage = fullSelectedPlace?.imageList?.[currentImageIndex] || fullSelectedPlace?.imageFull;
+            if (imageRef.current && currentImage) {
                 try {
                     const uri = await imageRef.current.capture();
                     imagePath = uri;
@@ -110,7 +114,7 @@ const PlaceFullCard = () => {
                 title: fullSelectedPlace?.name,
                 description: fullSelectedPlace?.description,
                 address: fullSelectedPlace?.address,
-                imageUrl: fullSelectedPlace?.imageFull,
+                imageUrl: currentImage,
                 imagePath: imagePath,
                 latitude: fullSelectedPlace?.latitude,
                 longitude: fullSelectedPlace?.longitude
@@ -133,6 +137,51 @@ const PlaceFullCard = () => {
         }
     }
 
+    const handleViewableItemsChanged = useCallback(({ viewableItems }) => {
+        if (viewableItems.length > 0) {
+            setCurrentImageIndex(viewableItems[0].index || 0);
+        }
+    }, []);
+
+    const viewabilityConfig = {
+        itemVisiblePercentThreshold: 50,
+    };
+
+    const getImageList = useCallback(() => {
+        if (fullSelectedPlace?.imageList && fullSelectedPlace.imageList.length > 0) {
+            return fullSelectedPlace.imageList;
+        }
+        if (fullSelectedPlace?.imageFull) {
+            return [fullSelectedPlace.imageFull];
+        }
+        return [];
+    }, [fullSelectedPlace]);
+
+    const renderImageItem = useCallback(({ item, index }) => {
+        const isCurrentImage = index === currentImageIndex;
+        return (
+            <View style={{ width: screenWidth, height: '100%' }}>
+                <ViewShot
+                    ref={isCurrentImage ? imageRef : null}
+                    options={{
+                        format: 'jpg',
+                        quality: 0.8,
+                    }}
+                >
+                    <AppImage
+                        source={item}
+                        placeholderSource={ImageAsset.logos.logoIcon}
+                        style={{
+                            width: '100%',
+                            height: '100%',
+                            resizeMode: 'cover',
+                        }}
+                    />
+                </ViewShot>
+            </View>
+        );
+    }, [currentImageIndex]);
+
     if (!fullSelectedPlace) {
         return null;
     }
@@ -144,24 +193,39 @@ const PlaceFullCard = () => {
             }],
         }]}>
             <View style={styles.selectedPlaceFullCardBackground}>
-                <ViewShot
-                    ref={imageRef}
-                    options={{
-                        format: 'jpg',
-                        quality: 0.8,
-                    }}
-                >
-                    <AppImage
-                        source={fullSelectedPlace?.imageFull}
-                        placeholderSource={ImageAsset.logos.logoIcon}
-                        style={{
-                            width: '100%',
-                            height: '100%',
-                            borderRadius: theme.borderRadius.sm,
-                            resizeMode: 'stretch',
-                        }}
-                    />
-                </ViewShot>
+                <FlatList
+                    ref={flatListRef}
+                    data={getImageList()}
+                    renderItem={renderImageItem}
+                    keyExtractor={(item, index) => `image-${index}`}
+                    horizontal
+                    pagingEnabled
+                    showsHorizontalScrollIndicator={false}
+                    onViewableItemsChanged={handleViewableItemsChanged}
+                    viewabilityConfig={viewabilityConfig}
+                    getItemLayout={(data, index) => ({
+                        length: screenWidth,
+                        offset: screenWidth * index,
+                        index,
+                    })}
+                    initialNumToRender={1}
+                    maxToRenderPerBatch={2}
+                    windowSize={3}
+                    removeClippedSubviews={true}
+                />
+                {getImageList().length > 1 && (
+                    <View style={styles.paginationContainer}>
+                        {getImageList().map((_, index) => (
+                            <View
+                                key={`dot-${index}`}
+                                style={[
+                                    styles.paginationDot,
+                                    index === currentImageIndex && styles.paginationDotActive
+                                ]}
+                            />
+                        ))}
+                    </View>
+                )}
             </View>
             <SafeAreaView>
                 <View style={styles.selectedPlaceFullCardButtons}>
@@ -478,5 +542,25 @@ const styles = StyleSheet.create({
     tagStyle3: {
         backgroundColor: theme.colors.background.tagStyle3,
         color: theme.colors.text.tagStyle3,
+    },
+    paginationContainer: {
+        position: 'absolute',
+        bottom: theme.responsive.size(70),
+        left: 0,
+        right: 0,
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        gap: theme.spacing.xs,
+    },
+    paginationDot: {
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+        backgroundColor: theme.colors.background.white,
+        opacity: 0.5,
+    },
+    paginationDotActive: {
+        opacity: 1,
     },
 })
