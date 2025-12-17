@@ -23,7 +23,7 @@ const AuthApiController = {
                         return []
                     }
                 } catch (error) {
-                    console.log('error', error)
+                    console.warn('error', error)
                 }
             }
         })

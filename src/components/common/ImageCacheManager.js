@@ -89,7 +89,7 @@ const ImageCacheManager = () => {
                     text: 'Cache',
                     onPress: async () => {
                         const results = await batchCache(sampleUrls, 2, (progress, completed, total, currentUrl) => {
-                            console.log(`Progress: ${progress.toFixed(1)}% - ${completed}/${total} - ${currentUrl}`);
+                            console.info(`Progress: ${progress.toFixed(1)}% - ${completed}/${total} - ${currentUrl}`);
                         });
                         Alert.alert(
                             'Batch Cache Results',

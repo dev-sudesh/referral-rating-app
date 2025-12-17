@@ -178,7 +178,7 @@ API.instance.interceptors.response.use(
 
         const originalRequest = error.config;
         // check token passed in header
-        // console.log('originalRequest.headers', originalRequest.headers)
+        // console.info('originalRequest.headers', originalRequest.headers)
         // console.error("api calling error on url ", originalRequest.url, ' with status code ', error.response?.status)
         if (!originalRequest) {
             return Promise.reject(error);
@@ -313,9 +313,9 @@ const measureApiPerformance = async (apiCall) => {
         const duration = endTime - startTime;
 
         // // Log performance metrics
-        // console.log(`API Performance - URL: ${response?.url || 'unknown'}`);
-        // console.log(`Response Time: ${duration.toFixed(2)}ms`);
-        // console.log(`Status Code: ${response?.statusCode || 'unknown'}`);
+        // console.info(`API Performance - URL: ${response?.url || 'unknown'}`);
+        // console.info(`Response Time: ${duration.toFixed(2)}ms`);
+        // console.info(`Status Code: ${response?.statusCode || 'unknown'}`);
 
         return response;
     } catch (error) {
@@ -323,9 +323,9 @@ const measureApiPerformance = async (apiCall) => {
         const duration = endTime - startTime;
 
         // Log performance metrics for failed requests
-        // console.log(`API Performance - Failed Request`);
-        // console.log(`Response Time: ${duration.toFixed(2)}ms`);
-        // console.log(`Error: ${error?.message || 'unknown error'}`);
+        // console.info(`API Performance - Failed Request`);
+        // console.info(`Response Time: ${duration.toFixed(2)}ms`);
+        // console.info(`Error: ${error?.message || 'unknown error'}`);
 
         throw error;
     }

@@ -42,7 +42,7 @@ const ReferralApiController = {
                         return null
                     }
                 } catch (error) {
-                    console.log('error', error)
+                    console.warn('error', error)
                 }
             }
         })
@@ -64,7 +64,7 @@ const ReferralApiController = {
                         return null
                     }
                 } catch (error) {
-                    console.log('error', error)
+                    console.warn('error', error)
                 }
             }
         })
@@ -127,9 +127,60 @@ const processedReferPlaceData = (response) => {
 }
 
 const processedReferralsData = (response) => {
-    const referrals = response.referrals || []
-    ReferralController.getState().setReferredPlaces(referrals)
-    return referrals
+
+    const newReferrals = response.referrals || []
+    const currentReferredPlaces = ReferralController.getState().referredPlaces || [];
+
+    // Create a map of existing referrals by ID for quick lookup
+    const existingReferralsMap = new Map();
+    currentReferredPlaces.forEach(ref => {
+        const id = ref.id || ref.place_id;
+        if (id) {
+            existingReferralsMap.set(id, ref);
+        }
+    });
+
+    // Merge new referrals with existing ones (new referrals take precedence)
+    const mergedReferrals = [...currentReferredPlaces];
+    newReferrals.forEach(newRef => {
+        const id = newRef.id || newRef.place_id;
+        if (id) {
+            const existingIndex = mergedReferrals.findIndex(ref => (ref.id || ref.place_id) === id);
+            if (existingIndex >= 0) {
+                // Update existing referral with new data
+                mergedReferrals[existingIndex] = newRef;
+            } else {
+                // Add new referral
+                mergedReferrals.push(newRef);
+            }
+        }
+    });
+
+    // If API returns empty array but we have existing referrals, keep existing ones
+    // This prevents location-based queries from clearing all referrals
+    // Only use new referrals if they exist, otherwise keep merged (which includes existing)
+    let finalReferrals;
+    if (newReferrals.length === 0 && currentReferredPlaces.length > 0) {
+        console.warn('[ReferralApiController] WARNING: API returned empty referrals array, preserving existing referrals to prevent clearing:', {
+            existingCount: currentReferredPlaces.length,
+            existingIds: currentReferredPlaces.map(r => r.id || r.place_id || 'no-id'),
+            preservedCount: currentReferredPlaces.length
+        });
+        // Keep existing referrals instead of clearing
+        finalReferrals = currentReferredPlaces;
+    } else {
+        // Use merged referrals (new + existing, with new taking precedence)
+        finalReferrals = mergedReferrals;
+    }
+
+    ReferralController.getState().setReferredPlaces(finalReferrals);
+
+    // Verify after setting
+    setTimeout(() => {
+        const verifyAfterSet = ReferralController.getState().referredPlaces || [];
+    }, 50);
+
+    return finalReferrals
 }
 
 export default ReferralApiController

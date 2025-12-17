@@ -21,7 +21,7 @@ const saveUserLocation = async ({ latitude, longitude }) => {
             return null
         }
     } catch (error) {
-        console.log('error', error)
+        console.warn('error', error)
         throw error
     }
 }
@@ -44,7 +44,7 @@ const UserApiController = {
                         return null
                     }
                 } catch (error) {
-                    console.log('error', error)
+                    console.warn('error', error)
                 }
             }
         })

@@ -12,6 +12,7 @@ import SearchBar from '../../../components/ui/SearchBar';
 import MapsController from '../../../controllers/maps/MapsController';
 import { getPlaceDistance } from '../../../utils/DistanceUtils';
 import ApiController from '../../../services/api/ApiController';
+import { CommonActions } from '@react-navigation/native';
 
 const SearchScreen = ({ navigation }) => {
     const [searchText, setSearchText] = useState('');
@@ -20,7 +21,7 @@ const SearchScreen = ({ navigation }) => {
     const [searchResults, setSearchResults] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
     const [hasSearched, setHasSearched] = useState(false);
-    const { userLocation, setSelectedPlace, setShowPlaceFullCard } = MapsController();
+    const { userLocation, setPlaces, setSelectedPlace, setShowPlaceFullCard } = MapsController();
     const [popularSearches, setPopularSearches] = useState([]);
     const [recentSearches, setRecentSearches] = useState([]);
     const searchPlacesMutation = ApiController.searchPlaces();
@@ -94,6 +95,25 @@ const SearchScreen = ({ navigation }) => {
             ))}
         </View>
     ), [handleSearchItemPress]);
+    const handleShowOnMap = useCallback((results) => {
+        setTimeout(() => {
+            //map reload
+            navigation.dispatch(
+                CommonActions.navigate({
+                    name: 'MainTabs',
+                    params: {
+                        screen: 'Map',
+                        params: {
+                            initialSearch: {
+                                category: results[0].category,
+                                places: results,
+                            },
+                        },
+                    },
+                })
+            );
+        }, 1000);
+    }, [navigation]);
 
     // Memoize the SearchResultsSection component
     const SearchResultsSection = useCallback(({ results, isLoading, searchText }) => {
@@ -134,7 +154,18 @@ const SearchScreen = ({ navigation }) => {
         if (results.length > 0) {
             return (
                 <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Search Results </Text>
+                    <View style={styles.sectionHeader}>
+                        <Text style={styles.sectionTitle}>Search Results </Text>
+                        <TouchableOpacity
+                            onPress={() => {
+                                handleShowOnMap(results);
+                            }}
+                            style={styles.showOnMapButton}
+                            activeOpacity={0.7}
+                        >
+                            <Text style={styles.showOnMapButtonText}>Show on Map</Text>
+                        </TouchableOpacity>
+                    </View>
                     {results.map((place, index) => (
                         <TouchableOpacity
                             key={place.id}
@@ -283,6 +314,23 @@ const styles = StyleSheet.create({
         ...theme.typography.bodySmall,
         color: theme.colors.text.secondary,
         fontWeight: theme.fontWeight.medium,
+    },
+    sectionHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: theme.spacing.md,
+        paddingHorizontal: theme.spacing.screenPadding,
+    },
+    showOnMapButton: {
+        paddingHorizontal: theme.spacing.md,
+        paddingVertical: theme.spacing.sm,
+        borderRadius: theme.borderRadius.md,
+        backgroundColor: theme.colors.primary[500],
+    },
+    showOnMapButtonText: {
+        ...theme.typography.bodyMedium,
+        color: theme.colors.text.inverse,
     },
 });
 
