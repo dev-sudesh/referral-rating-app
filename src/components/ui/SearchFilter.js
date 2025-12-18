@@ -82,16 +82,22 @@ const SearchFilter = () => {
     // Apply filters and close
     const handleApplyFilters = async () => {
         setIsLoading(true);
-        if (handleFilterCallback) {
-            handleFilterCallback(filters);
-        } else {
-            const places = await nearbyPlacesMutation.mutateAsync({ latitude: userLocation.latitude, longitude: userLocation.longitude, category: filters[0] });
-            setPlaces(places);
-        }
-        setIsLoading(false);
-
-        if (onClose) {
-            onClose();
+        try {
+            if (handleFilterCallback) {
+                // Wait for the callback to complete before closing
+                await handleFilterCallback(filters);
+            } else {
+                const places = await nearbyPlacesMutation.mutateAsync({ latitude: userLocation.latitude, longitude: userLocation.longitude, category: filters[0] });
+                setPlaces(places);
+            }
+        } catch (error) {
+            console.error('Error applying filters:', error);
+        } finally {
+            setIsLoading(false);
+            // Close modal only after API call completes
+            if (onClose) {
+                onClose();
+            }
         }
     };
 
