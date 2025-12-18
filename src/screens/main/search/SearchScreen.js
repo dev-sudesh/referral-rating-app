@@ -320,13 +320,13 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         paddingVertical: theme.spacing.md,
-        paddingHorizontal: theme.spacing.screenPadding,
     },
     showOnMapButton: {
         paddingHorizontal: theme.spacing.md,
         paddingVertical: theme.spacing.sm,
         borderRadius: theme.borderRadius.md,
         backgroundColor: theme.colors.primary[500],
+        marginRight: theme.spacing.md
     },
     showOnMapButtonText: {
         ...theme.typography.bodyMedium,
