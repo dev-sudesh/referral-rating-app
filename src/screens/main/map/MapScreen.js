@@ -88,6 +88,7 @@ const MapScreen = ({ navigation, route }) => {
     const referPlaceMutation = ApiController.referPlace();
     const nearbyPlacesMutation = ApiController.nearbyPlaces();
     const [selectedFilter, setSelectedFilter] = useState('all');
+    const selectedFilterCategoryRef = useRef(null); // Store the selected filter category for API calls
     const getInitialRegion = () => {
         if (global.userLastLocation) {
             // Ensure coordinates are numbers
@@ -274,9 +275,19 @@ const MapScreen = ({ navigation, route }) => {
     const setShowConfetti = MapsController.getState().setShowConfetti;
 
     React.useEffect(() => {
-        const filterData = selectedFilter === 'all'
-            ? places
-            : places.filter(place => place.category === selectedFilter);
+        // When a filter is selected, the API already filtered by category
+        // So we should show all places returned from the API without additional filtering
+        // Only filter locally if we're showing 'all' (no filter applied)
+        let filterData;
+        if (selectedFilter === 'all') {
+            // Show all places when no filter is selected
+            filterData = places;
+        } else {
+            // When a filter is selected, the API already filtered by category
+            // Show all places returned - they should all match the selected filter
+            // Don't filter again locally as the API already did the filtering
+            filterData = places;
+        }
         const sanitized = sanitizePlaces(filterData);
         setFilteredPlaces(sanitized);
     }, [places, selectedFilter, sanitizePlaces]);
@@ -951,11 +962,18 @@ const MapScreen = ({ navigation, route }) => {
     React.useEffect(() => {
         if (userLocation && shouldFetchPlacesRef.current) {
             shouldFetchPlacesRef.current = false;
+            // Use selected filter category if available and not 'all', otherwise use initialSearch category or undefined
+            let categoryToUse = undefined;
+            if (selectedFilterCategoryRef.current && selectedFilterCategoryRef.current !== 'all') {
+                categoryToUse = selectedFilterCategoryRef.current;
+            } else if (initialSearch?.category) {
+                categoryToUse = initialSearch.category;
+            }
             nearbyPlacesMutation.mutateAsync({
                 latitude: userLocation.latitude,
                 longitude: userLocation.longitude,
                 radius: 10000,
-                category: initialSearch?.category
+                category: categoryToUse
             });
         } else {
             // Set places from initialSearch after map is ready
@@ -1105,6 +1123,76 @@ const MapScreen = ({ navigation, route }) => {
         shouldFetchPlacesRef.current = true;
         LocationUtils.getCurrentLocation();
     }
+
+    // Set up filter callback to handle filter selection from SearchFilter
+    const handleFilterCallback = React.useCallback(async (filters) => {
+        const currentUserLocation = MapsController.getState().userLocation;
+
+        if (!currentUserLocation) {
+            return;
+        }
+
+        if (filters && filters.length > 0) {
+            // Store the selected filter category for API calls
+            selectedFilterCategoryRef.current = filters[0];
+            // Update local filter state BEFORE fetching places so filtering works correctly
+            setSelectedFilter(filters[0]);
+
+            try {
+                // Fetch places with the selected filter
+                const places = await nearbyPlacesMutation.mutateAsync({
+                    latitude: currentUserLocation.latitude,
+                    longitude: currentUserLocation.longitude,
+                    radius: 10000,
+                    category: filters[0]
+                });
+
+
+                // processedNearbyPlaces already sets places via MapsController.setPlaces,
+                // but we also call setPlaces to ensure consistency and trigger proper updates
+                if (places && Array.isArray(places)) {
+                    // Always set places, even if empty, to clear previous results
+                    setPlaces(places);
+                    if (places.length === 0) {
+                    }
+                } else {
+                }
+            } catch (error) {
+            }
+        } else {
+            // Clear filter if no filters selected
+            selectedFilterCategoryRef.current = null;
+            // Update local filter state BEFORE fetching places
+            setSelectedFilter('all');
+
+            try {
+                // Fetch all places
+                const places = await nearbyPlacesMutation.mutateAsync({
+                    latitude: currentUserLocation.latitude,
+                    longitude: currentUserLocation.longitude,
+                    radius: 10000,
+                    category: undefined
+                });
+
+                if (places && Array.isArray(places) && places.length > 0) {
+                    setPlaces(places);
+                } else {
+                }
+            } catch (error) {
+            }
+        }
+    }, [nearbyPlacesMutation, setPlaces]);
+
+    // Set the callback when component mounts and ensure it's available
+    React.useEffect(() => {
+        // Set the callback without changing visibility
+        SearchFilterController.getState().setHandleFilterCallback(handleFilterCallback);
+
+        return () => {
+            // Clear callback on unmount
+            SearchFilterController.getState().setHandleFilterCallback(null);
+        };
+    }, [handleFilterCallback]);
 
     return (
         <SafeAreaView style={{ flex: 1 }} edges={[]}>
@@ -1435,7 +1523,17 @@ const MapScreen = ({ navigation, route }) => {
                             <Text style={styles.searchInputText}>Search now...</Text>
                         </View>
                     </TouchableOpacity>
-                    <TouchableOpacity activeOpacity={1} style={styles.filterButton} onPress={() => setIsSearchFilterVisible({ isSearchFilterVisible: true })}>
+                    <TouchableOpacity activeOpacity={1} style={styles.filterButton} onPress={() => {
+                        // Pass current selected filter as initialFilters if not 'all'
+                        const currentFilter = selectedFilterCategoryRef.current && selectedFilterCategoryRef.current !== 'all'
+                            ? [selectedFilterCategoryRef.current]
+                            : null;
+                        setIsSearchFilterVisible({
+                            isSearchFilterVisible: true,
+                            initialFilters: currentFilter,
+                            handleFilterCallback: handleFilterCallback
+                        });
+                    }}>
                         <IconAsset.filterIcon
                             width={30}
                             height={30}

@@ -5,6 +5,7 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import { calculateDistance } from '../../../utils/DistanceUtils'
 import ImageAsset from '../../../assets/images/ImageAsset'
 import SearchFilterController from '../../../controllers/filters/SearchFilterController'
+import ReferralController from '../../../controllers/referrals/ReferralController'
 
 const PlaceApiController = {
     placeCategories: () => {
@@ -141,6 +142,17 @@ const processedNearbyPlaces = (response, referralsResponse, userLocation) => {
     const currentPlaces = MapsController.getState().places || [];
     const currentReferred = currentPlaces.filter(p => p.isReferred);
 
+    // Also check ReferralController's referredPlaces state to ensure all already referred places are marked
+    const referredPlacesFromController = ReferralController.getState().referredPlaces || [];
+    const referredPlaceIdsFromController = new Set(
+        referredPlacesFromController
+            .filter(ref => ref && (ref.id || ref.place_id))
+            .map(ref => ref.id || ref.place_id)
+    );
+
+    // Combine both sources: API response and ReferralController state
+    const allReferralIds = new Set([...referralIds, ...referredPlaceIdsFromController]);
+
     const res = response.results.slice(0, 10).map(place => {
         const coord1 = { latitude: userLocation.latitude, longitude: userLocation.longitude }
         const coord2 = { latitude: place.location.Lat, longitude: place.location.Lng }
@@ -151,7 +163,8 @@ const processedNearbyPlaces = (response, referralsResponse, userLocation) => {
             image = place.photo_uris[0]
             place.photo_uris.forEach(uri => imageList.push(uri))
         }
-        const isReferred = referralIds.has(place.id);
+        // Check if place is referred from either API response or ReferralController state
+        const isReferred = allReferralIds.has(place.id);
 
         // Check if this place was previously referred
         const previousPlace = currentPlaces.find(p => p.id === place.id);
@@ -250,6 +263,20 @@ const processedPlaceDetails = (response, place) => {
 }
 
 const processedSearchPlaces = (response, referralsResponse, userLocation) => {
+    // Get referral IDs from API response
+    const referralIdsFromApi = new Set((referralsResponse?.results || []).map(r => r.id));
+
+    // Also check ReferralController's referredPlaces state to ensure all already referred places are marked
+    const referredPlacesFromController = ReferralController.getState().referredPlaces || [];
+    const referredPlaceIdsFromController = new Set(
+        referredPlacesFromController
+            .filter(ref => ref && (ref.id || ref.place_id))
+            .map(ref => ref.id || ref.place_id)
+    );
+
+    // Combine both sources: API response and ReferralController state
+    const allReferralIds = new Set([...referralIdsFromApi, ...referredPlaceIdsFromController]);
+
     const res = response.results.slice(0, 10).map(place => {
         const coord1 = { latitude: userLocation.latitude, longitude: userLocation.longitude }
         const coord2 = { latitude: place.location.Lat, longitude: place.location.Lng }
@@ -260,7 +287,8 @@ const processedSearchPlaces = (response, referralsResponse, userLocation) => {
             image = place.photo_uris[0]
             place.photo_uris.forEach(uri => imageList.push(uri))
         }
-        const isReferred = referralsResponse?.results?.find(referral => referral.id === place.id) ? true : false
+        // Check if place is referred from either API response or ReferralController state
+        const isReferred = allReferralIds.has(place.id);
         return {
             id: place.id,
             name: place.name,
