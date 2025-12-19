@@ -1,4 +1,4 @@
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
+import { Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import React, { useCallback, useRef, useEffect, memo } from 'react'
 import { theme } from '../../constants/theme';
 import { responsiveSize } from '../../utils/responsive/ResponsiveUi';
@@ -71,7 +71,6 @@ const SearchBar = ({ handleBackPress, searchText = '', onSearch, onChangeText, o
                     autoCapitalize="none"
                     autoComplete="off"
                     importantForAutofill="no"
-                    lineHeight={theme.responsive.size(34)}
                 />
                 {searchText.length > 0 && (
                     <TouchableOpacity
@@ -125,8 +124,12 @@ const styles = StyleSheet.create({
         flex: 1,
         ...theme.typography.bodyMedium,
         color: theme.colors.text.primary,
-        lineHeight: theme.responsive.size(34),
         height: theme.responsive.size(50),
+        ...Platform.select({
+            android: {
+                lineHeight: theme.responsive.size(34),
+            },
+        }),
     },
     filterButton: {
         padding: theme.spacing.sm,
