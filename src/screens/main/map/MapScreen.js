@@ -138,6 +138,7 @@ const MapScreen = ({ navigation, route }) => {
     const markersLayoutingRef = useRef(new Set()); // Track markers currently being laid out
     const mapReadyRef = useRef(false); // Track map ready state to prevent unnecessary resets
     const setPlacesCleanupTimeoutsRef = useRef([]); // Track cleanup timeouts for setPlaces
+    const lastAutoZoomedPlaceIdsRef = useRef(null); // Track place IDs we last auto-zoomed to
 
     const sanitizePlaces = useCallback((placesList = []) =>
         placesList
@@ -162,6 +163,8 @@ const MapScreen = ({ navigation, route }) => {
             shouldForceSyncRef.current = true;
             // Reset centering flag
             isCenteringRef.current = false;
+            // Reset auto-zoom tracking so we can zoom again when places change
+            lastAutoZoomedPlaceIdsRef.current = null;
             return () => {
                 setIsScreenFocused(false);
                 // Reset map ready state when screen loses focus
@@ -303,6 +306,8 @@ const MapScreen = ({ navigation, route }) => {
             setSelectedPlace(null);
             setShowPlaceBigCard(false);
             setShowPlaceFullCard(false);
+            // Reset auto-zoom tracking so it will zoom to all places again
+            lastAutoZoomedPlaceIdsRef.current = null;
         }
     };
 
@@ -1019,32 +1024,60 @@ const MapScreen = ({ navigation, route }) => {
         }
     }, [userLocation, initialSearch?.category, initialSearch?.places, sanitizePlaces, isMapReady]);
 
-    // Update region when filteredPlaces change to fit all places
+    // Auto-zoom to fit all places when filteredPlaces change
     React.useEffect(() => {
-        if (filteredPlaces.length > 0 && !selectedPlace && isScreenFocused && isMapReady) {
-            const calculatedRegion = MapUtils.getRegionForPlaces(filteredPlaces);
-            if (calculatedRegion) {
-                // Only update if the region is significantly different to avoid unnecessary re-renders
-                const normalizedRegion = normalizeLocation(calculatedRegion);
+        if (filteredPlaces.length > 0 && !selectedPlace && isScreenFocused && isMapReady && mapRef.current) {
+            // Create a string identifier for current places to check if they've changed
+            const currentPlaceIds = filteredPlaces
+                .map(place => place.id)
+                .sort()
+                .join(',');
 
-                // Check if the new region is significantly different from the current centerLocation
-                const currentCenter = centerLocation;
-                if (currentCenter) {
-                    const latDiff = Math.abs(currentCenter.latitude - normalizedRegion.latitude);
-                    const lngDiff = Math.abs(currentCenter.longitude - normalizedRegion.longitude);
-                    const latDeltaDiff = Math.abs((currentCenter.latitudeDelta || 0) - normalizedRegion.latitudeDelta);
-                    const lngDeltaDiff = Math.abs((currentCenter.longitudeDelta || 0) - normalizedRegion.longitudeDelta);
+            // Only zoom if places have actually changed
+            if (lastAutoZoomedPlaceIdsRef.current === currentPlaceIds) {
+                return;
+            }
 
-                    // Only update if the difference is significant (more than 0.001 degrees or 0.01 delta)
-                    if (latDiff < 0.001 && lngDiff < 0.001 && latDeltaDiff < 0.01 && lngDeltaDiff < 0.01) {
-                        return;
+            // Get valid coordinates from filtered places
+            const coordinates = filteredPlaces
+                .filter(place =>
+                    place &&
+                    typeof place.latitude === 'number' &&
+                    typeof place.longitude === 'number' &&
+                    !isNaN(place.latitude) &&
+                    !isNaN(place.longitude)
+                )
+                .map(place => ({
+                    latitude: place.latitude,
+                    longitude: place.longitude,
+                }));
+
+            if (coordinates.length > 0) {
+                try {
+                    // Use fitToCoordinates to automatically zoom to fit all places
+                    mapRef.current.fitToCoordinates(coordinates, {
+                        edgePadding: {
+                            top: 100,
+                            right: 50,
+                            bottom: 200,
+                            left: 50,
+                        },
+                        animated: true,
+                    });
+                    // Track that we've zoomed to these places
+                    lastAutoZoomedPlaceIdsRef.current = currentPlaceIds;
+                } catch (error) {
+                    // Fallback to using MapUtils if fitToCoordinates fails
+                    const calculatedRegion = MapUtils.getRegionForPlaces(filteredPlaces);
+                    if (calculatedRegion) {
+                        const normalizedRegion = normalizeLocation(calculatedRegion);
+                        setCenterLocation(normalizedRegion);
+                        lastAutoZoomedPlaceIdsRef.current = currentPlaceIds;
                     }
                 }
-
-                setCenterLocation(normalizedRegion);
             }
         }
-    }, [filteredPlaces, selectedPlace, isScreenFocused, isMapReady, centerLocation]);
+    }, [filteredPlaces, selectedPlace, isScreenFocused, isMapReady]);
 
     React.useEffect(() => {
         // Reset processed flags if selectedPlace changed to a different place
