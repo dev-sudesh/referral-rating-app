@@ -88,10 +88,13 @@ const PlaceFullCard = () => {
     }, [showConfetti]);
 
     // Cleanup on unmount to prevent state updates after component unmounts
+    const isMountedRef = React.useRef(true);
     React.useEffect(() => {
+        isMountedRef.current = true;
         return () => {
-            // Reset confetti state when component unmounts
-            setShowConfetti(false);
+            isMountedRef.current = false;
+            // Don't set state during unmount to prevent stack overflow
+            // The ConfettiCannon component will handle cleanup via its unmount logic
         };
     }, []);
 
@@ -106,7 +109,7 @@ const PlaceFullCard = () => {
                     const uri = await imageRef.current.capture();
                     imagePath = uri;
                 } catch (screenshotError) {
-                    console.warn('Failed to capture screenshot, falling back to URL:', screenshotError);
+                    // Failed to capture screenshot, falling back to URL
                 }
             }
 
@@ -128,7 +131,6 @@ const PlaceFullCard = () => {
                 );
             }
         } catch (error) {
-            console.error('Error sharing referral:', error);
             Alert.alert(
                 'Share Error',
                 'Unable to share referral. Please try again.',

@@ -42,7 +42,7 @@ const ReferralApiController = {
                         return null
                     }
                 } catch (error) {
-                    console.warn('error', error)
+                    // Error handled silently
                 }
             }
         })
@@ -64,7 +64,7 @@ const ReferralApiController = {
                         return null
                     }
                 } catch (error) {
-                    console.warn('error', error)
+                    // Error handled silently
                 }
             }
         })
@@ -161,11 +161,6 @@ const processedReferralsData = (response) => {
     // Only use new referrals if they exist, otherwise keep merged (which includes existing)
     let finalReferrals;
     if (newReferrals.length === 0 && currentReferredPlaces.length > 0) {
-        console.warn('[ReferralApiController] WARNING: API returned empty referrals array, preserving existing referrals to prevent clearing:', {
-            existingCount: currentReferredPlaces.length,
-            existingIds: currentReferredPlaces.map(r => r.id || r.place_id || 'no-id'),
-            preservedCount: currentReferredPlaces.length
-        });
         // Keep existing referrals instead of clearing
         finalReferrals = currentReferredPlaces;
     } else {

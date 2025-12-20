@@ -40,7 +40,6 @@ const TextInputField = ({
 }) => {
     const validTypes = ['text', 'password', 'email', 'number', 'phone', 'url', 'search'];
     if (!validTypes.includes(type)) {
-        console.warn(`TextInputField: Invalid type "${type}". Valid types are: ${validTypes.join(', ')}. Defaulting to "text".`);
         type = 'text';
     }
     const [showPassword, setShowPassword] = useState(false);

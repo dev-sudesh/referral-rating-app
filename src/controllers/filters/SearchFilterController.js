@@ -9,6 +9,7 @@ const SearchFilterController = create((set) => ({
     handleFilterCallback: null,
     initialFilters: null,
     placeCategories: [],
+    radius: 3000, // Default radius in meters
     setIsSearchFilterVisible: ({
         isSearchFilterVisible,
         filterHeight,
@@ -26,6 +27,7 @@ const SearchFilterController = create((set) => ({
     setShowSearchBar: (showSearchBar) => set({ showSearchBar }),
     setHandleFilterCallback: (handleFilterCallback) => set({ handleFilterCallback }),
     setPlaceCategories: (placeCategories) => set({ placeCategories }),
+    setRadius: (radius) => set({ radius }),
 }));
 
 export default SearchFilterController;

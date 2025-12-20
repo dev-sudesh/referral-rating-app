@@ -13,6 +13,7 @@ import MapsController from '../../../controllers/maps/MapsController';
 import { getPlaceDistance } from '../../../utils/DistanceUtils';
 import ApiController from '../../../services/api/ApiController';
 import { CommonActions } from '@react-navigation/native';
+import SearchFilterController from '../../../controllers/filters/SearchFilterController';
 
 const SearchScreen = ({ navigation }) => {
     const [searchText, setSearchText] = useState('');
@@ -22,6 +23,7 @@ const SearchScreen = ({ navigation }) => {
     const [isSearching, setIsSearching] = useState(false);
     const [hasSearched, setHasSearched] = useState(false);
     const { userLocation, setPlaces, setSelectedPlace, setShowPlaceFullCard } = MapsController();
+    const { radius } = SearchFilterController();
     const [popularSearches, setPopularSearches] = useState([]);
     const [recentSearches, setRecentSearches] = useState([]);
     const searchPlacesMutation = ApiController.searchPlaces();
@@ -30,17 +32,22 @@ const SearchScreen = ({ navigation }) => {
     const handleSearch = useCallback(async (searchTerm) => {
         if (!searchTerm.trim() || !userLocation) return;
 
+        const currentRadius = SearchFilterController.getState().radius || 3000;
         setIsSearching(true);
         try {
-            const results = await searchPlacesMutation.mutateAsync({ query: searchTerm, latitude: userLocation.latitude, longitude: userLocation.longitude });
+            const results = await searchPlacesMutation.mutateAsync({
+                query: searchTerm,
+                latitude: userLocation.latitude,
+                longitude: userLocation.longitude,
+                radius: currentRadius
+            });
             setSearchResults(results);
         } catch (error) {
-            console.error('Search error:', error);
             setSearchResults([]);
         } finally {
             setIsSearching(false);
         }
-    }, [userLocation]);
+    }, [userLocation, radius]);
 
     const handleBackPress = useCallback(() => {
         navigation.goBack();
@@ -193,6 +200,26 @@ const SearchScreen = ({ navigation }) => {
 
         return null;
     }, [hasSearched, showPlaceDetails, userLocation]);
+
+    // Re-trigger search when radius changes if there's an active search
+    useEffect(() => {
+        if (hasSearched && searchText.trim() && userLocation) {
+            const currentRadius = SearchFilterController.getState().radius || 3000;
+            setIsSearching(true);
+            searchPlacesMutation.mutateAsync({
+                query: searchText,
+                latitude: userLocation.latitude,
+                longitude: userLocation.longitude,
+                radius: currentRadius
+            }).then((results) => {
+                setSearchResults(results);
+            }).catch((error) => {
+                setSearchResults([]);
+            }).finally(() => {
+                setIsSearching(false);
+            });
+        }
+    }, [radius, hasSearched, searchText, userLocation]);
 
     useEffect(() => {
     }, []);

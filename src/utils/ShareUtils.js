@@ -42,7 +42,7 @@ const ShareUtils = {
             return result;
         } catch (error) {
             if (error.message !== 'User did not share') {
-                console.error('Error sharing app:', error);
+                // Error sharing app
                 throw error;
             }
             return null;
@@ -118,7 +118,7 @@ const ShareUtils = {
             return result;
         } catch (error) {
             if (error.message !== 'User did not share') {
-                console.error('Error sharing referral:', error);
+                // Error sharing referral
                 throw error;
             }
             return null;
@@ -159,7 +159,7 @@ const ShareUtils = {
             return result;
         } catch (error) {
             if (error.message !== 'User did not share') {
-                console.error('Error sharing profile:', error);
+                // Error sharing profile
                 throw error;
             }
             return null;
@@ -199,7 +199,7 @@ const ShareUtils = {
             return result;
         } catch (error) {
             if (error.message !== 'User did not share') {
-                console.error('Error sharing text:', error);
+                // Error sharing text
                 throw error;
             }
             return null;

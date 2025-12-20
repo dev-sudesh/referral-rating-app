@@ -91,7 +91,7 @@ export const initializeCache = async () => {
             isCacheInitialized = true;
             resolve();
         } catch (error) {
-            console.warn('Failed to initialize image cache:', error);
+            // Failed to initialize image cache
             isCacheInitialized = true; // Mark as initialized even on error
             resolve();
         }
@@ -139,7 +139,7 @@ const saveCacheToStorage = async () => {
             await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
         }
     } catch (error) {
-        console.warn('Failed to save image cache:', error);
+        // Failed to save image cache
     }
 };
 
@@ -336,7 +336,7 @@ export const preloadRemoteImages = async (
         onComplete?.(results);
         return results;
     } catch (error) {
-        console.error('Error in preloadRemoteImages:', error);
+        // Error in preloadRemoteImages
         onError?.(error);
         throw error;
     }
@@ -371,7 +371,7 @@ export const preloadAllImages = async (
         onComplete?.(combinedResults);
         return combinedResults;
     } catch (error) {
-        console.error('Error in preloadAllImages:', error);
+        // Error in preloadAllImages
         onError?.(error);
         throw error;
     }
@@ -386,7 +386,7 @@ export const clearImageCache = async (onComplete = null) => {
         imageCache.clear();
         onComplete?.();
     } catch (error) {
-        console.error('Error clearing image cache:', error);
+        // Error clearing image cache
         throw error;
     }
 };
@@ -448,7 +448,7 @@ export const cacheImageUrl = async (url, options = {}) => {
 
         return true;
     } catch (error) {
-        console.warn(`Failed to cache image URL: ${url}`, error);
+        // Failed to cache image URL
         return false;
     }
 };
@@ -527,7 +527,7 @@ export const clearExpiredCache = async (onComplete = null) => {
         cleanExpiredCache();
         onComplete?.();
     } catch (error) {
-        console.error('Error clearing expired cache:', error);
+        // Error clearing expired cache
         throw error;
     }
 };

@@ -210,12 +210,7 @@ const MapScreen = ({ navigation, route }) => {
         // merge them with the new places to prevent null reference errors
         let placesToSet = newPlaces;
         if (removedBeingLaidOut.length > 0 && isMapReady) {
-            console.warn('[MapScreen] PREVENTING NULL REFERENCE: Places being removed while markers are being laid out!', {
-                removedBeingLaidOut: removedBeingLaidOut,
-                removedPlaces: removed.filter(p => removedBeingLaidOut.includes(p.id)).map(p => ({ id: p.id, name: p.name })),
-                action: 'Merging with new places to prevent null reference error',
-                timestamp: new Date().toISOString()
-            });
+            // Prevent null reference - places being removed while markers are being laid out
 
             // Keep the places that are being laid out and merge with new places
             const placesBeingLaidOut = currentPlaces.filter(p => removedBeingLaidOut.includes(p.id));
@@ -313,7 +308,6 @@ const MapScreen = ({ navigation, route }) => {
 
     const centerOnLocation = React.useCallback(() => {
         if (!centerLocation || !mapRef.current || !isMapReady || !isScreenFocused) {
-            console.warn('[MapScreen] Cannot animate map: missing centerLocation, mapRef, map not ready, or screen not focused');
             return;
         }
 
@@ -325,7 +319,6 @@ const MapScreen = ({ navigation, route }) => {
         // Ensure all coordinates are numbers (may be strings from AsyncStorage)
         const normalizedRegion = normalizeLocation(centerLocation);
         if (!normalizedRegion) {
-            console.warn('[MapScreen] Invalid centerLocation, cannot normalize');
             return;
         }
 
@@ -350,12 +343,11 @@ const MapScreen = ({ navigation, route }) => {
         try {
             mapRef.current.animateToRegion(normalizedRegion, 1000);
         } catch (error) {
-            console.error('[MapScreen] Error animating map region:', error);
             // Fallback to setRegion if animation fails
             try {
                 mapRef.current.setRegion(normalizedRegion);
             } catch (fallbackError) {
-                console.error('[MapScreen] Fallback setRegion also failed:', fallbackError);
+                // Error handled silently
             }
         } finally {
             timeoutRef.current = setTimeout(() => {
@@ -415,13 +407,7 @@ const MapScreen = ({ navigation, route }) => {
 
 
         if (removedPlacesBeingLaidOut.length > 0 && isMapReady) {
-            console.error('[MapScreen] CRITICAL: Places being removed while their markers are being laid out!', {
-                removedPlacesBeingLaidOut: removedPlacesBeingLaidOut,
-                removedPlaces: removedPlaces.filter(p => removedPlacesBeingLaidOut.includes(p.id)).map(p => ({ id: p.id, name: p.name })),
-                isMapReady,
-                warning: 'This will cause null reference errors when native side tries to update unmounted markers!',
-                timestamp: new Date().toISOString()
-            });
+            // Prevent null reference - places being removed while markers are being laid out
         }
 
         previousPlacesRef.current = places;
@@ -439,13 +425,7 @@ const MapScreen = ({ navigation, route }) => {
             const layoutingIds = Array.from(markersLayoutingRef.current);
 
             if (isReady === false && wasReady === true && markersLayouting > 0) {
-                console.error('[MapScreen] CRITICAL: isMapReady changed to FALSE while markers are being laid out!', {
-                    markersLayoutingCount: markersLayouting,
-                    markersLayoutingIds: layoutingIds,
-                    filteredPlacesCount: filteredPlaces.length,
-                    placesCount: currentPlaces.length,
-                    warning: 'This will cause markers to be removed during layout, leading to null reference errors!'
-                });
+                // Map ready state changed while markers are being laid out
             }
         }
 
@@ -618,7 +598,7 @@ const MapScreen = ({ navigation, route }) => {
                         shouldForceSyncRef.current = true;
                     })
                     .catch((error) => {
-                        console.warn('Error fetching referrals:', error);
+                        // Error handled silently
                     });
                 return;
             }
@@ -639,7 +619,7 @@ const MapScreen = ({ navigation, route }) => {
                 shouldForceSyncRef.current = true;
             })
             .catch((error) => {
-                console.warn('Error fetching referrals:', error);
+                // Error handled silently
             });
         centerOnLocation();
     }, [centerLocation?.latitude, centerLocation?.longitude, isScreenFocused, isMapReady, centerOnLocation]);
@@ -729,11 +709,7 @@ const MapScreen = ({ navigation, route }) => {
                         if (shouldBeReferred) {
                             shouldBeReferredList.push({ id: place.id, name: place.name });
                             if (!place.isReferred) {
-                                // This should never happen if mapping is correct, but fix it if it does
-                                console.error('[MapScreen] CRITICAL: Place should be referred but isReferred is false:', {
-                                    id: place.id,
-                                    name: place.name
-                                });
+                                // Fix incorrect isReferred status
                                 validationErrors.push({
                                     id: place.id,
                                     name: place.name,
@@ -770,7 +746,7 @@ const MapScreen = ({ navigation, route }) => {
                     }
 
                     if (validationErrors.length > 0) {
-                        console.error('[MapScreen] Validation errors detected and fixed - places with incorrect isReferred status:', validationErrors);
+                        // Validation errors detected and fixed
                     }
 
                     // Always update places when force syncing (e.g., on screen focus)
@@ -859,7 +835,6 @@ const MapScreen = ({ navigation, route }) => {
                             const notLoadedReferred = Array.from(referredPlaceIds).filter(id => !verifyPlaceIds.has(id));
 
                             if (missingReferred.length > 0) {
-                                console.error('[MapScreen] ERROR: Some referred places in current view are not marked as referred:', missingReferred);
                                 // Try to fix by updating again
                                 const placesToFix = verifyPlaces.map(place => {
                                     if (missingReferred.includes(place.id)) {
@@ -874,8 +849,6 @@ const MapScreen = ({ navigation, route }) => {
                                 setTimeout(() => {
                                     const verifyAfterFix = MapsController.getState().places?.filter(p => p.isReferred) || [];
                                 }, 50);
-                            } else if (notLoadedReferred.length > 0) {
-                                console.log('[MapScreen] Some referred places are not in current view (not loaded yet):', notLoadedReferred.length);
                             }
                         }, 100);
 
@@ -940,7 +913,7 @@ const MapScreen = ({ navigation, route }) => {
                         shouldForceSyncRef.current = true;
                     })
                     .catch((error) => {
-                        console.warn('Error fetching referrals on focus:', error);
+                        // Error handled silently
                     });
             } else {
                 // If we've already fetched for this exact location in this session,
@@ -974,10 +947,11 @@ const MapScreen = ({ navigation, route }) => {
             } else if (initialSearch?.category) {
                 categoryToUse = initialSearch.category;
             }
+            const currentRadius = SearchFilterController.getState().radius || 3000;
             nearbyPlacesMutation.mutateAsync({
                 latitude: userLocation.latitude,
                 longitude: userLocation.longitude,
-                radius: 10000,
+                radius: currentRadius,
                 category: categoryToUse
             });
         } else {
@@ -1160,9 +1134,10 @@ const MapScreen = ({ navigation, route }) => {
     // Set up filter callback to handle filter selection from SearchFilter
     const handleFilterCallback = React.useCallback(async (filters) => {
         const currentUserLocation = MapsController.getState().userLocation;
+        const currentRadius = SearchFilterController.getState().radius || 3000;
 
         if (!currentUserLocation) {
-            return;
+            return; // Return early - modal will still close after loading completes
         }
 
         if (filters && filters.length > 0) {
@@ -1176,21 +1151,18 @@ const MapScreen = ({ navigation, route }) => {
                 const places = await nearbyPlacesMutation.mutateAsync({
                     latitude: currentUserLocation.latitude,
                     longitude: currentUserLocation.longitude,
-                    radius: 10000,
+                    radius: currentRadius,
                     category: filters[0]
                 });
-
 
                 // processedNearbyPlaces already sets places via MapsController.setPlaces,
                 // but we also call setPlaces to ensure consistency and trigger proper updates
                 if (places && Array.isArray(places)) {
                     // Always set places, even if empty, to clear previous results
                     setPlaces(places);
-                    if (places.length === 0) {
-                    }
-                } else {
                 }
             } catch (error) {
+                // Error handled silently
             }
         } else {
             // Clear filter if no filters selected
@@ -1200,18 +1172,19 @@ const MapScreen = ({ navigation, route }) => {
 
             try {
                 // Fetch all places
+                const currentRadius = SearchFilterController.getState().radius || 3000;
                 const places = await nearbyPlacesMutation.mutateAsync({
                     latitude: currentUserLocation.latitude,
                     longitude: currentUserLocation.longitude,
-                    radius: 10000,
+                    radius: currentRadius,
                     category: undefined
                 });
 
                 if (places && Array.isArray(places) && places.length > 0) {
                     setPlaces(places);
-                } else {
                 }
             } catch (error) {
+                // Error handled silently
             }
         }
     }, [nearbyPlacesMutation, setPlaces]);
@@ -1268,7 +1241,7 @@ const MapScreen = ({ navigation, route }) => {
                                 filteredPlaces.length > 0;
 
                             if (hasMarkersLayouting && !shouldRenderMarkers) {
-                                console.log('[MapScreen] Markers are being laid out but shouldRenderMarkers is false, this could cause null reference errors');
+                                // Markers are being laid out but shouldRenderMarkers is false
                             }
 
                             // Log referred places status for debugging
@@ -1316,17 +1289,7 @@ const MapScreen = ({ navigation, route }) => {
                                     return null;
                                 }
 
-                                console.log(`[MapScreen] Creating Marker:`, {
-                                    key: markerKey,
-                                    placeId: place.id,
-                                    placeName: place.name,
-                                    latitude: place.latitude,
-                                    longitude: place.longitude,
-                                    isReferred: place.isReferred,
-                                    index,
-                                    isMapReady,
-                                    timestamp: new Date().toISOString()
-                                });
+                                // Creating marker for place
 
                                 try {
                                     // Log marker creation with full context
@@ -1342,11 +1305,7 @@ const MapScreen = ({ navigation, route }) => {
                                                 try {
                                                     showPlaceCard({ place, scroll: true });
                                                 } catch (error) {
-                                                    console.error('[MapScreen] Error in marker onPress:', {
-                                                        placeId: place.id,
-                                                        error: error.message,
-                                                        stack: error.stack
-                                                    });
+                                                    // Error handled silently
                                                 }
                                             }}
                                             onLayout={(event) => {
@@ -1366,22 +1325,12 @@ const MapScreen = ({ navigation, route }) => {
 
 
                                                         if (!placeStillExists) {
-                                                            console.warn('[MapScreen] WARNING: Marker layout completed but place no longer exists in places array!', {
-                                                                placeId: place.id,
-                                                                placeName: place.name
-                                                            });
+                                                            // Marker layout completed but place no longer exists
                                                         }
                                                     }, 300); // Increased delay to give native side more time
                                                 } catch (error) {
                                                     markersLayoutingRef.current.delete(place.id);
-                                                    console.error('[MapScreen] ERROR in marker onLayout:', {
-                                                        placeId: place.id,
-                                                        placeName: place.name,
-                                                        markerKey: markerKey,
-                                                        error: error.message,
-                                                        stack: error.stack,
-                                                        timestamp: new Date().toISOString()
-                                                    });
+                                                    // Error handled silently
                                                 }
                                             }}
                                         >
@@ -1445,28 +1394,15 @@ const MapScreen = ({ navigation, route }) => {
                                         </Marker>
                                     );
                                 } catch (error) {
-                                    console.error('[MapScreen] Error creating marker:', {
-                                        placeId: place.id,
-                                        placeName: place.name,
-                                        markerKey: markerKey,
-                                        error: error.message,
-                                        stack: error.stack,
-                                        timestamp: new Date().toISOString()
-                                    });
+                                    // Error handled silently
                                     return null; // Return null to prevent rendering invalid marker
                                 }
-                            });
+                            })
                         })()}
 
                         {/* User Current Location Marker */}
                         {(() => {
                             const shouldRenderUserLocation = isMapReady && userLocation;
-                            console.log('[MapScreen] User location marker check:', {
-                                isMapReady,
-                                hasUserLocation: !!userLocation,
-                                userLocation,
-                                shouldRenderUserLocation
-                            });
                             return shouldRenderUserLocation && (
                                 <Marker
                                     coordinate={userLocation}

@@ -34,7 +34,7 @@ class FirebaseInitializer {
             this.isInitialized = true;
             return true;
         } catch (error) {
-            console.error('Firebase initialization error:', error);
+            // Firebase initialization error
             throw error;
         }
     }

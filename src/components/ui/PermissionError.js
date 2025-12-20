@@ -98,7 +98,7 @@ const PermissionError = ({
                 showSettingsAlert();
             }
         } catch (error) {
-            console.error('Error during retry:', error);
+            // Error during retry
             showSettingsAlert();
         }
     };

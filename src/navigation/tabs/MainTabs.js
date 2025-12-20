@@ -111,11 +111,10 @@ const MainTabs = () => {
                     );
                 } catch (error) {
                     // Fallback: try direct navigation
-                    console.warn('Navigation error, trying fallback:', error);
                     try {
                         navigation.navigate('MainTabs', { screen: 'Map' });
                     } catch (e) {
-                        console.error('Navigation fallback failed:', e);
+                        // Navigation fallback failed
                     }
                 }
                 return true; // Prevent default back behavior

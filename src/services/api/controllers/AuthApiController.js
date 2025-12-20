@@ -23,7 +23,7 @@ const AuthApiController = {
                         return []
                     }
                 } catch (error) {
-                    console.warn('error', error)
+                    // Error handled silently
                 }
             }
         })

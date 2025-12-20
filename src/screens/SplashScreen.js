@@ -57,7 +57,7 @@ const SplashScreen = () => {
                 navigation.replace(Constants.Screen.Onboarding);
             }
         } catch (error) {
-            console.error('Error checking login status:', error);
+            // Error checking login status
             // Fallback to auth screen on error
             navigation.replace(Constants.Screen.Stack.Auth);
         }

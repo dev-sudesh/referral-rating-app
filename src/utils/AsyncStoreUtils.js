@@ -47,7 +47,7 @@ const AsyncStoreUtils = {
             }
             return null;
         } catch (error) {
-            console.error(`AsyncStore: Error getting item with key "${key}":`, error);
+            // Error handled silently
             return null;
         }
     },
@@ -66,7 +66,7 @@ const AsyncStoreUtils = {
             await AsyncStorage.setItem(key, value);
             return true;
         } catch (error) {
-            console.error(`AsyncStore: Error setting item with key "${key}":`, error);
+            // Error handled silently
             return false;
         }
     },
@@ -81,7 +81,7 @@ const AsyncStoreUtils = {
             await AsyncStorage.removeItem(key);
             return true;
         } catch (error) {
-            console.error(`AsyncStore: Error removing item with key "${key}":`, error);
+            // Error handled silently
             return false;
         }
     },
@@ -98,7 +98,7 @@ const AsyncStoreUtils = {
             await AsyncStorage.setItem(key, jsonString);
             return true;
         } catch (error) {
-            console.error(`AsyncStore: Error setting object with key "${key}":`, error);
+            // Error handled silently
             return false;
         }
     },
@@ -116,7 +116,7 @@ const AsyncStoreUtils = {
             }
             return null;
         } catch (error) {
-            console.error(`AsyncStore: Error getting object with key "${key}":`, error);
+            // Error handled silently
             return null;
         }
     },
@@ -143,7 +143,7 @@ const AsyncStoreUtils = {
             await Keychain.setInternetCredentials(key, key, value, keychainOptions);
             return true;
         } catch (error) {
-            console.error(`AsyncStore: Error setting secure item with key "${key}":`, error);
+            // Error handled silently
             return false;
         }
     },
@@ -161,7 +161,7 @@ const AsyncStoreUtils = {
             }
             return null;
         } catch (error) {
-            console.error(`AsyncStore: Error getting secure item with key "${key}":`, error);
+            // Error handled silently
             return null;
         }
     },
@@ -176,7 +176,7 @@ const AsyncStoreUtils = {
             await Keychain.resetInternetCredentials(key);
             return true;
         } catch (error) {
-            console.error(`AsyncStore: Error removing secure item with key "${key}":`, error);
+            // Error handled silently
             return false;
         }
     },
@@ -204,7 +204,7 @@ const AsyncStoreUtils = {
             );
             return true;
         } catch (error) {
-            console.error('AsyncStore: Error setting credentials:', error);
+            // Error handled silently
             return false;
         }
     },
@@ -226,7 +226,7 @@ const AsyncStoreUtils = {
             }
             return null;
         } catch (error) {
-            console.error('AsyncStore: Error getting credentials:', error);
+            // Error handled silently
             return null;
         }
     },
@@ -243,7 +243,7 @@ const AsyncStoreUtils = {
             const jsonString = JSON.stringify(object);
             return await AsyncStoreUtils.setSecureItem(key, jsonString, options);
         } catch (error) {
-            console.error(`AsyncStore: Error setting secure object with key "${key}":`, error);
+            // Error handled silently
             return false;
         }
     },
@@ -261,7 +261,7 @@ const AsyncStoreUtils = {
             }
             return null;
         } catch (error) {
-            console.error(`AsyncStore: Error getting secure object with key "${key}":`, error);
+            // Error handled silently
             return null;
         }
     },
@@ -279,7 +279,7 @@ const AsyncStoreUtils = {
             await AsyncStorage.clear();
             return true;
         } catch (error) {
-            console.error('AsyncStore: Error clearing AsyncStorage:', error);
+            // Error handled silently
             return false;
         }
     },
@@ -293,7 +293,7 @@ const AsyncStoreUtils = {
             await Keychain.resetInternetCredentials();
             return true;
         } catch (error) {
-            console.error('AsyncStore: Error clearing Keychain:', error);
+            // Error handled silently
             return false;
         }
     },
@@ -308,7 +308,7 @@ const AsyncStoreUtils = {
             const keychainCleared = await AsyncStoreUtils.clearKeychain();
             return asyncStorageCleared && keychainCleared;
         } catch (error) {
-            console.error('AsyncStore: Error clearing all storage:', error);
+            // Error handled silently
             return false;
         }
     },
@@ -322,7 +322,7 @@ const AsyncStoreUtils = {
             const keys = await AsyncStorage.getAllKeys();
             return keys || [];
         } catch (error) {
-            console.error('AsyncStore: Error getting all keys:', error);
+            // Error handled silently
             return [];
         }
     },
@@ -336,7 +336,7 @@ const AsyncStoreUtils = {
             const biometryType = await Keychain.getSupportedBiometryType();
             return biometryType !== null;
         } catch (error) {
-            console.error('AsyncStore: Error checking biometric availability:', error);
+            // Error handled silently
             return false;
         }
     },
@@ -349,7 +349,7 @@ const AsyncStoreUtils = {
         try {
             return await Keychain.getSupportedBiometryType();
         } catch (error) {
-            console.error('AsyncStore: Error getting biometry type:', error);
+            // Error handled silently
             return null;
         }
     },
@@ -381,7 +381,7 @@ const AsyncStoreUtils = {
 
             return accessTokenSet && refreshTokenSet;
         } catch (error) {
-            console.error('AsyncStore: Error setting auth tokens:', error);
+            // Error handled silently
             return false;
         }
     },
@@ -410,7 +410,7 @@ const AsyncStoreUtils = {
 
             return tokenData;
         } catch (error) {
-            console.error('AsyncStore: Error getting auth tokens:', error);
+            // Error handled silently
             return null;
         }
     },
@@ -429,7 +429,7 @@ const AsyncStoreUtils = {
             );
             return accessTokenRemoved && refreshTokenRemoved;
         } catch (error) {
-            console.error('AsyncStore: Error clearing auth tokens:', error);
+            // Error handled silently
             return false;
         }
     },

@@ -33,7 +33,7 @@ const ShareModal = ({ visible, onClose, userProfile, userPersonalInfo }) => {
                         );
                     }
                 } catch (error) {
-                    console.error('Error sharing profile:', error);
+                    // Error sharing profile
                     Alert.alert(
                         'Share Error',
                         'Unable to share your profile. Please try again.',
@@ -58,7 +58,7 @@ const ShareModal = ({ visible, onClose, userProfile, userPersonalInfo }) => {
                         );
                     }
                 } catch (error) {
-                    console.error('Error sharing app:', error);
+                    // Error sharing app
                     Alert.alert(
                         'Share Error',
                         'Unable to share the app. Please try again.',
@@ -87,7 +87,7 @@ const ShareModal = ({ visible, onClose, userProfile, userPersonalInfo }) => {
                         );
                     }
                 } catch (error) {
-                    console.error('Error sharing referral:', error);
+                    // Error sharing referral
                     Alert.alert(
                         'Share Error',
                         'Unable to share referral. Please try again.',
@@ -115,7 +115,7 @@ const ShareModal = ({ visible, onClose, userProfile, userPersonalInfo }) => {
                         );
                     }
                 } catch (error) {
-                    console.error('Error sharing custom message:', error);
+                    // Error sharing custom message
                     Alert.alert(
                         'Share Error',
                         'Unable to share message. Please try again.',

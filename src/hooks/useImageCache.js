@@ -50,7 +50,7 @@ const useImageCache = () => {
                     updateCacheStats();
                 }
             } catch (error) {
-                console.error('Failed to initialize cache:', error);
+                // Failed to initialize cache
                 if (isMounted) {
                     setIsCacheReady(true);
                 }
@@ -114,7 +114,7 @@ const useImageCache = () => {
 
             return result;
         } catch (error) {
-            console.error('Failed to cache image URL:', error);
+            // Failed to cache image URL
             return false;
         } finally {
             setIsLoading(false);
@@ -154,7 +154,7 @@ const useImageCache = () => {
 
             return results;
         } catch (error) {
-            console.error('Failed to cache image URLs:', error);
+            // Failed to cache image URLs
             return { total: urls.length, successful: 0, failed: urls.length, errors: [error] };
         } finally {
             setIsLoading(false);
@@ -188,7 +188,7 @@ const useImageCache = () => {
 
             updateCacheStats();
         } catch (error) {
-            console.error('Failed to clear cache:', error);
+            // Failed to clear cache
         } finally {
             setIsLoading(false);
         }
@@ -207,7 +207,7 @@ const useImageCache = () => {
 
             updateCacheStats();
         } catch (error) {
-            console.error('Failed to clear expired cache:', error);
+            // Failed to clear expired cache
         } finally {
             setIsLoading(false);
         }
@@ -258,7 +258,7 @@ const useImageCache = () => {
             updateCacheStats();
             return results;
         } catch (error) {
-            console.error('Failed to batch cache URLs:', error);
+            // Failed to batch cache URLs
             return { total: urls.length, successful: 0, failed: urls.length, errors: [error] };
         } finally {
             setIsLoading(false);
@@ -282,7 +282,7 @@ const useImageCache = () => {
             updateCacheStats();
             return results;
         } catch (error) {
-            console.error('Failed to preload critical images:', error);
+            // Failed to preload critical images
             return { total: criticalUrls.length, successful: 0, failed: criticalUrls.length, errors: [error] };
         } finally {
             setIsLoading(false);

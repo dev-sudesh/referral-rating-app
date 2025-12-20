@@ -169,7 +169,7 @@ const ProfileScreen = ({ navigation }) => {
                 );
             }
         } catch (error) {
-            console.error('Error sharing app:', error);
+            // Error sharing app
             Alert.alert(
                 'Share Error',
                 'Unable to share the app. Please try again.',

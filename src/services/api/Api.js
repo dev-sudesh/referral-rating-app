@@ -12,8 +12,8 @@ API.url = {
     },
     place: {
         categories: () => `/api/places/categories`,
-        nearby: ({ latitude, longitude, limit = 10, radius = 5000, enhanced = true, category }) => `api/places${!category ? '/top' : ''}?lat=${latitude}&lng=${longitude}&radius=${radius}&limit=${limit}&enhanced=${enhanced}${category ? '&category=' + category : ''}`,
-        search: ({ query, latitude, longitude, limit = 10, radius = 5000, enhanced = true }) => `api/places/search?query=${query}&lat=${latitude}&lng=${longitude}&limit=${limit}&radius=${radius}&enhanced=${enhanced}`,
+        nearby: ({ latitude, longitude, limit = 10, radius = 3000, enhanced = true, category }) => `api/places${!category ? '/top' : ''}?lat=${latitude}&lng=${longitude}&radius=${radius}&limit=${limit}&enhanced=${enhanced}${category ? '&category=' + category : ''}`,
+        search: ({ query, latitude, longitude, limit = 10, radius = 3000, enhanced = true }) => `api/places/search?query=${query}&lat=${latitude}&lng=${longitude}&limit=${limit}&radius=${radius}&enhanced=${enhanced}`,
         details: ({ placeId }) => `/api/places/details/enhanced?provider=google&place_id=${placeId}`,
     },
     referral: {
@@ -21,7 +21,7 @@ API.url = {
     },
     user: {
         profile: () => `/api/anon/profile`,
-        referrals: ({ latitude, longitude, radius = 5000 }) => `/api/user/referrals?lat=${latitude}&lng=${longitude}&radius=${radius}`,
+        referrals: ({ latitude, longitude, radius = 3000 }) => `/api/user/referrals?lat=${latitude}&lng=${longitude}&radius=${radius}`,
         saveLocation: () => `/api/user/location`,
     }
 }
@@ -97,7 +97,7 @@ API.instance.interceptors.request.use(
                     config.headers['X-Device-Hash'] = DeviceInfo.deviceUniqueId;
                 }
             } catch (error) {
-                console.error('Error adding auth token to request:', error);
+                // Error handled silently
             }
         }
 

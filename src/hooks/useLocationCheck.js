@@ -65,7 +65,7 @@ const useLocationCheck = () => {
             PermissionController.getState().setShowPermissionError(false);
 
         } catch (error) {
-            console.error('❌ Error during location check:', error);
+            // Error during location check
             setLocationStatus({
                 permissionGranted: false,
                 gpsEnabled: false,

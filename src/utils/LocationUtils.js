@@ -355,7 +355,6 @@ const LocationUtils = {
                 } catch (error) {
                     // Silently fail - location saving to API is not critical
                     // The location is already saved to AsyncStorage
-                    console.warn('Failed to save location to API:', error);
                 }
             },
             (error) => {

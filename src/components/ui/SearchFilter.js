@@ -13,6 +13,8 @@ import {
     Keyboard,
     KeyboardAvoidingView,
     ActivityIndicator,
+    PanResponder,
+    Animated,
 } from 'react-native';
 import RBSheet from 'react-native-raw-bottom-sheet';
 import { theme } from '../../constants/theme';
@@ -22,17 +24,219 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import MapsController from '../../controllers/maps/MapsController';
 import ApiController from '../../services/api/ApiController';
 
+// Radius Slider Component
+const RadiusSlider = ({ value, onValueChange, min = 50, max = 50000, step = 50 }) => {
+    const thumbSize = 24;
+    const trackRef = useRef(null);
+    const trackWidthRef = useRef(0);
+    const isDraggingRef = useRef(false);
+    const lastValueRef = useRef(value);
+    const onValueChangeRef = useRef(onValueChange);
+    const widthAnimatedValue = useRef(new Animated.Value(0)).current;
+
+    // Initialize pan with normalized value (0-1)
+    const getNormalizedValue = useCallback((val) => {
+        return Math.max(0, Math.min(1, (val - min) / (max - min)));
+    }, [min, max]);
+
+    const pan = useRef(new Animated.Value(getNormalizedValue(value))).current;
+
+    // Keep refs in sync
+    useEffect(() => {
+        onValueChangeRef.current = onValueChange;
+    }, [onValueChange]);
+
+    // Update pan value when value prop changes (but not during drag)
+    useEffect(() => {
+        if (!isDraggingRef.current && value !== lastValueRef.current) {
+            const normalizedValue = getNormalizedValue(value);
+            // Use requestAnimationFrame to ensure smooth updates
+            requestAnimationFrame(() => {
+                if (!isDraggingRef.current) {
+                    pan.setValue(normalizedValue);
+                    lastValueRef.current = value;
+                }
+            });
+        }
+    }, [value, getNormalizedValue]);
+
+    const handleLayout = useCallback((event) => {
+        const { width } = event.nativeEvent.layout;
+        if (width > 0 && width !== trackWidthRef.current) {
+            trackWidthRef.current = width;
+            widthAnimatedValue.setValue(width);
+            // Set initial position when layout is measured
+            if (!isDraggingRef.current) {
+                const normalizedValue = getNormalizedValue(value);
+                pan.setValue(normalizedValue);
+            }
+        }
+    }, [value, getNormalizedValue, widthAnimatedValue]);
+
+    // Throttle callback to improve performance during dragging
+    const callbackTimeoutRef = useRef(null);
+
+    // Cleanup timeout on unmount
+    useEffect(() => {
+        return () => {
+            if (callbackTimeoutRef.current) {
+                clearTimeout(callbackTimeoutRef.current);
+            }
+        };
+    }, []);
+    const throttledCallback = useCallback((newValue) => {
+        if (callbackTimeoutRef.current) {
+            clearTimeout(callbackTimeoutRef.current);
+        }
+        callbackTimeoutRef.current = setTimeout(() => {
+            if (onValueChangeRef.current) {
+                onValueChangeRef.current(newValue);
+            }
+        }, 16); // ~60fps throttling
+    }, []);
+
+    // Track if we had any movement to distinguish clicks from drags
+    const hasMovedRef = useRef(false);
+    const startXRef = useRef(0);
+
+    // Create pan responder once and use refs for dynamic values
+    const panResponder = useRef(
+        PanResponder.create({
+            onStartShouldSetPanResponder: () => true,
+            onMoveShouldSetPanResponder: () => true,
+            onPanResponderGrant: (evt) => {
+                const width = trackWidthRef.current;
+                if (width === 0) return;
+                isDraggingRef.current = true;
+                hasMovedRef.current = false;
+                pan.stopAnimation();
+                const x = evt.nativeEvent.locationX;
+                startXRef.current = x;
+                const normalizedValue = Math.max(0, Math.min(1, x / width));
+
+                // Calculate stepped value immediately for click handling
+                const rawValue = min + normalizedValue * (max - min);
+                const steppedValue = Math.max(min, Math.min(max, Math.round(rawValue / step) * step));
+
+                // Only update if the value actually changed (prevents jump on double click)
+                if (steppedValue !== lastValueRef.current) {
+                    const steppedNormalizedValue = getNormalizedValue(steppedValue);
+                    pan.setValue(steppedNormalizedValue);
+                }
+            },
+            onPanResponderMove: (evt) => {
+                const width = trackWidthRef.current;
+                if (width === 0) return;
+                const x = evt.nativeEvent.locationX;
+
+                // Check if user actually moved (more than a few pixels)
+                if (Math.abs(x - startXRef.current) > 5) {
+                    hasMovedRef.current = true;
+                }
+
+                const normalizedValue = Math.max(0, Math.min(1, x / width));
+                pan.setValue(normalizedValue);
+
+                // Calculate and update value, but only call callback if changed
+                const rawValue = min + normalizedValue * (max - min);
+                const steppedValue = Math.max(min, Math.min(max, Math.round(rawValue / step) * step));
+                if (steppedValue !== lastValueRef.current) {
+                    lastValueRef.current = steppedValue;
+                    throttledCallback(steppedValue);
+                }
+            },
+            onPanResponderRelease: () => {
+                isDraggingRef.current = false;
+                // Clear any pending throttled callback
+                if (callbackTimeoutRef.current) {
+                    clearTimeout(callbackTimeoutRef.current);
+                    callbackTimeoutRef.current = null;
+                }
+
+                // Get final value and call callback immediately to ensure final state is correct
+                const currentValue = pan._value;
+                const rawValue = min + currentValue * (max - min);
+                const steppedValue = Math.max(min, Math.min(max, Math.round(rawValue / step) * step));
+
+                // Only update and call callback if value changed or user moved
+                if (steppedValue !== lastValueRef.current || hasMovedRef.current) {
+                    // Update pan to stepped value to ensure visual consistency
+                    const steppedNormalizedValue = getNormalizedValue(steppedValue);
+                    pan.setValue(steppedNormalizedValue);
+                    lastValueRef.current = steppedValue;
+                    if (onValueChangeRef.current) {
+                        onValueChangeRef.current(steppedValue);
+                    }
+                }
+
+                hasMovedRef.current = false;
+            },
+        })
+    ).current;
+
+    // Create stable interpolations using Animated.multiply to avoid recreating them
+    // This prevents flickering when dragging - these are created once and never recreated
+    // Since pan is already clamped between 0-1, multiply will give us values between 0-width
+    const thumbPosition = useMemo(() => {
+        const maxPosition = Animated.subtract(widthAnimatedValue, thumbSize);
+        return Animated.multiply(pan, maxPosition);
+    }, [pan, widthAnimatedValue, thumbSize]);
+
+    // Progress bar extends to full width for visual consistency
+    // This provides smooth animation without complex calculations
+    const progressWidth = useMemo(() => {
+        return Animated.multiply(pan, widthAnimatedValue);
+    }, [pan, widthAnimatedValue]);
+
+    return (
+        <View style={styles.sliderContainer}>
+            <View
+                ref={trackRef}
+                style={styles.sliderTrack}
+                onLayout={handleLayout}
+                {...panResponder.panHandlers}
+            >
+                <Animated.View
+                    style={[
+                        styles.sliderProgress,
+                        {
+                            width: progressWidth,
+                        },
+                    ]}
+                    pointerEvents="none"
+                />
+                <Animated.View
+                    style={[
+                        styles.sliderThumb,
+                        {
+                            transform: [{ translateX: thumbPosition }],
+                        },
+                    ]}
+                    pointerEvents="none"
+                    renderToHardwareTextureAndroid={true}
+                    shouldRasterizeIOS={true}
+                />
+            </View>
+            <View style={styles.sliderLabels}>
+                <Text style={styles.sliderLabel}>{min}m</Text>
+                <Text style={styles.sliderLabel}>{max}m</Text>
+            </View>
+        </View>
+    );
+};
+
 const SearchFilter = () => {
     const { data: placeCategoriesResponse } = ApiController.placeCategories();
     const [filters, setFilters] = useState([]);
     const [searchFilterText, setSearchFilterText] = useState('');
     const bottomSheetRef = useRef(null);
-    const { isSearchFilterVisible, setIsSearchFilterVisible, filterHeight, showSearchBar, initialFilters, handleFilterCallback, placeCategories } = SearchFilterController();
+    const { isSearchFilterVisible, setIsSearchFilterVisible, filterHeight, showSearchBar, initialFilters, handleFilterCallback, placeCategories, radius, setRadius } = SearchFilterController();
     const [filterCategories, setFilterCategories] = useState(placeCategoriesResponse ?? []);
     const { places, setPlaces, userLocation } = MapsController();
     const insets = useSafeAreaInsets();
     const nearbyPlacesMutation = ApiController.nearbyPlaces();
     const [isLoading, setIsLoading] = useState(false);
+    const initialRadiusRef = useRef(radius);
 
     React.useEffect(() => {
         if (Array.isArray(placeCategories)) {
@@ -44,15 +248,27 @@ const SearchFilter = () => {
     useEffect(() => {
         if (isSearchFilterVisible) {
             bottomSheetRef.current?.open();
+            // Store initial radius when modal opens
+            initialRadiusRef.current = radius;
         } else {
             bottomSheetRef.current?.close();
         }
-    }, [isSearchFilterVisible]);
+    }, [isSearchFilterVisible, radius]);
 
     // Calculate active filter count
     const getActiveFilterCount = () => {
         return Object.values(filters).flat().length;
     };
+
+    // Check if radius has changed from initial value
+    const hasRadiusChanged = useMemo(() => {
+        return radius !== initialRadiusRef.current;
+    }, [radius]);
+
+    // Check if there are any changes (filters or radius)
+    const hasChanges = useMemo(() => {
+        return filters.length > 0 || hasRadiusChanged;
+    }, [filters.length, hasRadiusChanged]);
 
     // Toggle filter selection - only one filter can be selected at a time
     const toggleFilter = (filterId) => {
@@ -87,11 +303,16 @@ const SearchFilter = () => {
                 // Wait for the callback to complete before closing
                 await handleFilterCallback(filters);
             } else {
-                const places = await nearbyPlacesMutation.mutateAsync({ latitude: userLocation.latitude, longitude: userLocation.longitude, category: filters[0] });
+                const places = await nearbyPlacesMutation.mutateAsync({
+                    latitude: userLocation.latitude,
+                    longitude: userLocation.longitude,
+                    radius: radius,
+                    category: filters[0]
+                });
                 setPlaces(places);
             }
         } catch (error) {
-            console.error('Error applying filters:', error);
+            // Error handled silently
         } finally {
             setIsLoading(false);
             // Close modal only after API call completes
@@ -352,6 +573,22 @@ const SearchFilter = () => {
                         </View>
                     </View>
                 }
+
+                {/* Radius Slider */}
+                <View style={styles.radiusContainer}>
+                    <View style={styles.radiusHeader}>
+                        <Text style={styles.radiusTitle}>Search Radius</Text>
+                        <Text style={styles.radiusValue}>{radius}m</Text>
+                    </View>
+                    <RadiusSlider
+                        value={radius}
+                        onValueChange={setRadius}
+                        min={50}
+                        max={50000}
+                        step={50}
+                    />
+                </View>
+
                 <KeyboardAvoidingView style={{ flex: 1 }}
                     behavior="padding"
                     keyboardVerticalOffset={0}
@@ -429,10 +666,10 @@ const SearchFilter = () => {
                     {/* Apply Button */}
                     <View style={styles.applyButtonContainer}>
                         <TouchableOpacity
-                            disabled={isLoading || filters.length === 0}
+                            disabled={isLoading || !hasChanges}
                             style={[
                                 styles.applyButton,
-                                (isLoading || filters.length === 0) && styles.applyButtonDisabled
+                                (isLoading || !hasChanges) && styles.applyButtonDisabled
                             ]}
                             onPress={handleApplyFilters}
                             activeOpacity={1}
@@ -442,7 +679,7 @@ const SearchFilter = () => {
                             ) : (
                                 <Text style={[
                                     styles.applyButtonText,
-                                    (filters.length === 0) && styles.applyButtonTextDisabled
+                                    !hasChanges && styles.applyButtonTextDisabled
                                 ]}>Show results</Text>
                             )}
                         </TouchableOpacity>
@@ -673,6 +910,71 @@ const styles = StyleSheet.create({
     suggestionText: {
         ...theme.typography.bodyMedium,
         color: theme.colors.text.primary,
+    },
+    radiusContainer: {
+        paddingHorizontal: theme.spacing.screenPadding,
+        paddingVertical: theme.spacing.md,
+        borderBottomWidth: 1,
+        borderBottomColor: theme.colors.border.light,
+    },
+    radiusHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: theme.spacing.md,
+    },
+    radiusTitle: {
+        ...theme.typography.bodyLarge,
+        fontWeight: theme.fontWeight.semiBold,
+        color: theme.colors.text.primary,
+    },
+    radiusValue: {
+        ...theme.typography.bodyMedium,
+        fontWeight: theme.fontWeight.medium,
+        color: theme.colors.primary[500],
+    },
+    sliderContainer: {
+        width: '100%',
+    },
+    sliderTrack: {
+        width: '100%',
+        height: 8,
+        backgroundColor: theme.colors.neutral[300],
+        borderRadius: theme.borderRadius.full,
+        position: 'relative',
+        justifyContent: 'center',
+    },
+    sliderProgress: {
+        height: 8,
+        backgroundColor: theme.colors.primary[500],
+        borderRadius: theme.borderRadius.full,
+        position: 'absolute',
+        left: 0,
+        top: 0,
+    },
+    sliderThumb: {
+        width: 24,
+        height: 24,
+        borderRadius: 12,
+        backgroundColor: theme.colors.background.white,
+        borderWidth: 2,
+        borderColor: theme.colors.primary[500],
+        position: 'absolute',
+        top: -8,
+        shadowColor: theme.colors.neutral[900],
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+        elevation: 4,
+    },
+    sliderLabels: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: theme.spacing.sm,
+    },
+    sliderLabel: {
+        ...theme.typography.bodySmall,
+        color: theme.colors.text.secondary,
     },
 });
 

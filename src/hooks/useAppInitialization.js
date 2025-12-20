@@ -32,7 +32,7 @@ export const useAppInitialization = () => {
             const hasFirebaseError = firebaseResult?.status === 'rejected';
 
             if (hasFirebaseError) {
-                console.error('Firebase initialization failed:', firebaseResult.reason);
+                // Firebase initialization failed
             }
 
             // Update state once with all results
@@ -44,7 +44,7 @@ export const useAppInitialization = () => {
             });
 
         } catch (err) {
-            console.error('App initialization error:', err);
+            // App initialization error
             setState({
                 firebaseReady: false,
                 error: err.message,

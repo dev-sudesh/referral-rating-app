@@ -138,7 +138,7 @@ const AppImage = ({
                     }
                 }
             } catch (error) {
-                console.warn('Failed to initialize cache:', error);
+                // Failed to initialize cache
                 if (isMounted) {
                     setIsCacheReady(true);
                 }
@@ -160,7 +160,7 @@ const AppImage = ({
             setIsCaching(true);
             await cacheImageUrl(url);
         } catch (error) {
-            console.warn('Failed to auto-cache image:', error);
+            // Failed to auto-cache image
         } finally {
             setIsCaching(false);
         }

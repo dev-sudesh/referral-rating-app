@@ -17,7 +17,7 @@ export const useOnboarding = (navigation) => {
             ]);
             navigation.replace(Constants.Screen.Stack.Main);
         } catch (error) {
-            console.error('Onboarding authentication error:', error);
+            // Onboarding authentication error
             Alert.alert(
                 'Connection Error',
                 'Unable to connect to our services. Please check your internet connection and try again.',

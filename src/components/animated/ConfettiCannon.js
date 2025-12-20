@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { View, Animated, StyleSheet, Dimensions } from 'react-native';
 import theme from '../../constants/theme';
 
@@ -20,10 +20,107 @@ const ConfettiCannon = ({
 }) => {
     const [particles, setParticles] = useState([]);
     const isAnimating = useRef(false);
-    const particlesRef = useRef([]);
+    const timeoutRefs = useRef([]);
+    const animationRefs = useRef([]);
+    const rafRefs = useRef([]);
+    const isMountedRef = useRef(true);
+    const shouldUpdateStateRef = useRef(true);
+
+    // Safe state update wrapper that checks if component is mounted
+    // Handles both direct values and function updaters
+    const safeSetParticles = useCallback((newParticlesOrUpdater) => {
+        if (!isMountedRef.current || !shouldUpdateStateRef.current) {
+            return;
+        }
+        // Use requestAnimationFrame to defer state update
+        const rafId = requestAnimationFrame(() => {
+            // Remove from tracking array
+            const index = rafRefs.current.indexOf(rafId);
+            if (index > -1) {
+                rafRefs.current.splice(index, 1);
+            }
+            // Only update if still mounted
+            if (isMountedRef.current && shouldUpdateStateRef.current) {
+                if (typeof newParticlesOrUpdater === 'function') {
+                    setParticles(newParticlesOrUpdater);
+                } else {
+                    setParticles(newParticlesOrUpdater);
+                }
+            }
+        });
+        rafRefs.current.push(rafId);
+    }, []);
+
+    // Cleanup on unmount
+    useEffect(() => {
+        isMountedRef.current = true;
+        shouldUpdateStateRef.current = true;
+        return () => {
+            // Prevent any state updates during unmount
+            isMountedRef.current = false;
+            shouldUpdateStateRef.current = false;
+            isAnimating.current = false;
+
+            // Clear all timeouts
+            timeoutRefs.current.forEach(timeout => {
+                if (timeout) {
+                    clearTimeout(timeout);
+                }
+            });
+            timeoutRefs.current = [];
+
+            // Cancel all pending animation frames
+            rafRefs.current.forEach(rafId => {
+                if (rafId) {
+                    cancelAnimationFrame(rafId);
+                }
+            });
+            rafRefs.current = [];
+
+            // Stop all animations
+            animationRefs.current.forEach(animation => {
+                try {
+                    if (animation && typeof animation.stop === 'function') {
+                        animation.stop();
+                    }
+                } catch (e) {
+                    // Ignore errors during cleanup
+                }
+            });
+            animationRefs.current = [];
+        };
+    }, []);
 
     useEffect(() => {
-        if (visible && !isAnimating.current) {
+        if (!visible) {
+            isAnimating.current = false;
+            // Clear all timeouts when hidden
+            timeoutRefs.current.forEach(timeout => {
+                if (timeout) clearTimeout(timeout);
+            });
+            timeoutRefs.current = [];
+            // Cancel pending animation frames
+            rafRefs.current.forEach(rafId => {
+                if (rafId) cancelAnimationFrame(rafId);
+            });
+            rafRefs.current = [];
+            // Stop all animations
+            animationRefs.current.forEach(animation => {
+                try {
+                    if (animation && typeof animation.stop === 'function') {
+                        animation.stop();
+                    }
+                } catch (e) {
+                    // Ignore errors
+                }
+            });
+            animationRefs.current = [];
+            // Clear particles state if mounted (this will schedule a new RAF which is fine)
+            safeSetParticles([]);
+            return;
+        }
+
+        if (visible && !isAnimating.current && isMountedRef.current) {
             isAnimating.current = true;
 
             const getAnimOrigin = () => origin || {
@@ -84,44 +181,43 @@ const ConfettiCannon = ({
                     const gravityPull = 400;
                     const finalY = peakY + gravityPull;
 
-                    animations.push(
-                        Animated.parallel([
-                            // X movement: smooth continuous spread throughout
-                            Animated.timing(translateX, {
-                                toValue: finalX,
-                                duration: duration,
+                    const animation = Animated.parallel([
+                        // X movement: smooth continuous spread throughout
+                        Animated.timing(translateX, {
+                            toValue: finalX,
+                            duration: duration,
+                            useNativeDriver: true,
+                        }),
+                        // Y movement: parabolic arc - up then down smoothly
+                        Animated.sequence([
+                            Animated.timing(translateY, {
+                                toValue: peakY,
+                                duration: duration * 0.4,
                                 useNativeDriver: true,
                             }),
-                            // Y movement: parabolic arc - up then down smoothly
-                            Animated.sequence([
-                                Animated.timing(translateY, {
-                                    toValue: peakY,
-                                    duration: duration * 0.4,
-                                    useNativeDriver: true,
-                                }),
-                                Animated.timing(translateY, {
-                                    toValue: finalY,
-                                    duration: duration * 0.6,
-                                    useNativeDriver: true,
-                                }),
-                            ]),
-                            // Rotation continues throughout
-                            Animated.timing(rotate, {
-                                toValue: 1,
-                                duration: duration * (0.5 + Math.random() * 0.5),
+                            Animated.timing(translateY, {
+                                toValue: finalY,
+                                duration: duration * 0.6,
                                 useNativeDriver: true,
                             }),
-                            // Fade out near the end
-                            Animated.sequence([
-                                Animated.delay(duration * 0.6),
-                                Animated.timing(opacity, {
-                                    toValue: 0,
-                                    duration: duration * 0.4,
-                                    useNativeDriver: true,
-                                }),
-                            ]),
-                        ])
-                    );
+                        ]),
+                        // Rotation continues throughout
+                        Animated.timing(rotate, {
+                            toValue: 1,
+                            duration: duration * (0.5 + Math.random() * 0.5),
+                            useNativeDriver: true,
+                        }),
+                        // Fade out near the end
+                        Animated.sequence([
+                            Animated.delay(duration * 0.6),
+                            Animated.timing(opacity, {
+                                toValue: 0,
+                                duration: duration * 0.4,
+                                useNativeDriver: true,
+                            }),
+                        ]),
+                    ]);
+                    animations.push(animation);
                 }
 
                 return { newParticles, animations };
@@ -130,47 +226,77 @@ const ConfettiCannon = ({
             // Create first burst
             const burst1 = createBurst(1);
 
-            // Set initial particles
-            setParticles(burst1.newParticles);
-            particlesRef.current = burst1.newParticles;
+            // Set initial particles only if still mounted
+            if (!isMountedRef.current) return;
+
+            safeSetParticles(burst1.newParticles);
 
             // Start first burst animation
-            setTimeout(() => {
-                Animated.parallel(burst1.animations).start();
+            const timeout1 = setTimeout(() => {
+                if (!isMountedRef.current) return;
+
+                const animation1 = Animated.parallel(burst1.animations);
+                animationRefs.current.push(animation1);
+                animation1.start();
 
                 // Create and start second burst after delay
-                setTimeout(() => {
-                    const burst2 = createBurst(2);
-                    setParticles(prev => [...prev, ...burst2.newParticles]);
-                    particlesRef.current = [...particlesRef.current, ...burst2.newParticles];
+                const timeout2 = setTimeout(() => {
+                    if (!isMountedRef.current) return;
 
-                    Animated.parallel(burst2.animations).start(() => {
-                        setParticles([]);
-                        particlesRef.current = [];
+                    const burst2 = createBurst(2);
+                    safeSetParticles(prev => [...prev, ...burst2.newParticles]);
+
+                    const animation2 = Animated.parallel(burst2.animations);
+                    animationRefs.current.push(animation2);
+                    animation2.start(() => {
+                        // Animation callback - use safe state update
+                        safeSetParticles([]);
                         isAnimating.current = false;
                     });
                 }, 200);
+                timeoutRefs.current.push(timeout2);
             }, 10);
+            timeoutRefs.current.push(timeout1);
         }
-    }, [visible, confettiCount, colors, duration, origin]);
 
-    useEffect(() => {
-        if (!visible) {
-            isAnimating.current = false;
-            setParticles([]);
-            particlesRef.current = [];
-        }
+        // Cleanup function
+        return () => {
+            // Clear timeouts when effect re-runs
+            timeoutRefs.current.forEach(timeout => {
+                if (timeout) clearTimeout(timeout);
+            });
+            timeoutRefs.current = [];
+            // Cancel pending animation frames
+            rafRefs.current.forEach(rafId => {
+                if (rafId) cancelAnimationFrame(rafId);
+            });
+            rafRefs.current = [];
+            // Stop all animations
+            animationRefs.current.forEach(animation => {
+                try {
+                    if (animation && typeof animation.stop === 'function') {
+                        animation.stop();
+                    }
+                } catch (e) {
+                    // Ignore errors
+                }
+            });
+            animationRefs.current = [];
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [visible]);
 
-    if (!visible || particles.length === 0) {
-        return null;
-    }
-
-    const getRotation = (value) =>
-        value.interpolate({
+    // Memoize getRotation to prevent recreation on every render
+    const getRotation = useCallback((value) => {
+        return value.interpolate({
             inputRange: [0, 1],
             outputRange: ['0deg', '720deg'],
         });
+    }, []);
+
+    if (!visible || particles.length === 0 || !isMountedRef.current) {
+        return null;
+    }
 
     return (
         <View style={styles.container} pointerEvents="none">
@@ -214,4 +340,3 @@ const styles = StyleSheet.create({
 });
 
 export default ConfettiCannon;
-

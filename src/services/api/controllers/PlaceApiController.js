@@ -26,7 +26,6 @@ const PlaceApiController = {
                         return []
                     }
                 } catch (error) {
-                    console.warn('error', error)
                     return []
                 }
             }
@@ -37,22 +36,22 @@ const PlaceApiController = {
             mutationFn: async (params) => {
                 const { latitude, longitude, limit, radius, enhanced, category } = params || {}
                 try {
-                    console.log('category', category);
+                    const nearbyUrl = Api.url.place.nearby({ latitude, longitude, limit, radius, enhanced, category });
+                    const referralsUrl = Api.url.user.referrals({ latitude, longitude, radius });
                     const [placesResponse, referralsResponse] = await Promise.all([
                         Api.get({
-                            url: Api.url.place.nearby({ latitude, longitude, limit, radius, enhanced, category }),
+                            url: nearbyUrl,
                             headerConfig: {
                                 authType: Api.AuthType.auth
                             }
                         }),
                         Api.get({
-                            url: Api.url.user.referrals({ latitude, longitude, radius }),
+                            url: referralsUrl,
                             headerConfig: {
                                 authType: Api.AuthType.auth
                             }
                         })
                     ])
-                    console.log('placesResponse', placesResponse);
                     if (placesResponse.statusCode === 200) {
                         const processedPlaces = processedNearbyPlaces(placesResponse, referralsResponse, { latitude, longitude })
                         return processedPlaces
@@ -60,7 +59,7 @@ const PlaceApiController = {
                         return placesResponse
                     }
                 } catch (error) {
-                    console.warn('error', error)
+                    // Error handled silently
                 }
             }
         })
@@ -68,17 +67,19 @@ const PlaceApiController = {
     searchPlaces: () => {
         return useMutation({
             mutationFn: async (params) => {
-                const { query, latitude, longitude, limit = 10, radius = 1000, enhanced = true } = params || {}
+                const { query, latitude, longitude, limit = 10, radius = 3000, enhanced = true } = params || {}
                 try {
+                    const searchUrl = Api.url.place.search({ query, latitude, longitude, limit, radius, enhanced });
+                    const referralsUrl = Api.url.user.referrals({ latitude, longitude, radius });
                     const [placesResponse, referralsResponse] = await Promise.all([
                         Api.get({
-                            url: Api.url.place.search({ query, latitude, longitude, limit, radius, enhanced }),
+                            url: searchUrl,
                             headerConfig: {
                                 authType: Api.AuthType.auth
                             }
                         }),
                         Api.get({
-                            url: Api.url.user.referrals({ latitude, longitude, radius }),
+                            url: referralsUrl,
                             headerConfig: {
                                 authType: Api.AuthType.auth
                             }
@@ -91,7 +92,7 @@ const PlaceApiController = {
                         return placesResponse
                     }
                 } catch (error) {
-                    console.warn('error', error)
+                    // Error handled silently
                 }
             }
         })
@@ -114,7 +115,7 @@ const PlaceApiController = {
                         return response
                     }
                 } catch (error) {
-                    console.warn('error', error)
+                    // Error handled silently
                 }
             }
         })
@@ -170,17 +171,8 @@ const processedNearbyPlaces = (response, referralsResponse, userLocation) => {
         const previousPlace = currentPlaces.find(p => p.id === place.id);
         const wasReferred = previousPlace?.isReferred || false;
 
-        // If it was referred but not in current referralIds, log a warning
-        if (wasReferred && !isReferred) {
-            console.warn('[PlaceApiController] processedNearbyPlaces: Place was referred but not in referralsResponse:', {
-                placeId: place.id,
-                placeName: place.name,
-                wasReferred: true,
-                isReferred: false,
-                referralIds: Array.from(referralIds),
-                referralsResponseCount: referralsResponse?.results?.length || 0
-            });
-        }
+        // If it was referred but not in current referralIds, silently handle
+        // (Place will be marked as not referred based on current API response)
 
         return {
             id: place.id,

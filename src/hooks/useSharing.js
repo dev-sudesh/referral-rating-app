@@ -20,7 +20,7 @@ export const useSharing = () => {
             });
             return { success: true };
         } catch (error) {
-            console.error('Error sharing profile:', error);
+            // Error sharing profile
             return { success: false, error };
         } finally {
             setIsSharing(false);
@@ -38,7 +38,7 @@ export const useSharing = () => {
             });
             return { success: true };
         } catch (error) {
-            console.error('Error sharing app:', error);
+            // Error sharing app
             return { success: false, error };
         } finally {
             setIsSharing(false);
@@ -60,7 +60,7 @@ export const useSharing = () => {
             });
             return { success: true };
         } catch (error) {
-            console.error('Error sharing referral:', error);
+            // Error sharing referral
             return { success: false, error };
         } finally {
             setIsSharing(false);
@@ -77,7 +77,7 @@ export const useSharing = () => {
             });
             return { success: true };
         } catch (error) {
-            console.error('Error sharing custom message:', error);
+            // Error sharing custom message
             return { success: false, error };
         } finally {
             setIsSharing(false);
