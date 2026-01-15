@@ -31,6 +31,7 @@ import MoreIcon from '../../assets/icons/others/more-icon.svg';
 import EmptyStateIcon from '../../assets/icons/others/empty-state-icon.svg';
 import PlacePlaceholderIcon from '../../assets/icons/others/place-placeholder.svg';
 import LocationIcon from '../../assets/icons/others/location-icon.svg';
+import WarningIcon from '../../assets/icons/others/warning-icon.svg';
 
 const IconAsset = {
     eyeOn: EyeOn,
@@ -73,6 +74,7 @@ const IconAsset = {
     emptyStateIcon: EmptyStateIcon,
     placePlaceholderIcon: PlacePlaceholderIcon,
     locationIcon: LocationIcon,
+    warningIcon: WarningIcon,
 }
 
 export default IconAsset;

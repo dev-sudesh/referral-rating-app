@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import MapView, { Marker } from 'react-native-maps';
+import Geolocation from '@react-native-community/geolocation';
 import { theme } from '../../../constants/theme';
 import IconAsset from '../../../assets/icons/IconAsset';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -24,6 +25,7 @@ import AsyncStoreUtils from '../../../utils/AsyncStoreUtils';
 import ConfettiCannon from '../../../components/animated/ConfettiCannon';
 import ApiController from '../../../services/api/ApiController';
 import LocationUtils from '../../../utils/LocationUtils';
+import ToastUtils from '../../../utils/ToastUtils';
 
 const customMapStyle = [
     {
@@ -1126,9 +1128,82 @@ const MapScreen = ({ navigation, route }) => {
     }, [showConfetti, setShowConfetti]);
 
     const handleLocationButtonPress = async () => {
+        console.log('handleLocationButtonPress');
         // Always fetch current location when user clicks the button
         shouldFetchPlacesRef.current = true;
-        LocationUtils.getCurrentLocation();
+
+        // If we already have a user location, center on it immediately for instant feedback
+        const currentUserLocation = MapsController.getState().userLocation;
+        if (currentUserLocation && mapRef.current && isMapReady) {
+            const immediateRegion = normalizeLocation({
+                latitude: currentUserLocation.latitude,
+                longitude: currentUserLocation.longitude,
+                latitudeDelta: 0.001,
+                longitudeDelta: 0.001,
+            });
+
+            try {
+                mapRef.current.animateToRegion(immediateRegion, 500);
+                setRegion(immediateRegion);
+            } catch (error) {
+                console.error('Error animating to cached location:', error);
+            }
+        }
+
+        // Then fetch fresh location in the background and update if different
+        Geolocation.getCurrentPosition(
+            (position) => {
+                const { latitude, longitude } = position.coords;
+                const newUserLocation = { latitude, longitude };
+
+                // Update user location in state
+                MapsController.getState().setUserLocation(newUserLocation);
+                AsyncStoreUtils.setItem(AsyncStoreUtils.Keys.USER_LAST_LOCATION, newUserLocation);
+
+                // Only animate again if the location is significantly different from cached location
+                const shouldUpdateMap = !currentUserLocation ||
+                    Math.abs(currentUserLocation.latitude - latitude) > 0.0001 ||
+                    Math.abs(currentUserLocation.longitude - longitude) > 0.0001;
+
+                if (shouldUpdateMap && mapRef.current && isMapReady) {
+                    // Center map on fresh user location with animation
+                    const newRegion = normalizeLocation({
+                        latitude,
+                        longitude,
+                        latitudeDelta: 0.001,
+                        longitudeDelta: 0.001,
+                    });
+
+                    try {
+                        mapRef.current.animateToRegion(newRegion, 1000);
+                        setRegion(newRegion);
+                    } catch (error) {
+                        console.error('Error animating to fresh location:', error);
+                    }
+                }
+
+                // Update center location for consistency
+                const newRegion = normalizeLocation({
+                    latitude,
+                    longitude,
+                    latitudeDelta: 0.03,
+                    longitudeDelta: 0.03,
+                });
+                setCenterLocation(newRegion);
+            },
+            (error) => {
+                console.error('Error getting location:', error);
+                // Only show error if we didn't have a cached location to fall back to
+                if (!currentUserLocation) {
+                    ToastUtils.error('Failed to get current location');
+                }
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 5000, // Reduced timeout for faster response
+                maximumAge: 1000, // Allow 1 second old location for faster response
+            }
+        );
     }
 
     // Set up filter callback to handle filter selection from SearchFilter
@@ -1230,6 +1305,7 @@ const MapScreen = ({ navigation, route }) => {
                         mapType="standard"
                         userInterfaceStyle="light"
                         pointsOfInterestEnabled={false}
+                        showsPointsOfInterests={false}
                         customMapStyle={customMapStyle}
                     >
                         {(() => {

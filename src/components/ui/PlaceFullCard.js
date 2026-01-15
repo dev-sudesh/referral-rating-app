@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, Text, TouchableOpacity, View, Alert, Dimensions, Linking, FlatList } from 'react-native'
+import { Pressable, StyleSheet, Text, TouchableOpacity, View, Dimensions, Linking, FlatList } from 'react-native'
 import React, { useState, useRef, useCallback } from 'react'
 import MapsController from '../../controllers/maps/MapsController'
 import AppImage from '../common/AppImage';
@@ -12,6 +12,7 @@ import { useSharing } from '../../hooks/useSharing';
 import ViewShot from 'react-native-view-shot';
 import ConfettiCannon from '../animated/ConfettiCannon';
 import ApiController from '../../services/api/ApiController';
+import UnreferModal from './UnreferModal';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -31,6 +32,7 @@ const PlaceFullCard = () => {
     const [showConfetti, setShowConfetti] = useState(false);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const flatListRef = useRef(null);
+    const [showUnreferModal, setShowUnreferModal] = useState(false);
 
     React.useEffect(() => {
         if (selectedPlace) {
@@ -39,30 +41,14 @@ const PlaceFullCard = () => {
     }, []);
 
     const referPlace = async (place) => {
-        //     if (!place?.isReferred) {
-        //         setShowReferralAlert(true);
-        //     }
-        // };
-
-        // React.useEffect(() => {
-        //     if (placeReferredStatus) {
-        //         referPlaceSubmit(fullSelectedPlace);
-        //     }
-        // }, [placeReferredStatus]);
-
-        // const referPlaceSubmit = async (place) => { 
-
-        referPlaceMutation.mutateAsync({ place: place, placeId: place.id, action: place.isReferred ? 'unrefer' : 'refer' });
+        // If place is already referred, show confirmation dialog
         if (place.isReferred) {
-            // unrefer place
-            // setFilteredPlaces(filteredPlaces.map(p => p.id === place.id ? { ...p, isReferred: false } : p));
-            if (places && Array.isArray(places)) {
-                setPlaces(places.map(p => p.id === place.id ? { ...p, isReferred: false } : p));
-            }
-            setSelectedPlace(prev => prev.id === place.id ? { ...prev, isReferred: false } : prev);
+            setShowUnreferModal(true);
             return;
         }
-        // setFilteredPlaces(filteredPlaces.map(p => p.id === place.id ? { ...p, isReferred: true } : p));
+
+        // Refer the place
+        referPlaceMutation.mutateAsync({ place: place, placeId: place.id, action: 'refer' });
         if (places && Array.isArray(places)) {
             setPlaces(places.map(p => p.id === place.id ? { ...p, isReferred: true } : p));
         }
@@ -70,6 +56,20 @@ const PlaceFullCard = () => {
 
         // Trigger confetti animation
         setShowConfetti(true);
+    };
+
+    const handleUnreferConfirm = async () => {
+        // unrefer place
+        referPlaceMutation.mutateAsync({ place: fullSelectedPlace, placeId: fullSelectedPlace.id, action: 'unrefer' });
+        if (places && Array.isArray(places)) {
+            setPlaces(places.map(p => p.id === fullSelectedPlace.id ? { ...p, isReferred: false } : p));
+        }
+        setSelectedPlace(prev => prev.id === fullSelectedPlace.id ? { ...prev, isReferred: false } : prev);
+        setShowUnreferModal(false);
+    };
+
+    const handleUnreferCancel = () => {
+        setShowUnreferModal(false);
     };
 
     React.useEffect(() => {
@@ -331,6 +331,13 @@ const PlaceFullCard = () => {
             <ConfettiCannon
                 visible={showConfetti}
                 origin={{ x: screenWidth / 2, y: screenHeight - theme.responsive.size(80) }}
+            />
+
+            <UnreferModal
+                visible={showUnreferModal}
+                onCancel={handleUnreferCancel}
+                onConfirm={handleUnreferConfirm}
+                placeName={fullSelectedPlace?.name}
             />
         </View>
     )
