@@ -71,6 +71,7 @@ const SearchBar = ({ handleBackPress, searchText = '', onSearch, onChangeText, o
                     autoCapitalize="none"
                     autoComplete="off"
                     importantForAutofill="no"
+                    onSubmitEditing={handleSearch}
                 />
                 {searchText.length > 0 && (
                     <TouchableOpacity

@@ -24,12 +24,27 @@ const Button = ({
         if (variant === 'primary') {
             baseStyle.push(styles.primary);
             if (disabled) baseStyle.push(styles.primaryDisabled);
+        } else if (variant === 'outline-primary') {
+            baseStyle.push(styles.outlinePrimary);
+            if (disabled) baseStyle.push(styles.outlinePrimaryDisabled);
         } else if (variant === 'secondary') {
             baseStyle.push(styles.secondary);
             if (disabled) baseStyle.push(styles.secondaryDisabled);
-        } else if (variant === 'outline') {
-            baseStyle.push(styles.outline);
-            if (disabled) baseStyle.push(styles.outlineDisabled);
+        } else if (variant === 'outline-secondary') {
+            baseStyle.push(styles.outlineSecondary);
+            if (disabled) baseStyle.push(styles.outlineSecondaryDisabled);
+        } else if (variant === 'warning') {
+            baseStyle.push(styles.warning);
+            if (disabled) baseStyle.push(styles.warningDisabled);
+        } else if (variant === 'outline-warning') {
+            baseStyle.push(styles.outlineWarning);
+            if (disabled) baseStyle.push(styles.outlineWarningDisabled);
+        } else if (variant === 'danger') {
+            baseStyle.push(styles.danger);
+            if (disabled) baseStyle.push(styles.dangerDisabled);
+        } else if (variant === 'outline-danger') {
+            baseStyle.push(styles.outlineDanger);
+            if (disabled) baseStyle.push(styles.outlineDangerDisabled);
         }
 
         if (style) baseStyle.push(style);
@@ -42,12 +57,27 @@ const Button = ({
         if (variant === 'primary') {
             baseTextStyle.push(styles.primaryText);
             if (disabled) baseTextStyle.push(styles.primaryTextDisabled);
+        } else if (variant === 'outline-primary') {
+            baseTextStyle.push(styles.outlinePrimaryText);
+            if (disabled) baseTextStyle.push(styles.outlinePrimaryTextDisabled);
         } else if (variant === 'secondary') {
             baseTextStyle.push(styles.secondaryText);
             if (disabled) baseTextStyle.push(styles.secondaryTextDisabled);
-        } else if (variant === 'outline') {
-            baseTextStyle.push(styles.outlineText);
-            if (disabled) baseTextStyle.push(styles.outlineTextDisabled);
+        } else if (variant === 'outline-secondary') {
+            baseTextStyle.push(styles.outlineSecondaryText);
+            if (disabled) baseTextStyle.push(styles.outlineSecondaryTextDisabled);
+        } else if (variant === 'warning') {
+            baseTextStyle.push(styles.warningText);
+            if (disabled) baseTextStyle.push(styles.warningTextDisabled);
+        } else if (variant === 'outline-warning') {
+            baseTextStyle.push(styles.outlineWarningText);
+            if (disabled) baseTextStyle.push(styles.outlineWarningTextDisabled);
+        } else if (variant === 'danger') {
+            baseTextStyle.push(styles.dangerText);
+            if (disabled) baseTextStyle.push(styles.dangerTextDisabled);
+        } else if (variant === 'outline-danger') {
+            baseTextStyle.push(styles.outlineDangerText);
+            if (disabled) baseTextStyle.push(styles.outlineDangerTextDisabled);
         }
 
         if (textStyle) baseTextStyle.push(textStyle);
@@ -66,7 +96,7 @@ const Button = ({
             {loading ? (
                 <ActivityIndicator
                     color={
-                        variant === 'primary'
+                        variant === 'primary' || variant === 'danger'
                             ? theme.colors.background.primary
                             : theme.colors.primary[500]
                     }
@@ -109,6 +139,16 @@ const styles = StyleSheet.create({
     primaryDisabled: {
         backgroundColor: theme.colors.neutral[300],
     },
+    // Outline Primary variant
+    outlinePrimary: {
+        backgroundColor: 'transparent',
+        borderWidth: 1,
+        borderColor: theme.colors.primary[500],
+        ...theme.shadows.none,
+    },
+    outlinePrimaryDisabled: {
+        borderColor: theme.colors.neutral[300],
+    },
     // Secondary variant
     secondary: {
         backgroundColor: theme.colors.secondary[500],
@@ -116,13 +156,48 @@ const styles = StyleSheet.create({
     secondaryDisabled: {
         backgroundColor: theme.colors.neutral[300],
     },
-    // Outline variant
-    outline: {
+    // Outline Secondary variant
+    outlineSecondary: {
         backgroundColor: 'transparent',
         borderWidth: 1,
-        borderColor: theme.colors.primary[500],
+        borderColor: theme.colors.secondary[500],
+        ...theme.shadows.none,
     },
-    outlineDisabled: {
+    outlineSecondaryDisabled: {
+        borderColor: theme.colors.neutral[300],
+    },
+    // Warning variant
+    warning: {
+        backgroundColor: theme.colors.warning[500],
+    },
+    warningDisabled: {
+        backgroundColor: theme.colors.neutral[300],
+    },
+    // Outline Warning variant
+    outlineWarning: {
+        backgroundColor: 'transparent',
+        borderWidth: 1,
+        borderColor: theme.colors.warning[500],
+        ...theme.shadows.none,
+    },
+    outlineWarningDisabled: {
+        borderColor: theme.colors.neutral[300],
+    },
+    // Danger variant
+    danger: {
+        backgroundColor: '#EF4444',
+    },
+    dangerDisabled: {
+        backgroundColor: theme.colors.neutral[300],
+    },
+    // Outline Danger variant
+    outlineDanger: {
+        backgroundColor: 'transparent',
+        borderWidth: 1,
+        borderColor: '#EF4444',
+        ...theme.shadows.none,
+    },
+    outlineDangerDisabled: {
         borderColor: theme.colors.neutral[300],
     },
     // Text styles
@@ -157,6 +232,34 @@ const styles = StyleSheet.create({
         color: theme.colors.primary[500],
     },
     outlineTextDisabled: {
+        color: theme.colors.text.disabled,
+    },
+    // Warning text
+    warningText: {
+        color: theme.colors.text.white,
+    },
+    warningTextDisabled: {
+        color: theme.colors.text.disabled,
+    },
+    // Outline Warning text
+    outlineWarningText: {
+        color: theme.colors.warning[500],
+    },
+    outlineWarningTextDisabled: {
+        color: theme.colors.text.disabled,
+    },
+    // Danger text
+    dangerText: {
+        color: theme.colors.text.white,
+    },
+    // Outline Danger text
+    outlineDangerText: {
+        color: theme.colors.error[500],
+    },
+    outlineDangerTextDisabled: {
+        color: theme.colors.text.disabled,
+    },
+    dangerTextDisabled: {
         color: theme.colors.text.disabled,
     },
 });

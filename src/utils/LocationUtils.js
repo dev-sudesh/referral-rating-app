@@ -334,27 +334,33 @@ const LocationUtils = {
     getCurrentLocation: async () => {
         Geolocation.getCurrentPosition(
             async (position) => {
-                const { latitude, longitude } = position.coords;
-                const newUserLocation = { latitude, longitude };
 
-                MapsController.getState().setUserLocation(newUserLocation);
-                AsyncStoreUtils.setItem(AsyncStoreUtils.Keys.USER_LAST_LOCATION, newUserLocation);
-
-                // Center map on user location
-                const newRegion = {
-                    latitude,
-                    longitude,
-                    latitudeDelta: 0.001,
-                    longitudeDelta: 0.001,
-                };
-                MapsController.getState().setCenterLocation(newRegion);
-
-                // Save user location to API
                 try {
+                    console.log("position", position)
+                    const { latitude, longitude } = position.coords;
+                    const newUserLocation = { latitude, longitude };
+
+                    MapsController.getState().setUserLocation(newUserLocation);
+                    AsyncStoreUtils.setItem(AsyncStoreUtils.Keys.USER_LAST_LOCATION, newUserLocation);
+
+                    // Center map on user location
+                    const newRegion = {
+                        latitude,
+                        longitude,
+                        latitudeDelta: 0.001,
+                        longitudeDelta: 0.001,
+                    };
+                    console.log("newRegion", newRegion)
+                    MapsController.getState().setCenterLocation(newRegion);
+
+                    // Save user location to API
                     await UserApiController.saveLocationDirect({ latitude, longitude });
+                    console.log("userLocation saved")
                 } catch (error) {
                     // Silently fail - location saving to API is not critical
                     // The location is already saved to AsyncStorage
+                    console.log("error", error)
+                    throw error;
                 }
             },
             (error) => {

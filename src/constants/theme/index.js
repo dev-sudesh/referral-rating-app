@@ -59,6 +59,12 @@ export const shadows = {
             shadowOpacity: 0.2,
             shadowRadius: 8,
         },
+        none: {
+            shadowColor: 'transparent',
+            shadowOffset: { width: 0, height: 0 },
+            shadowOpacity: 0,
+            shadowRadius: 0,
+        }
     } : {
         custom: ({ radius }) => ({
             elevation: radius,
@@ -72,6 +78,9 @@ export const shadows = {
         large: {
             elevation: 8,
         },
+        none: {
+            elevation: 0,
+        }
     })
 };
 
